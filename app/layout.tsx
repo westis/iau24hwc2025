@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import { Navbar } from '@/components/navigation/navbar'
 import { ThemeProvider } from '@/components/theme-provider'
+import { SeedDataLoader } from '@/components/seed-data-loader'
 
 export const metadata: Metadata = {
   title: 'IAU 24h World Championships 2025',
@@ -22,6 +23,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <SeedDataLoader />
           <Navbar />
           {children}
         </ThemeProvider>
