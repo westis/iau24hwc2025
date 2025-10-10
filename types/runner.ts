@@ -21,8 +21,8 @@ export interface Runner {
   // Performance data (from DUV API)
   personalBestAllTime: number | null           // km
   personalBestAllTimeYear?: number             // Year when all-time PB was set
-  personalBestLast2Years: number | null        // km
-  personalBestLast2YearsYear?: number          // Year when last-2-years PB was set
+  personalBestLast3Years: number | null        // km
+  personalBestLast3YearsYear?: number          // Year when last-3-years PB was set
   dateOfBirth: string | null                   // ISO date
   age?: number                                 // Calculated
   performanceHistory?: Performance[]

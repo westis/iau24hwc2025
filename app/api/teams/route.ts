@@ -6,7 +6,7 @@ import type { Gender } from '@/types/runner'
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const metric = (searchParams.get('metric') || 'all-time') as 'all-time' | 'last-2-years'
+    const metric = (searchParams.get('metric') || 'all-time') as 'all-time' | 'last-3-years'
     const gender = (searchParams.get('gender') || 'M') as Gender
 
     // Calculate and save team rankings

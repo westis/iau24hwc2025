@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
         console.log(`  Updating runner in DB with entry_id: ${runner.entryId}`)
         updateRunner(runner.entryId, {
           personalBestAllTime: pbAllTime,
-          personalBestLast2Years: pbLast3Years,
+          personalBestLast3Years: pbLast3Years,
           dateOfBirth: profile.YOB ? `${profile.YOB}-01-01` : null,
           age: age || undefined,
         })
@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
         enrichedRunners.push({
           ...runner,
           personalBestAllTime: pbAllTime,
-          personalBestLast2Years: pbLast3Years,
+          personalBestLast3Years: pbLast3Years,
           dateOfBirth: profile.YOB ? `${profile.YOB}-01-01` : null,
           age: age || undefined,
         })
@@ -162,7 +162,7 @@ export async function POST(request: NextRequest) {
           console.log(`    Entry ID: ${updated.entryId}`)
           console.log(`    DUV ID: ${updated.duvId}`)
           console.log(`    PB All-Time: ${updated.personalBestAllTime}`)
-          console.log(`    PB Last 3Y: ${updated.personalBestLast2Years}`)
+          console.log(`    PB Last 3Y: ${updated.personalBestLast3Years}`)
           console.log(`    Age: ${updated.age}`)
         } else {
           console.error(`  ✗ Could not find updated runner with entry_id: ${runner.entryId}`)

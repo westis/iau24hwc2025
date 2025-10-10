@@ -58,8 +58,8 @@ export function insertRunner(runner: Omit<Runner, 'performanceHistory'>): number
     runner.matchConfidence,
     runner.personalBestAllTime,
     runner.personalBestAllTimeYear,
-    runner.personalBestLast2Years,
-    runner.personalBestLast2YearsYear,
+    runner.personalBestLast3Years,
+    runner.personalBestLast3YearsYear,
     runner.dateOfBirth,
     runner.age
   )
@@ -92,13 +92,13 @@ export function updateRunner(entryId: string, updates: Partial<Runner>): void {
     fields.push('personal_best_all_time_year = ?')
     values.push(updates.personalBestAllTimeYear)
   }
-  if (updates.personalBestLast2Years !== undefined) {
+  if (updates.personalBestLast3Years !== undefined) {
     fields.push('personal_best_last_2_years = ?')
-    values.push(updates.personalBestLast2Years)
+    values.push(updates.personalBestLast3Years)
   }
-  if (updates.personalBestLast2YearsYear !== undefined) {
+  if (updates.personalBestLast3YearsYear !== undefined) {
     fields.push('personal_best_last_2_years_year = ?')
-    values.push(updates.personalBestLast2YearsYear)
+    values.push(updates.personalBestLast3YearsYear)
   }
   if (updates.dateOfBirth !== undefined) {
     fields.push('date_of_birth = ?')
@@ -163,8 +163,8 @@ function rowToRunner(row: any): Runner {
     matchConfidence: row.match_confidence,
     personalBestAllTime: row.personal_best_all_time,
     personalBestAllTimeYear: row.personal_best_all_time_year,
-    personalBestLast2Years: row.personal_best_last_2_years,
-    personalBestLast2YearsYear: row.personal_best_last_2_years_year,
+    personalBestLast3Years: row.personal_best_last_2_years,
+    personalBestLast3YearsYear: row.personal_best_last_2_years_year,
     dateOfBirth: row.date_of_birth,
     age: row.age,
   }
@@ -263,7 +263,7 @@ export function getMatchCandidates(runnerId: number): DUVSearchResult[] {
 }
 
 // Team operations
-export function calculateAndSaveTeams(metric: 'all-time' | 'last-2-years'): void {
+export function calculateAndSaveTeams(metric: 'all-time' | 'last-3-years'): void {
   const db = getDatabase()
   const runners = getRunners()
 
@@ -283,14 +283,14 @@ export function calculateAndSaveTeams(metric: 'all-time' | 'last-2-years'): void
     const [nationality, gender] = key.split('-')
 
     const sorted = teamRunners.sort((a, b) => {
-      const aVal = metric === 'all-time' ? a.personalBestAllTime : a.personalBestLast2Years
-      const bVal = metric === 'all-time' ? b.personalBestAllTime : b.personalBestLast2Years
+      const aVal = metric === 'all-time' ? a.personalBestAllTime : a.personalBestLast3Years
+      const bVal = metric === 'all-time' ? b.personalBestAllTime : b.personalBestLast3Years
       return (bVal || 0) - (aVal || 0)
     })
 
     const topThree = sorted.slice(0, 3)
     const teamTotal = topThree.reduce((sum, r) => {
-      const pb = metric === 'all-time' ? r.personalBestAllTime : r.personalBestLast2Years
+      const pb = metric === 'all-time' ? r.personalBestAllTime : r.personalBestLast3Years
       return sum + (pb || 0)
     }, 0)
 
@@ -337,7 +337,7 @@ export function calculateAndSaveTeams(metric: 'all-time' | 'last-2-years'): void
   })
 }
 
-export function getTeams(metric: 'all-time' | 'last-2-years', gender: Gender): Team[] {
+export function getTeams(metric: 'all-time' | 'last-3-years', gender: Gender): Team[] {
   const db = getDatabase()
   const stmt = db.prepare(`
     SELECT * FROM teams
@@ -357,8 +357,8 @@ export function getTeams(metric: 'all-time' | 'last-2-years', gender: Gender): T
     `)
     const runnerRows = runnersStmt.all(nationality, genderVal) as any[]
     const runners = runnerRows.map(rowToRunner).sort((a, b) => {
-      const aVal = metric === 'all-time' ? a.personalBestAllTime : a.personalBestLast2Years
-      const bVal = metric === 'all-time' ? b.personalBestAllTime : b.personalBestLast2Years
+      const aVal = metric === 'all-time' ? a.personalBestAllTime : a.personalBestLast3Years
+      const bVal = metric === 'all-time' ? b.personalBestAllTime : b.personalBestLast3Years
       return (bVal || 0) - (aVal || 0)
     })
 

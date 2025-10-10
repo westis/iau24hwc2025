@@ -60,8 +60,8 @@ export async function POST(request: NextRequest) {
         // Calculate PBs with years
         let personalBestAllTime: number | null = null
         let personalBestAllTimeYear: number | undefined
-        let personalBestLast2Years: number | null = null
-        let personalBestLast2YearsYear: number | undefined
+        let personalBestLast3Years: number | null = null
+        let personalBestLast3YearsYear: number | undefined
 
         if (performances.length > 0) {
           // All-time PB
@@ -86,8 +86,8 @@ export async function POST(request: NextRequest) {
               p.distance > (best?.distance || 0) ? p : best
             , recentPerformances[0])
 
-            personalBestLast2Years = recentBest.distance
-            personalBestLast2YearsYear = new Date(recentBest.date).getFullYear()
+            personalBestLast3Years = recentBest.distance
+            personalBestLast3YearsYear = new Date(recentBest.date).getFullYear()
           }
         }
 
@@ -102,8 +102,8 @@ export async function POST(request: NextRequest) {
           ...runner,
           personalBestAllTime,
           personalBestAllTimeYear,
-          personalBestLast2Years,
-          personalBestLast2YearsYear,
+          personalBestLast3Years,
+          personalBestLast3YearsYear,
           dateOfBirth: profile.YOB ? `${profile.YOB}-01-01` : null,
           age,
           performanceHistory: performances,

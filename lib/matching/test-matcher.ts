@@ -23,7 +23,7 @@ const mockRunners: Runner[] = [
     duvId: null,
     matchStatus: 'unmatched',
     personalBestAllTime: null,
-    personalBestLast2Years: null,
+    personalBestLast3Years: null,
     dateOfBirth: null,
   },
   {
@@ -36,7 +36,7 @@ const mockRunners: Runner[] = [
     duvId: null,
     matchStatus: 'unmatched',
     personalBestAllTime: null,
-    personalBestLast2Years: null,
+    personalBestLast3Years: null,
     dateOfBirth: null,
   },
 ]

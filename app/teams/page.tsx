@@ -8,7 +8,7 @@ import type { Runner, Gender } from '@/types/runner'
 
 export default function TeamsPage() {
   const [runners, setRunners] = useState<Runner[]>([])
-  const [metric, setMetric] = useState<'all-time' | 'last-2-years'>('last-2-years')
+  const [metric, setMetric] = useState<'all-time' | 'last-3-years'>('last-3-years')
   const [gender, setGender] = useState<Gender>('M')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -37,7 +37,7 @@ export default function TeamsPage() {
     // Filter runners with valid PB data for this gender
     const runnersWithPB = runners.filter(r => {
       if (r.gender !== gender) return false
-      const pb = metric === 'all-time' ? r.personalBestAllTime : r.personalBestLast2Years
+      const pb = metric === 'all-time' ? r.personalBestAllTime : r.personalBestLast3Years
       return pb !== null && pb > 0
     })
 
@@ -55,8 +55,8 @@ export default function TeamsPage() {
     const allTeams: Team[] = Array.from(teamGroups.entries()).map(([nationality, teamRunners]) => {
       // Sort runners by PB (descending)
       const sorted = teamRunners.sort((a, b) => {
-        const aVal = metric === 'all-time' ? a.personalBestAllTime : a.personalBestLast2Years
-        const bVal = metric === 'all-time' ? b.personalBestAllTime : b.personalBestLast2Years
+        const aVal = metric === 'all-time' ? a.personalBestAllTime : a.personalBestLast3Years
+        const bVal = metric === 'all-time' ? b.personalBestAllTime : b.personalBestLast3Years
         return (bVal || 0) - (aVal || 0)
       })
 
@@ -65,7 +65,7 @@ export default function TeamsPage() {
 
       // Calculate team total
       const teamTotal = topThree.reduce((sum, r) => {
-        const pb = metric === 'all-time' ? r.personalBestAllTime : r.personalBestLast2Years
+        const pb = metric === 'all-time' ? r.personalBestAllTime : r.personalBestLast3Years
         return sum + (pb || 0)
       }, 0)
 
@@ -139,10 +139,10 @@ export default function TeamsPage() {
         {/* Metric Toggle */}
         <div className="inline-flex rounded-lg border border-input bg-background p-1" role="group">
           <Button
-            variant={metric === 'last-2-years' ? 'default' : 'ghost'}
+            variant={metric === 'last-3-years' ? 'default' : 'ghost'}
             size="sm"
-            onClick={() => setMetric('last-2-years')}
-            className={metric === 'last-2-years' ? '' : 'hover:bg-accent'}
+            onClick={() => setMetric('last-3-years')}
+            className={metric === 'last-3-years' ? '' : 'hover:bg-accent'}
           >
             Last 3 Years
           </Button>

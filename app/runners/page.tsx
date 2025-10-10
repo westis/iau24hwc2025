@@ -12,7 +12,7 @@ export default function RunnersPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedGender, setSelectedGender] = useState<'M' | 'W'>('M')
-  const [selectedMetric, setSelectedMetric] = useState<'last-2-years' | 'all-time'>('last-2-years')
+  const [selectedMetric, setSelectedMetric] = useState<'last-3-years' | 'all-time'>('last-3-years')
 
   useEffect(() => {
     // Load runners from localStorage
@@ -51,8 +51,8 @@ export default function RunnersPage() {
   const runnersWithRankings = useMemo(() => {
     // Get PB value based on selected metric
     const getPB = (runner: Runner) => {
-      return selectedMetric === 'last-2-years'
-        ? runner.personalBestLast2Years || 0
+      return selectedMetric === 'last-3-years'
+        ? runner.personalBestLast3Years || 0
         : runner.personalBestAllTime || 0
     }
 
@@ -141,10 +141,10 @@ export default function RunnersPage() {
           </div>
           <div className="inline-flex rounded-lg border border-input bg-background p-1 ml-auto" role="group">
             <Button
-              variant={selectedMetric === 'last-2-years' ? 'default' : 'ghost'}
+              variant={selectedMetric === 'last-3-years' ? 'default' : 'ghost'}
               size="sm"
-              onClick={() => setSelectedMetric('last-2-years')}
-              className={selectedMetric === 'last-2-years' ? '' : 'hover:bg-accent'}
+              onClick={() => setSelectedMetric('last-3-years')}
+              className={selectedMetric === 'last-3-years' ? '' : 'hover:bg-accent'}
             >
               Last 3 Years
             </Button>
@@ -161,6 +161,7 @@ export default function RunnersPage() {
 
         <RunnerTable
           runners={runnersWithRankings}
+          metric={selectedMetric}
           onManualMatch={(runner) => {
             router.push('/match')
           }}

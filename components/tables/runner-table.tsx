@@ -29,11 +29,12 @@ import { cn } from '@/lib/utils'
 
 interface RunnerTableProps {
   runners: Runner[]
+  metric: 'last-3-years' | 'all-time'
   onManualMatch: (runner: Runner) => void
   onRowClick: (runnerId: number) => void
 }
 
-export function RunnerTable({ runners, onManualMatch, onRowClick }: RunnerTableProps) {
+export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: RunnerTableProps) {
   const { isAdmin } = useAuth()
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -227,7 +228,7 @@ export function RunnerTable({ runners, onManualMatch, onRowClick }: RunnerTableP
         },
       },
       {
-        accessorKey: 'personalBestLast2Years',
+        accessorKey: 'personalBestLast3Years',
         header: ({ column }) => {
           return (
             <Button
@@ -241,8 +242,8 @@ export function RunnerTable({ runners, onManualMatch, onRowClick }: RunnerTableP
           )
         },
         cell: ({ row }) => {
-          const pb = row.getValue('personalBestLast2Years') as number | null
-          const pbYear = row.original.personalBestLast2YearsYear
+          const pb = row.getValue('personalBestLast3Years') as number | null
+          const pbYear = row.original.personalBestLast3YearsYear
           return (
             <div className="text-right">
               {pb ? (
@@ -440,7 +441,7 @@ export function RunnerTable({ runners, onManualMatch, onRowClick }: RunnerTableP
       </div>
 
       {/* Mobile Card View */}
-      <div className="md:hidden space-y-2">
+      <div className="md:hidden grid grid-cols-1 sm:grid-cols-2 gap-2">
         {table.getRowModel().rows?.length ? (
           table.getRowModel().rows.map((row) => {
             const runner = row.original
@@ -448,6 +449,15 @@ export function RunnerTable({ runners, onManualMatch, onRowClick }: RunnerTableP
             const threeLetterCode = runner.nationality
             const twoLetterCode = getCountryCodeForFlag(threeLetterCode)
             const countryName = getCountryName(threeLetterCode)
+
+            // Get selected and alternate PB values
+            const selectedPB = metric === 'last-3-years' ? runner.personalBestLast3Years : runner.personalBestAllTime
+            const selectedPBYear = metric === 'last-3-years' ? runner.personalBestLast3YearsYear : runner.personalBestAllTimeYear
+            const selectedLabel = metric === 'last-3-years' ? 'Last 3Y' : 'All-Time'
+
+            const alternatePB = metric === 'last-3-years' ? runner.personalBestAllTime : runner.personalBestLast3Years
+            const alternatePBYear = metric === 'last-3-years' ? runner.personalBestAllTimeYear : runner.personalBestLast3YearsYear
+            const alternateLabel = metric === 'last-3-years' ? 'All-Time' : 'Last 3Y'
 
             return (
               <div key={row.id} className="border rounded-lg overflow-hidden">
@@ -484,13 +494,13 @@ export function RunnerTable({ runners, onManualMatch, onRowClick }: RunnerTableP
                     </button>
                   </div>
                   <div className="text-sm">
-                    <span className="text-muted-foreground text-xs">PB Last 3Y: </span>
+                    <span className="text-muted-foreground text-xs">PB {selectedLabel}: </span>
                     <span className="font-medium">
-                      {runner.personalBestLast2Years ? (
+                      {selectedPB ? (
                         <>
-                          {runner.personalBestLast2Years.toFixed(2)} km
-                          {runner.personalBestLast2YearsYear && (
-                            <span className="text-xs text-muted-foreground ml-1">({runner.personalBestLast2YearsYear})</span>
+                          {selectedPB.toFixed(2)} km
+                          {selectedPBYear && (
+                            <span className="text-xs text-muted-foreground ml-1">({selectedPBYear})</span>
                           )}
                         </>
                       ) : '-'}
@@ -502,13 +512,13 @@ export function RunnerTable({ runners, onManualMatch, onRowClick }: RunnerTableP
                 {isExpanded && (
                   <div className="px-4 pb-4 space-y-3 bg-accent/20 border-t">
                     <div className="pt-3">
-                      <div className="text-xs text-muted-foreground">PB All-Time</div>
+                      <div className="text-xs text-muted-foreground">PB {alternateLabel}</div>
                       <div className="text-sm font-medium">
-                        {runner.personalBestAllTime ? (
+                        {alternatePB ? (
                           <>
-                            {runner.personalBestAllTime.toFixed(2)} km
-                            {runner.personalBestAllTimeYear && (
-                              <span className="text-xs text-muted-foreground ml-1">({runner.personalBestAllTimeYear})</span>
+                            {alternatePB.toFixed(2)} km
+                            {alternatePBYear && (
+                              <span className="text-xs text-muted-foreground ml-1">({alternatePBYear})</span>
                             )}
                           </>
                         ) : '-'}
@@ -555,7 +565,7 @@ export function RunnerTable({ runners, onManualMatch, onRowClick }: RunnerTableP
             )
           })
         ) : (
-          <div className="border rounded-lg p-8 text-center text-muted-foreground">
+          <div className="col-span-full border rounded-lg p-8 text-center text-muted-foreground">
             No results.
           </div>
         )}

@@ -15,7 +15,7 @@ interface TeamCardProps {
   rank: number
   team: Team
   gender: Gender
-  metric: 'all-time' | 'last-2-years'
+  metric: 'all-time' | 'last-3-years'
 }
 
 // Get medal emoji for top 3 ranks
@@ -39,7 +39,7 @@ export function TeamCard({ rank, team, gender, metric }: TeamCardProps) {
   const medal = getMedalEmoji(rank)
   const countryName = getCountryName(team.nationality)
   const twoLetterCode = getCountryCodeForFlag(team.nationality)
-  const metricLabel = metric === 'last-2-years' ? 'Last 3 Years' : 'All-Time'
+  const metricLabel = metric === 'last-3-years' ? 'Last 3 Years' : 'All-Time'
 
   return (
     <div className="rounded-lg border bg-card p-4 hover:shadow-sm transition-shadow">
@@ -78,8 +78,8 @@ export function TeamCard({ rank, team, gender, metric }: TeamCardProps) {
       {!isExpanded && (
         <div className="space-y-1.5">
           {team.topThree.map((runner, index) => {
-            const pb = metric === 'all-time' ? runner.personalBestAllTime : runner.personalBestLast2Years
-            const pbYear = metric === 'all-time' ? runner.personalBestAllTimeYear : runner.personalBestLast2YearsYear
+            const pb = metric === 'all-time' ? runner.personalBestAllTime : runner.personalBestLast3Years
+            const pbYear = metric === 'all-time' ? runner.personalBestAllTimeYear : runner.personalBestLast3YearsYear
             return (
               <div
                 key={runner.entryId}
@@ -105,8 +105,8 @@ export function TeamCard({ rank, team, gender, metric }: TeamCardProps) {
       {isExpanded && (
         <div className="space-y-1.5">
           {team.runners.map((runner, index) => {
-            const pb = metric === 'all-time' ? runner.personalBestAllTime : runner.personalBestLast2Years
-            const pbYear = metric === 'all-time' ? runner.personalBestAllTimeYear : runner.personalBestLast2YearsYear
+            const pb = metric === 'all-time' ? runner.personalBestAllTime : runner.personalBestLast3Years
+            const pbYear = metric === 'all-time' ? runner.personalBestAllTimeYear : runner.personalBestLast3YearsYear
             const isTopThree = index < 3
             return (
               <div

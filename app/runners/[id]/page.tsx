@@ -31,8 +31,8 @@ interface RunnerProfile {
   duv_id: number | null
   personal_best_all_time: number | null
   personal_best_all_time_year?: number
-  personal_best_last_2_years: number | null
-  personal_best_last_2_years_year?: number
+  personal_best_last_3_years: number | null
+  personal_best_last_3_years_year?: number
   date_of_birth: string | null
   age: number | null
   match_status: string
@@ -89,8 +89,8 @@ export default function RunnerProfilePage() {
           duv_id: foundRunner.duvId,
           personal_best_all_time: foundRunner.personalBestAllTime,
           personal_best_all_time_year: foundRunner.personalBestAllTimeYear,
-          personal_best_last_2_years: foundRunner.personalBestLast2Years,
-          personal_best_last_2_years_year: foundRunner.personalBestLast2YearsYear,
+          personal_best_last_3_years: foundRunner.personalBestLast3Years,
+          personal_best_last_3_years_year: foundRunner.personalBestLast3YearsYear,
           date_of_birth: foundRunner.dateOfBirth,
           age: foundRunner.age,
           match_status: foundRunner.matchStatus,
@@ -357,11 +357,11 @@ export default function RunnerProfilePage() {
                 <div>
                   <p className="text-sm text-muted-foreground">Last 3 Years PB (since Oct 2022)</p>
                   <p className="text-2xl font-bold text-primary">
-                    {runner.personal_best_last_2_years ? (
+                    {runner.personal_best_last_3_years ? (
                       <>
-                        {runner.personal_best_last_2_years.toFixed(2)} km
-                        {runner.personal_best_last_2_years_year && (
-                          <span className="text-base text-muted-foreground ml-2">({runner.personal_best_last_2_years_year})</span>
+                        {runner.personal_best_last_3_years.toFixed(2)} km
+                        {runner.personal_best_last_3_years_year && (
+                          <span className="text-base text-muted-foreground ml-2">({runner.personal_best_last_3_years_year})</span>
                         )}
                       </>
                     ) : 'N/A'}

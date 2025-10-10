@@ -233,6 +233,7 @@ export default function UploadPage() {
             <CardContent>
               <RunnerTable
                 runners={runners}
+                metric="last-3-years"
                 onManualMatch={handleManualMatch}
                 onRowClick={handleRowClick}
               />
