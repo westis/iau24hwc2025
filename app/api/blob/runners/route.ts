@@ -1,9 +1,8 @@
 // app/api/blob/runners/route.ts - Vercel Blob storage for runners data
 import { NextRequest, NextResponse } from 'next/server'
 import { put, head } from '@vercel/blob'
-import { readFileSync } from 'fs'
-import { join } from 'path'
 import type { Runner } from '@/types/runner'
+import seedData from '@/data/seed-data.json'
 
 const BLOB_NAME = 'runners.json'
 
@@ -31,15 +30,13 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Fallback to seed.json
-    console.log('Loading runners from seed.json (blob not available)')
-    const seedPath = join(process.cwd(), 'public', 'seed.json')
-    const seedData = JSON.parse(readFileSync(seedPath, 'utf-8'))
+    // Fallback to imported seed data
+    console.log('Loading runners from seed-data.json (blob not available)')
 
     return NextResponse.json({
-      runners: seedData.runners,
-      version: seedData.version,
-      source: 'seed.json'
+      runners: (seedData as any).runners,
+      version: (seedData as any).version,
+      source: 'seed-data.json'
     })
 
   } catch (error) {

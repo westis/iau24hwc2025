@@ -1,10 +1,8 @@
 // app/api/fetch-performances-blob/route.ts - Fetch PBs and save to Vercel Blob
 import { NextRequest, NextResponse } from 'next/server'
-import { put, head } from '@vercel/blob'
+import { put } from '@vercel/blob'
 import { getRunnerProfile } from '@/lib/api/duv-client'
 import type { Runner } from '@/types/runner'
-import { readFileSync } from 'fs'
-import { join } from 'path'
 
 const BLOB_NAME = 'runners.json'
 
@@ -26,34 +24,40 @@ export async function POST(request: NextRequest) {
 
     console.log(`Processing ${runnersToEnrich.length} runner(s)`)
 
-    // Load ALL runners from blob (or seed)
+    // Load ALL runners via the GET endpoint (handles blob + seed.json fallback)
     let allRunners: Runner[] = []
     let version = 1
 
-    if (process.env.BLOB_READ_WRITE_TOKEN) {
-      try {
-        const blob = await head(BLOB_NAME, {
-          token: process.env.BLOB_READ_WRITE_TOKEN,
-        })
-        if (blob) {
-          const response = await fetch(blob.url)
-          const data = await response.json()
-          allRunners = data.runners || []
-          version = data.version || 1
-          console.log(`Loaded ${allRunners.length} runners from blob`)
-        }
-      } catch (err) {
-        console.log('Blob not found, loading from seed.json')
+    try {
+      // Use the blob GET endpoint which has proper fallback logic
+      const baseUrl = process.env.VERCEL_URL
+        ? `https://${process.env.VERCEL_URL}`
+        : 'http://localhost:3000'
+
+      const response = await fetch(`${baseUrl}/api/blob/runners`)
+
+      if (response.ok) {
+        const data = await response.json()
+        allRunners = data.runners || []
+        version = data.version || 1
+        console.log(`Loaded ${allRunners.length} runners from blob GET endpoint`)
+      } else {
+        throw new Error(`Failed to load runners: ${response.status}`)
       }
+    } catch (err) {
+      console.error('Failed to load runners from blob endpoint:', err)
+      return NextResponse.json(
+        { error: 'Failed to load existing runners data', details: String(err) },
+        { status: 500 }
+      )
     }
 
-    // Fallback to seed if blob not available
     if (allRunners.length === 0) {
-      const seedPath = join(process.cwd(), 'public', 'seed.json')
-      const seedData = JSON.parse(readFileSync(seedPath, 'utf-8'))
-      allRunners = seedData.runners
-      version = seedData.version
-      console.log(`Loaded ${allRunners.length} runners from seed.json`)
+      console.error('No runners found in storage')
+      return NextResponse.json(
+        { error: 'No runners found. Upload runners first.' },
+        { status: 400 }
+      )
     }
 
     // Enrich the specific runners
