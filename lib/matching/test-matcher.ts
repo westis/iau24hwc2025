@@ -14,6 +14,7 @@ import { getMatchingStats } from './matcher'
 // Mock runner data
 const mockRunners: Runner[] = [
   {
+    id: 1,
     entryId: '1',
     firstname: 'John',
     lastname: 'Smith',
@@ -26,6 +27,7 @@ const mockRunners: Runner[] = [
     dateOfBirth: null,
   },
   {
+    id: 2,
     entryId: '2',
     firstname: 'Jane',
     lastname: 'Doe',

@@ -141,6 +141,7 @@ export function getRunnerByEntryId(entryId: string): Runner | null {
 
 function rowToRunner(row: any): Runner {
   return {
+    id: row.id,
     entryId: row.entry_id,
     firstname: row.firstname,
     lastname: row.lastname,

@@ -119,9 +119,8 @@ export default function UploadPage() {
     console.log('Manual match:', runner)
   }
 
-  const handleViewProfile = (duvId: number) => {
-    // Open DUV profile in new tab
-    window.open(`https://statistik.d-u-v.org/getperson.php?modus=0&PersonID=${duvId}`, '_blank')
+  const handleRowClick = (runnerId: number) => {
+    router.push(`/runners/${runnerId}`)
   }
 
   return (
@@ -235,7 +234,7 @@ export default function UploadPage() {
               <RunnerTable
                 runners={runners}
                 onManualMatch={handleManualMatch}
-                onViewProfile={handleViewProfile}
+                onRowClick={handleRowClick}
               />
             </CardContent>
           </Card>

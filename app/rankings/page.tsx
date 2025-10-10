@@ -165,6 +165,7 @@ export default function RankingsPage() {
                   rank={index + 1}
                   team={team}
                   gender="M"
+                  metric={metric}
                 />
               ))}
             </div>
@@ -185,6 +186,7 @@ export default function RankingsPage() {
                   rank={index + 1}
                   team={team}
                   gender="W"
+                  metric={metric}
                 />
               ))}
             </div>
