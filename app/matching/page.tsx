@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/auth/auth-context'
 import type { Runner, MatchStatus } from '@/types/runner'
 import type { DUVSearchResult } from '@/types/match'
 import { RunnerTable } from '@/components/tables/runner-table'
@@ -9,10 +10,11 @@ import { ManualMatchDialog } from '@/components/dialogs/manual-match-dialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, Play, Search, Database, AlertCircle } from 'lucide-react'
+import { Loader2, Play, Search, Database, AlertCircle, Lock } from 'lucide-react'
 
 export default function MatchingPage() {
   const router = useRouter()
+  const { isAdmin } = useAuth()
   const [runners, setRunners] = React.useState<Runner[]>([])
   const [isAutoMatching, setIsAutoMatching] = React.useState(false)
   const [isFetchingPerformances, setIsFetchingPerformances] = React.useState(false)
@@ -25,8 +27,17 @@ export default function MatchingPage() {
   const [candidates, setCandidates] = React.useState<DUVSearchResult[]>([])
   const [isLoadingCandidates, setIsLoadingCandidates] = React.useState(false)
 
+  // Protect route - redirect if not admin
+  React.useEffect(() => {
+    if (!isAdmin) {
+      router.push('/admin')
+    }
+  }, [isAdmin, router])
+
   // Load runners from localStorage on mount
   React.useEffect(() => {
+    if (!isAdmin) return // Don't load if not admin
+
     const stored = localStorage.getItem('runners')
     if (stored) {
       try {
@@ -40,7 +51,7 @@ export default function MatchingPage() {
       // No runners found, redirect to upload
       router.push('/upload')
     }
-  }, [router])
+  }, [isAdmin, router])
 
   const saveRunners = (updatedRunners: Runner[]) => {
     setRunners(updatedRunners)
@@ -222,6 +233,30 @@ export default function MatchingPage() {
       allMatched,
     }
   }, [runners])
+
+  // Show loading/unauthorized state
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Lock className="h-5 w-5" />
+              Admin Access Required
+            </CardTitle>
+            <CardDescription>
+              Redirecting to login...
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 p-4 sm:p-8">

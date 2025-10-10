@@ -3,6 +3,7 @@ import './globals.css'
 import { Navbar } from '@/components/navigation/navbar'
 import { ThemeProvider } from '@/components/theme-provider'
 import { SeedDataLoader } from '@/components/seed-data-loader'
+import { AuthProvider } from '@/lib/auth/auth-context'
 
 export const metadata: Metadata = {
   title: 'IAU 24h World Championships 2025',
@@ -23,9 +24,11 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <SeedDataLoader />
-          <Navbar />
-          {children}
+          <AuthProvider>
+            <SeedDataLoader />
+            <Navbar />
+            {children}
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

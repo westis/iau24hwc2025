@@ -79,6 +79,7 @@ export function TeamCard({ rank, team, gender, metric }: TeamCardProps) {
         <div className="space-y-1.5">
           {team.topThree.map((runner, index) => {
             const pb = metric === 'all-time' ? runner.personalBestAllTime : runner.personalBestLast2Years
+            const pbYear = metric === 'all-time' ? runner.personalBestAllTimeYear : runner.personalBestLast2YearsYear
             return (
               <div
                 key={runner.entryId}
@@ -89,7 +90,11 @@ export function TeamCard({ rank, team, gender, metric }: TeamCardProps) {
                   <span className="text-muted-foreground w-4">{index + 1}.</span>
                   <span className="truncate">{runner.firstname} {runner.lastname}</span>
                 </div>
-                {pb && <span className="text-muted-foreground text-xs">{pb.toFixed(1)}</span>}
+                {pb && (
+                  <span className="text-muted-foreground text-xs">
+                    {pb.toFixed(1)} {pbYear && `(${pbYear})`}
+                  </span>
+                )}
               </div>
             )
           })}
@@ -101,6 +106,7 @@ export function TeamCard({ rank, team, gender, metric }: TeamCardProps) {
         <div className="space-y-1.5">
           {team.runners.map((runner, index) => {
             const pb = metric === 'all-time' ? runner.personalBestAllTime : runner.personalBestLast2Years
+            const pbYear = metric === 'all-time' ? runner.personalBestAllTimeYear : runner.personalBestLast2YearsYear
             const isTopThree = index < 3
             return (
               <div
@@ -114,7 +120,11 @@ export function TeamCard({ rank, team, gender, metric }: TeamCardProps) {
                     {runner.firstname} {runner.lastname}
                   </span>
                 </div>
-                {pb && <span className="text-muted-foreground text-xs">{pb.toFixed(1)}</span>}
+                {pb && (
+                  <span className="text-muted-foreground text-xs">
+                    {pb.toFixed(1)} {pbYear && `(${pbYear})`}
+                  </span>
+                )}
               </div>
             )
           })}

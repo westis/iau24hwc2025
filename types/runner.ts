@@ -19,10 +19,12 @@ export interface Runner {
   matchConfidence?: number           // 0-1 score for auto-matches
 
   // Performance data (from DUV API)
-  personalBestAllTime: number | null      // km
-  personalBestLast2Years: number | null   // km
-  dateOfBirth: string | null              // ISO date
-  age?: number                            // Calculated
+  personalBestAllTime: number | null           // km
+  personalBestAllTimeYear?: number             // Year when all-time PB was set
+  personalBestLast2Years: number | null        // km
+  personalBestLast2YearsYear?: number          // Year when last-2-years PB was set
+  dateOfBirth: string | null                   // ISO date
+  age?: number                                 // Calculated
   performanceHistory?: Performance[]
 }
 

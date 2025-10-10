@@ -41,9 +41,10 @@ export function insertRunner(runner: Omit<Runner, 'performanceHistory'>): number
     INSERT INTO runners (
       entry_id, firstname, lastname, nationality, gender,
       duv_id, match_status, match_confidence,
-      personal_best_all_time, personal_best_last_2_years,
+      personal_best_all_time, personal_best_all_time_year,
+      personal_best_last_2_years, personal_best_last_2_years_year,
       date_of_birth, age
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `)
 
   const result = stmt.run(
@@ -56,7 +57,9 @@ export function insertRunner(runner: Omit<Runner, 'performanceHistory'>): number
     runner.matchStatus,
     runner.matchConfidence,
     runner.personalBestAllTime,
+    runner.personalBestAllTimeYear,
     runner.personalBestLast2Years,
+    runner.personalBestLast2YearsYear,
     runner.dateOfBirth,
     runner.age
   )
@@ -85,9 +88,17 @@ export function updateRunner(entryId: string, updates: Partial<Runner>): void {
     fields.push('personal_best_all_time = ?')
     values.push(updates.personalBestAllTime)
   }
+  if (updates.personalBestAllTimeYear !== undefined) {
+    fields.push('personal_best_all_time_year = ?')
+    values.push(updates.personalBestAllTimeYear)
+  }
   if (updates.personalBestLast2Years !== undefined) {
     fields.push('personal_best_last_2_years = ?')
     values.push(updates.personalBestLast2Years)
+  }
+  if (updates.personalBestLast2YearsYear !== undefined) {
+    fields.push('personal_best_last_2_years_year = ?')
+    values.push(updates.personalBestLast2YearsYear)
   }
   if (updates.dateOfBirth !== undefined) {
     fields.push('date_of_birth = ?')
@@ -151,7 +162,9 @@ function rowToRunner(row: any): Runner {
     matchStatus: row.match_status as MatchStatus,
     matchConfidence: row.match_confidence,
     personalBestAllTime: row.personal_best_all_time,
+    personalBestAllTimeYear: row.personal_best_all_time_year,
     personalBestLast2Years: row.personal_best_last_2_years,
+    personalBestLast2YearsYear: row.personal_best_last_2_years_year,
     dateOfBirth: row.date_of_birth,
     age: row.age,
   }

@@ -57,13 +57,20 @@ export async function POST(request: NextRequest) {
           eventType: '24h',
         }))
 
-        // Calculate PBs
+        // Calculate PBs with years
         let personalBestAllTime: number | null = null
+        let personalBestAllTimeYear: number | undefined
         let personalBestLast2Years: number | null = null
+        let personalBestLast2YearsYear: number | undefined
 
         if (performances.length > 0) {
           // All-time PB
-          personalBestAllTime = Math.max(...performances.map(p => p.distance))
+          const allTimeBest = performances.reduce((best, p) =>
+            p.distance > (best?.distance || 0) ? p : best
+          , performances[0])
+
+          personalBestAllTime = allTimeBest.distance
+          personalBestAllTimeYear = new Date(allTimeBest.date).getFullYear()
 
           // Last 3 years PB
           const threeYearsAgo = new Date()
@@ -75,7 +82,12 @@ export async function POST(request: NextRequest) {
           })
 
           if (recentPerformances.length > 0) {
-            personalBestLast2Years = Math.max(...recentPerformances.map(p => p.distance))
+            const recentBest = recentPerformances.reduce((best, p) =>
+              p.distance > (best?.distance || 0) ? p : best
+            , recentPerformances[0])
+
+            personalBestLast2Years = recentBest.distance
+            personalBestLast2YearsYear = new Date(recentBest.date).getFullYear()
           }
         }
 
@@ -89,7 +101,9 @@ export async function POST(request: NextRequest) {
         enrichedRunners.push({
           ...runner,
           personalBestAllTime,
+          personalBestAllTimeYear,
           personalBestLast2Years,
+          personalBestLast2YearsYear,
           dateOfBirth: profile.YOB ? `${profile.YOB}-01-01` : null,
           age,
           performanceHistory: performances,

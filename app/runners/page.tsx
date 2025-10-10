@@ -14,37 +14,37 @@ export default function RunnersPage() {
   const [selectedGender, setSelectedGender] = useState<'M' | 'W'>('M')
   const [selectedMetric, setSelectedMetric] = useState<'last-2-years' | 'all-time'>('last-2-years')
 
-  async function loadRunners() {
+  useEffect(() => {
+    // Load runners from localStorage
     try {
       setLoading(true)
-      const response = await fetch('/api/runners')
-      if (!response.ok) throw new Error('Failed to load runners')
+      const stored = localStorage.getItem('runners')
+      if (stored) {
+        const parsedRunners = JSON.parse(stored) as Runner[]
+        console.log('Loaded runners from localStorage:', parsedRunners.length)
 
-      const data = await response.json()
-      console.log('Loaded runners:', data.runners.length)
+        // Debug: Count runners by status
+        const byStatus = parsedRunners.reduce((acc: any, r: Runner) => {
+          acc[r.matchStatus] = (acc[r.matchStatus] || 0) + 1
+          return acc
+        }, {})
+        console.log('Runners by match status:', byStatus)
 
-      // Debug: Count runners by status
-      const byStatus = data.runners.reduce((acc: any, r: Runner) => {
-        acc[r.matchStatus] = (acc[r.matchStatus] || 0) + 1
-        return acc
-      }, {})
-      console.log('Runners by match status:', byStatus)
+        // Debug: Count runners with/without DUV ID
+        const withDuv = parsedRunners.filter((r: Runner) => r.duvId !== null).length
+        const withoutDuv = parsedRunners.filter((r: Runner) => r.duvId === null).length
+        console.log(`With DUV ID: ${withDuv}, Without DUV ID: ${withoutDuv}`)
 
-      // Debug: Count runners with/without DUV ID
-      const withDuv = data.runners.filter((r: Runner) => r.duvId !== null).length
-      const withoutDuv = data.runners.filter((r: Runner) => r.duvId === null).length
-      console.log(`With DUV ID: ${withDuv}, Without DUV ID: ${withoutDuv}`)
-
-      setRunners(data.runners || [])
+        setRunners(parsedRunners)
+      } else {
+        setError('No runners found. Please upload an entry list.')
+      }
     } catch (err) {
+      console.error('Error loading runners from localStorage:', err)
       setError(err instanceof Error ? err.message : 'Failed to load runners')
     } finally {
       setLoading(false)
     }
-  }
-
-  useEffect(() => {
-    loadRunners()
   }, [])
 
   // Filter, sort, and add rankings

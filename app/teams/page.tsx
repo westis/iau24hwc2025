@@ -1,36 +1,86 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { TeamCard } from '@/components/cards/team-card'
 import { Button } from '@/components/ui/button'
 import type { Team } from '@/types/team'
-import type { Gender } from '@/types/runner'
+import type { Runner, Gender } from '@/types/runner'
 
 export default function TeamsPage() {
-  const [teams, setTeams] = useState<Team[]>([])
+  const [runners, setRunners] = useState<Runner[]>([])
   const [metric, setMetric] = useState<'all-time' | 'last-2-years'>('last-2-years')
   const [gender, setGender] = useState<Gender>('M')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    async function loadTeams() {
+    // Load runners from localStorage
+    try {
       setLoading(true)
-      try {
-        const response = await fetch(`/api/teams?metric=${metric}&gender=${gender}`)
-        if (!response.ok) throw new Error('Failed to load teams')
-        const data = await response.json()
-
-        setTeams(data.teams || [])
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load teams')
-      } finally {
-        setLoading(false)
+      const stored = localStorage.getItem('runners')
+      if (stored) {
+        const parsedRunners = JSON.parse(stored) as Runner[]
+        setRunners(parsedRunners)
+      } else {
+        setError('No runners found. Please upload an entry list.')
       }
+    } catch (err) {
+      console.error('Error loading runners from localStorage:', err)
+      setError(err instanceof Error ? err.message : 'Failed to load runners')
+    } finally {
+      setLoading(false)
     }
+  }, [])
 
-    loadTeams()
-  }, [metric, gender])
+  // Calculate teams client-side
+  const teams = useMemo(() => {
+    // Filter runners with valid PB data for this gender
+    const runnersWithPB = runners.filter(r => {
+      if (r.gender !== gender) return false
+      const pb = metric === 'all-time' ? r.personalBestAllTime : r.personalBestLast2Years
+      return pb !== null && pb > 0
+    })
+
+    // Group by nationality
+    const teamGroups = new Map<string, Runner[]>()
+    runnersWithPB.forEach(runner => {
+      const key = runner.nationality
+      if (!teamGroups.has(key)) {
+        teamGroups.set(key, [])
+      }
+      teamGroups.get(key)!.push(runner)
+    })
+
+    // Calculate team totals
+    const allTeams: Team[] = Array.from(teamGroups.entries()).map(([nationality, teamRunners]) => {
+      // Sort runners by PB (descending)
+      const sorted = teamRunners.sort((a, b) => {
+        const aVal = metric === 'all-time' ? a.personalBestAllTime : a.personalBestLast2Years
+        const bVal = metric === 'all-time' ? b.personalBestAllTime : b.personalBestLast2Years
+        return (bVal || 0) - (aVal || 0)
+      })
+
+      // Take top 3
+      const topThree = sorted.slice(0, 3)
+
+      // Calculate team total
+      const teamTotal = topThree.reduce((sum, r) => {
+        const pb = metric === 'all-time' ? r.personalBestAllTime : r.personalBestLast2Years
+        return sum + (pb || 0)
+      }, 0)
+
+      return {
+        nationality,
+        gender,
+        runners: sorted,
+        topThree,
+        teamTotal,
+      }
+    })
+
+    // Sort by team total (descending)
+    return allTeams.sort((a, b) => b.teamTotal - a.teamTotal)
+  }, [runners, metric, gender])
 
   if (loading) {
     return (

@@ -17,7 +17,9 @@ CREATE TABLE IF NOT EXISTS runners (
 
     -- Performance data from DUV
     personal_best_all_time REAL,  -- km
+    personal_best_all_time_year INTEGER,  -- Year when all-time PB was set
     personal_best_last_2_years REAL,  -- km
+    personal_best_last_2_years_year INTEGER,  -- Year when last-2-years PB was set
     date_of_birth TEXT,  -- ISO date
     age INTEGER,
 
