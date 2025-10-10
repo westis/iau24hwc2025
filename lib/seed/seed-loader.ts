@@ -80,11 +80,12 @@ function transformDBRunner(row: any): Runner {
     personalBestLast2YearsYear: row.personal_best_last_2_years_year ?? last2YearsYear,
     dateOfBirth: row.date_of_birth,
     age: row.age ?? undefined,
+    performanceHistory: row.performanceHistory || [],
   }
 }
 
 // Version of the seed data structure - increment when data structure changes
-const SEED_DATA_VERSION = 2
+const SEED_DATA_VERSION = 3
 
 /**
  * Load seed data into localStorage if not already present or if version changed

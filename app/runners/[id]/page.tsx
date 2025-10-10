@@ -225,6 +225,27 @@ export default function RunnerProfilePage() {
     return timeBasedEvents.some(type => eventType.toLowerCase().includes(type))
   }
 
+  // Calculate PBs for other distances from performance history
+  const calculatePBForEventType = (eventType: string): { distance: number; year: number } | null => {
+    const performances = runner.performances.filter(p =>
+      p.event_type.toLowerCase().includes(eventType.toLowerCase())
+    )
+    if (performances.length === 0) return null
+
+    const best = performances.reduce((best, p) =>
+      p.distance > best.distance ? p : best
+    , performances[0])
+
+    return {
+      distance: best.distance,
+      year: new Date(best.event_date).getFullYear()
+    }
+  }
+
+  const pb6h = calculatePBForEventType('6h')
+  const pb12h = calculatePBForEventType('12h')
+  const pb48h = calculatePBForEventType('48h')
+
   return (
     <main className="min-h-screen py-8">
       <div className="container mx-auto px-4 max-w-6xl">
@@ -253,10 +274,26 @@ export default function RunnerProfilePage() {
               </Button>
             )}
           </div>
-          <div className="flex gap-2 mt-2">
+          <div className="flex flex-wrap items-center gap-2 mt-2">
             <Badge variant="outline">{runner.nationality}</Badge>
             <Badge variant="outline">{runner.gender === 'M' ? 'Men' : 'Women'}</Badge>
-            {runner.age && <Badge variant="outline">Age {runner.age}</Badge>}
+            {(runner.age || runner.date_of_birth) && (
+              <Badge variant="outline">
+                {runner.age && `Age ${runner.age}`}
+                {runner.age && runner.date_of_birth && ' • '}
+                {runner.date_of_birth && `YOB ${new Date(runner.date_of_birth).getFullYear()}`}
+              </Badge>
+            )}
+            {runner.duv_id && (
+              <a
+                href={`https://statistik.d-u-v.org/getresultperson.php?runner=${runner.duv_id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-muted-foreground hover:text-primary transition-colors ml-2"
+              >
+                DUV Profile →
+              </a>
+            )}
           </div>
         </div>
 
@@ -299,33 +336,43 @@ export default function RunnerProfilePage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Runner Info</CardTitle>
+              <CardTitle>Other PBs</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
+              <div className="space-y-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">Entry ID</p>
-                  <p className="font-medium">{runner.entry_id}</p>
+                  <p className="text-sm text-muted-foreground">6h PB</p>
+                  <p className="text-2xl font-bold text-primary">
+                    {pb6h ? (
+                      <>
+                        {pb6h.distance.toFixed(2)} km
+                        <span className="text-base text-muted-foreground ml-2">({pb6h.year})</span>
+                      </>
+                    ) : 'N/A'}
+                  </p>
                 </div>
-                {runner.date_of_birth && (
-                  <div>
-                    <p className="text-sm text-muted-foreground">Year of Birth</p>
-                    <p className="font-medium">{new Date(runner.date_of_birth).getFullYear()}</p>
-                  </div>
-                )}
-                {runner.duv_id && (
-                  <div>
-                    <p className="text-sm text-muted-foreground">DUV Profile</p>
-                    <a
-                      href={`https://statistik.d-u-v.org/getresultperson.php?runner=${runner.duv_id}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary hover:underline"
-                    >
-                      View on DUV →
-                    </a>
-                  </div>
-                )}
+                <div>
+                  <p className="text-sm text-muted-foreground">12h PB</p>
+                  <p className="text-2xl font-bold text-primary">
+                    {pb12h ? (
+                      <>
+                        {pb12h.distance.toFixed(2)} km
+                        <span className="text-base text-muted-foreground ml-2">({pb12h.year})</span>
+                      </>
+                    ) : 'N/A'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">48h PB</p>
+                  <p className="text-2xl font-bold text-primary">
+                    {pb48h ? (
+                      <>
+                        {pb48h.distance.toFixed(2)} km
+                        <span className="text-base text-muted-foreground ml-2">({pb48h.year})</span>
+                      </>
+                    ) : 'N/A'}
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
