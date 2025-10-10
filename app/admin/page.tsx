@@ -36,48 +36,53 @@ export default function AdminPage() {
 
   if (isAdmin) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Lock className="h-5 w-5" />
-              Admin Access
+              <Lock className="h-5 w-5 text-green-600" />
+              Admin Dashboard
             </CardTitle>
             <CardDescription>
               You are logged in as administrator
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-sm text-green-800">
+            <div className="p-4 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
+              <p className="text-sm text-green-800 dark:text-green-200">
                 ✓ Authenticated successfully
               </p>
             </div>
 
             <div className="space-y-2">
-              <p className="text-sm text-slate-600">Admin features enabled:</p>
-              <ul className="text-sm text-slate-600 space-y-1 list-disc list-inside">
-                <li>Access to Matching page</li>
+              <p className="text-sm font-semibold">Admin features enabled:</p>
+              <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                <li>Access to Matching page (via navbar)</li>
                 <li>Edit runner information</li>
                 <li>Manual matching controls</li>
               </ul>
             </div>
 
-            <div className="flex gap-3">
-              <Button
-                onClick={() => router.push('/matching')}
-                className="flex-1"
-              >
-                Go to Matching
-              </Button>
-              <Button
-                onClick={handleLogout}
-                variant="outline"
-                className="flex-1"
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                Logout
-              </Button>
+            <div className="border-t pt-4 space-y-3">
+              <p className="text-xs text-muted-foreground">
+                To logout, click the button below. You can return to this page anytime by visiting <code className="text-xs bg-muted px-1 py-0.5 rounded">/admin</code>
+              </p>
+              <div className="flex flex-col gap-2">
+                <Button
+                  onClick={() => router.push('/matching')}
+                  className="w-full"
+                >
+                  Go to Matching
+                </Button>
+                <Button
+                  onClick={handleLogout}
+                  variant="destructive"
+                  className="w-full"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -86,7 +91,7 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

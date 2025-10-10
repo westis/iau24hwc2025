@@ -12,6 +12,7 @@ import {
   flexRender,
 } from '@tanstack/react-table'
 import ReactCountryFlag from 'react-country-flag'
+import { useAuth } from '@/lib/auth/auth-context'
 import type { Runner, Gender } from '@/types/runner'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Input } from '@/components/ui/input'
@@ -33,6 +34,7 @@ interface RunnerTableProps {
 }
 
 export function RunnerTable({ runners, onManualMatch, onRowClick }: RunnerTableProps) {
+  const { isAdmin } = useAuth()
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [searchQuery, setSearchQuery] = React.useState('')
@@ -253,19 +255,21 @@ export function RunnerTable({ runners, onManualMatch, onRowClick }: RunnerTableP
           const runner = row.original
           return (
             <div className="flex flex-col sm:flex-row gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  openEditDialog(runner)
-                }}
-                className="whitespace-nowrap"
-              >
-                <Pencil className="h-4 w-4 mr-1" />
-                Edit
-              </Button>
-              {runner.matchStatus === 'unmatched' && (
+              {isAdmin && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    openEditDialog(runner)
+                  }}
+                  className="whitespace-nowrap"
+                >
+                  <Pencil className="h-4 w-4 mr-1" />
+                  Edit
+                </Button>
+              )}
+              {isAdmin && runner.matchStatus === 'unmatched' && (
                 <Button
                   variant="default"
                   size="sm"
@@ -283,7 +287,7 @@ export function RunnerTable({ runners, onManualMatch, onRowClick }: RunnerTableP
         },
       },
     ],
-    [onManualMatch]
+    [onManualMatch, isAdmin]
   )
 
   const table = useReactTable({

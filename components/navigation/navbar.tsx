@@ -4,13 +4,12 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/lib/auth/auth-context'
 import { ThemeToggle } from '@/components/theme-toggle'
-import { Menu, X, Shield, LogOut } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
 
 export function Navbar() {
   const pathname = usePathname()
-  const { isAdmin, logout } = useAuth()
+  const { isAdmin } = useAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const publicNavItems = [
@@ -50,25 +49,6 @@ export function Navbar() {
                 {item.label}
               </Link>
             ))}
-            {isAdmin ? (
-              <Button
-                onClick={logout}
-                variant="ghost"
-                size="sm"
-                className="gap-2"
-              >
-                <Shield className="h-4 w-4" />
-                <span className="hidden lg:inline">Admin</span>
-                <LogOut className="h-4 w-4" />
-              </Button>
-            ) : (
-              <Link href="/admin">
-                <Button variant="ghost" size="sm" className="gap-2">
-                  <Shield className="h-4 w-4" />
-                  <span className="hidden lg:inline">Admin</span>
-                </Button>
-              </Link>
-            )}
             <ThemeToggle />
           </div>
 
@@ -102,30 +82,6 @@ export function Navbar() {
                   {item.label}
                 </Link>
               ))}
-              <div className="pt-2 border-t border-border">
-                {isAdmin ? (
-                  <Button
-                    onClick={() => {
-                      logout()
-                      setMobileMenuOpen(false)
-                    }}
-                    variant="ghost"
-                    size="sm"
-                    className="w-full justify-start gap-2"
-                  >
-                    <Shield className="h-4 w-4" />
-                    Admin
-                    <LogOut className="h-4 w-4 ml-auto" />
-                  </Button>
-                ) : (
-                  <Link href="/admin" onClick={() => setMobileMenuOpen(false)}>
-                    <Button variant="ghost" size="sm" className="w-full justify-start gap-2">
-                      <Shield className="h-4 w-4" />
-                      Admin Login
-                    </Button>
-                  </Link>
-                )}
-              </div>
             </div>
           </div>
         )}
