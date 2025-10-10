@@ -453,73 +453,75 @@ export function RunnerTable({ runners, onManualMatch, onRowClick }: RunnerTableP
               <div key={row.id} className="border rounded-lg overflow-hidden">
                 {/* Collapsed View - Always Visible */}
                 <div
-                  className="p-4 flex items-center justify-between cursor-pointer hover:bg-accent/50"
+                  className="p-4 cursor-pointer hover:bg-accent/50"
                   onClick={() => onRowClick(runner.id)}
                 >
-                  <div className="flex-1">
-                    <div className="font-medium">{runner.firstname} {runner.lastname}</div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <ReactCountryFlag
-                        countryCode={twoLetterCode}
-                        svg
-                        style={{
-                          width: '1.5em',
-                          height: '1em',
-                        }}
-                        title={countryName}
-                      />
-                      <span className="text-sm text-muted-foreground">{threeLetterCode}</span>
-                      <span className="text-sm text-muted-foreground">• {runner.gender}</span>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex-1">
+                      <div className="font-medium">{runner.firstname} {runner.lastname}</div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <ReactCountryFlag
+                          countryCode={twoLetterCode}
+                          svg
+                          style={{
+                            width: '1.5em',
+                            height: '1em',
+                          }}
+                          title={countryName}
+                        />
+                        <span className="text-sm text-muted-foreground">{threeLetterCode}</span>
+                        <span className="text-sm text-muted-foreground">• {runner.gender}</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        toggleRow(runner.id)
+                      }}
+                      className="p-2 hover:bg-accent rounded-md"
+                    >
+                      {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                    </button>
+                  </div>
+                  <div className="flex gap-4 text-sm">
+                    <div>
+                      <span className="text-muted-foreground text-xs">All-Time: </span>
+                      <span className="font-medium">
+                        {runner.personalBestAllTime ? (
+                          <>
+                            {runner.personalBestAllTime.toFixed(2)} km
+                            {runner.personalBestAllTimeYear && (
+                              <span className="text-xs text-muted-foreground ml-1">({runner.personalBestAllTimeYear})</span>
+                            )}
+                          </>
+                        ) : '-'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground text-xs">Last 3Y: </span>
+                      <span className="font-medium">
+                        {runner.personalBestLast2Years ? (
+                          <>
+                            {runner.personalBestLast2Years.toFixed(2)} km
+                            {runner.personalBestLast2YearsYear && (
+                              <span className="text-xs text-muted-foreground ml-1">({runner.personalBestLast2YearsYear})</span>
+                            )}
+                          </>
+                        ) : '-'}
+                      </span>
                     </div>
                   </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      toggleRow(runner.id)
-                    }}
-                    className="p-2 hover:bg-accent rounded-md"
-                  >
-                    {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-                  </button>
                 </div>
 
-                {/* Expanded View - Hidden Details */}
+                {/* Expanded View - Additional Details */}
                 {isExpanded && (
                   <div className="px-4 pb-4 space-y-2 bg-accent/20 border-t">
-                    <div className="grid grid-cols-2 gap-2 pt-3">
-                      <div>
-                        <div className="text-xs text-muted-foreground">PB All-Time</div>
-                        <div className="text-sm font-medium">
-                          {runner.personalBestAllTime ? (
-                            <>
-                              {runner.personalBestAllTime.toFixed(2)} km
-                              {runner.personalBestAllTimeYear && (
-                                <span className="text-xs text-muted-foreground ml-1">({runner.personalBestAllTimeYear})</span>
-                              )}
-                            </>
-                          ) : '-'}
-                        </div>
+                    {runner.dateOfBirth && (
+                      <div className="pt-3">
+                        <div className="text-xs text-muted-foreground">Year of Birth</div>
+                        <div className="text-sm font-medium">{new Date(runner.dateOfBirth).getFullYear()}</div>
                       </div>
-                      <div>
-                        <div className="text-xs text-muted-foreground">PB Last 3Y</div>
-                        <div className="text-sm font-medium">
-                          {runner.personalBestLast2Years ? (
-                            <>
-                              {runner.personalBestLast2Years.toFixed(2)} km
-                              {runner.personalBestLast2YearsYear && (
-                                <span className="text-xs text-muted-foreground ml-1">({runner.personalBestLast2YearsYear})</span>
-                              )}
-                            </>
-                          ) : '-'}
-                        </div>
-                      </div>
-                      {runner.dateOfBirth && (
-                        <div>
-                          <div className="text-xs text-muted-foreground">YOB</div>
-                          <div className="text-sm font-medium">{new Date(runner.dateOfBirth).getFullYear()}</div>
-                        </div>
-                      )}
-                    </div>
+                    )}
                     {isAdmin && (
                       <div className="flex gap-2 pt-2">
                         <Button
