@@ -200,8 +200,8 @@ export default function MatchingPage() {
     }
   }
 
-  const handleViewProfile = (duvId: number) => {
-    window.open(`https://statistik.d-u-v.org/getperson.php?modus=0&PersonID=${duvId}`, '_blank')
+  const handleRowClick = (runnerId: number) => {
+    router.push(`/runners/${runnerId}`)
   }
 
   // Calculate statistics
@@ -366,7 +366,7 @@ export default function MatchingPage() {
               <RunnerTable
                 runners={runners}
                 onManualMatch={handleManualMatch}
-                onViewProfile={handleViewProfile}
+                onRowClick={handleRowClick}
               />
             </CardContent>
           </Card>
