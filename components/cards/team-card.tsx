@@ -107,7 +107,7 @@ export function TeamCard({ rank, team, gender, metric }: TeamCardProps) {
           {team.runners.map((runner, index) => {
             const pb = metric === 'all-time' ? runner.personalBestAllTime : runner.personalBestLast3Years
             const pbYear = metric === 'all-time' ? runner.personalBestAllTimeYear : runner.personalBestLast3YearsYear
-            const isTopThree = index < 3
+            const isTopThree = index < 3 && pb !== null && pb > 0
             return (
               <div
                 key={runner.entryId}
@@ -120,10 +120,12 @@ export function TeamCard({ rank, team, gender, metric }: TeamCardProps) {
                     {runner.firstname} {runner.lastname}
                   </span>
                 </div>
-                {pb && (
+                {pb ? (
                   <span className="text-muted-foreground text-xs">
                     {pb.toFixed(3)} {pbYear && `(${pbYear})`}
                   </span>
+                ) : (
+                  <span className="text-muted-foreground text-xs italic">No PB</span>
                 )}
               </div>
             )

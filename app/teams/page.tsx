@@ -34,16 +34,12 @@ export default function TeamsPage() {
 
   // Calculate teams client-side
   const teams = useMemo(() => {
-    // Filter runners with valid PB data for this gender
-    const runnersWithPB = runners.filter(r => {
-      if (r.gender !== gender) return false
-      const pb = metric === 'all-time' ? r.personalBestAllTime : r.personalBestLast3Years
-      return pb !== null && pb > 0
-    })
+    // Filter runners for this gender
+    const genderRunners = runners.filter(r => r.gender === gender)
 
-    // Group by nationality
+    // Group ALL runners by nationality (including those without PBs)
     const teamGroups = new Map<string, Runner[]>()
-    runnersWithPB.forEach(runner => {
+    genderRunners.forEach(runner => {
       const key = runner.nationality
       if (!teamGroups.has(key)) {
         teamGroups.set(key, [])
@@ -52,18 +48,37 @@ export default function TeamsPage() {
     })
 
     // Calculate team totals
-    const allTeams: Team[] = Array.from(teamGroups.entries()).map(([nationality, teamRunners]) => {
-      // Sort runners by PB (descending)
-      const sorted = teamRunners.sort((a, b) => {
+    const allTeams: Team[] = Array.from(teamGroups.entries()).map(([nationality, allTeamRunners]) => {
+      // Separate runners with PBs from those without
+      const runnersWithPB = allTeamRunners.filter(r => {
+        const pb = metric === 'all-time' ? r.personalBestAllTime : r.personalBestLast3Years
+        return pb !== null && pb > 0
+      })
+
+      // Sort runners with PBs by PB (descending)
+      const sortedWithPB = runnersWithPB.sort((a, b) => {
         const aVal = metric === 'all-time' ? a.personalBestAllTime : a.personalBestLast3Years
         const bVal = metric === 'all-time' ? b.personalBestAllTime : b.personalBestLast3Years
         return (bVal || 0) - (aVal || 0)
       })
 
-      // Take top 3
-      const topThree = sorted.slice(0, 3)
+      // Sort runners without PBs alphabetically
+      const runnersWithoutPB = allTeamRunners.filter(r => {
+        const pb = metric === 'all-time' ? r.personalBestAllTime : r.personalBestLast3Years
+        return pb === null || pb === 0
+      }).sort((a, b) => {
+        const aName = `${a.lastname} ${a.firstname}`
+        const bName = `${b.lastname} ${b.firstname}`
+        return aName.localeCompare(bName)
+      })
 
-      // Calculate team total
+      // Combine: runners with PBs first, then runners without PBs
+      const allSorted = [...sortedWithPB, ...runnersWithoutPB]
+
+      // Take top 3 with PBs for team ranking
+      const topThree = sortedWithPB.slice(0, 3)
+
+      // Calculate team total (only from top 3 with PBs)
       const teamTotal = topThree.reduce((sum, r) => {
         const pb = metric === 'all-time' ? r.personalBestAllTime : r.personalBestLast3Years
         return sum + (pb || 0)
@@ -72,14 +87,16 @@ export default function TeamsPage() {
       return {
         nationality,
         gender,
-        runners: sorted,
+        runners: allSorted, // All runners for this nationality
         topThree,
         teamTotal,
       }
     })
 
-    // Sort by team total (descending)
-    return allTeams.sort((a, b) => b.teamTotal - a.teamTotal)
+    // Filter out teams with no valid PBs (can't rank them), then sort by team total
+    return allTeams
+      .filter(team => team.teamTotal > 0)
+      .sort((a, b) => b.teamTotal - a.teamTotal)
   }, [runners, metric, gender])
 
   if (loading) {
