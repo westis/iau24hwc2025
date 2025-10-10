@@ -9,7 +9,7 @@ import { useState } from 'react'
 
 export function Navbar() {
   const pathname = usePathname()
-  const { isAdmin } = useAuth()
+  const { isAdmin, logout } = useAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const publicNavItems = [
@@ -49,6 +49,14 @@ export function Navbar() {
               </Link>
             ))}
             <ThemeToggle />
+            {isAdmin && (
+              <button
+                onClick={logout}
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Logout
+              </button>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -81,6 +89,17 @@ export function Navbar() {
                   {item.label}
                 </Link>
               ))}
+              {isAdmin && (
+                <button
+                  onClick={() => {
+                    logout()
+                    setMobileMenuOpen(false)
+                  }}
+                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors text-left"
+                >
+                  Logout
+                </button>
+              )}
             </div>
           </div>
         )}
