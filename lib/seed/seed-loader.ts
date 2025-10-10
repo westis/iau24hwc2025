@@ -83,15 +83,24 @@ function transformDBRunner(row: any): Runner {
   }
 }
 
+// Version of the seed data structure - increment when data structure changes
+const SEED_DATA_VERSION = 2
+
 /**
- * Load seed data into localStorage if not already present
+ * Load seed data into localStorage if not already present or if version changed
  */
 export function loadSeedData(): boolean {
-  // Check if data already exists
+  // Check if data version matches
+  const existingVersion = localStorage.getItem('seed_data_version')
   const existingData = localStorage.getItem('runners')
-  if (existingData) {
-    console.log('Seed data: Runners already exist in localStorage')
+
+  if (existingData && existingVersion === String(SEED_DATA_VERSION)) {
+    console.log('Seed data: Already loaded (version ' + SEED_DATA_VERSION + ')')
     return false
+  }
+
+  if (existingData && existingVersion !== String(SEED_DATA_VERSION)) {
+    console.log('Seed data: Version mismatch (old: ' + existingVersion + ', new: ' + SEED_DATA_VERSION + ') - reloading')
   }
 
   try {
@@ -101,8 +110,9 @@ export function loadSeedData(): boolean {
     // Transform and save runners
     const runners = data.runners.map(transformDBRunner)
     localStorage.setItem('runners', JSON.stringify(runners))
+    localStorage.setItem('seed_data_version', String(SEED_DATA_VERSION))
 
-    console.log(`Seed data: Loaded ${runners.length} runners`)
+    console.log(`Seed data: Loaded ${runners.length} runners (version ${SEED_DATA_VERSION})`)
     console.log(`Seed data stats:`)
     console.log(`  - Total runners: ${runners.length}`)
     console.log(`  - Auto-matched: ${runners.filter(r => r.matchStatus === 'auto-matched').length}`)
@@ -128,5 +138,6 @@ export function hasSeedData(): boolean {
  */
 export function clearSeedData(): void {
   localStorage.removeItem('runners')
+  localStorage.removeItem('seed_data_version')
   console.log('Seed data cleared')
 }
