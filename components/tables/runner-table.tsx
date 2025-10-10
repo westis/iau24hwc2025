@@ -483,10 +483,27 @@ export function RunnerTable({ runners, onManualMatch, onRowClick }: RunnerTableP
                       {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
                     </button>
                   </div>
-                  <div className="flex gap-4 text-sm">
-                    <div>
-                      <span className="text-muted-foreground text-xs">All-Time: </span>
-                      <span className="font-medium">
+                  <div className="text-sm">
+                    <span className="text-muted-foreground text-xs">PB Last 3Y: </span>
+                    <span className="font-medium">
+                      {runner.personalBestLast2Years ? (
+                        <>
+                          {runner.personalBestLast2Years.toFixed(2)} km
+                          {runner.personalBestLast2YearsYear && (
+                            <span className="text-xs text-muted-foreground ml-1">({runner.personalBestLast2YearsYear})</span>
+                          )}
+                        </>
+                      ) : '-'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Expanded View - Additional Details */}
+                {isExpanded && (
+                  <div className="px-4 pb-4 space-y-3 bg-accent/20 border-t">
+                    <div className="pt-3">
+                      <div className="text-xs text-muted-foreground">PB All-Time</div>
+                      <div className="text-sm font-medium">
                         {runner.personalBestAllTime ? (
                           <>
                             {runner.personalBestAllTime.toFixed(2)} km
@@ -495,35 +512,16 @@ export function RunnerTable({ runners, onManualMatch, onRowClick }: RunnerTableP
                             )}
                           </>
                         ) : '-'}
-                      </span>
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-muted-foreground text-xs">Last 3Y: </span>
-                      <span className="font-medium">
-                        {runner.personalBestLast2Years ? (
-                          <>
-                            {runner.personalBestLast2Years.toFixed(2)} km
-                            {runner.personalBestLast2YearsYear && (
-                              <span className="text-xs text-muted-foreground ml-1">({runner.personalBestLast2YearsYear})</span>
-                            )}
-                          </>
-                        ) : '-'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Expanded View - Additional Details */}
-                {isExpanded && (
-                  <div className="px-4 pb-4 space-y-2 bg-accent/20 border-t">
                     {runner.dateOfBirth && (
-                      <div className="pt-3">
+                      <div>
                         <div className="text-xs text-muted-foreground">Year of Birth</div>
                         <div className="text-sm font-medium">{new Date(runner.dateOfBirth).getFullYear()}</div>
                       </div>
                     )}
                     {isAdmin && (
-                      <div className="flex gap-2 pt-2">
+                      <div className="flex gap-2">
                         <Button
                           variant="outline"
                           size="sm"
