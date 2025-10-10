@@ -85,7 +85,7 @@ function transformDBRunner(row: any): Runner {
 }
 
 // Version of the seed data structure - increment when data structure changes
-const SEED_DATA_VERSION = 3
+const SEED_DATA_VERSION = 4
 
 /**
  * Load seed data into localStorage if not already present or if version changed
