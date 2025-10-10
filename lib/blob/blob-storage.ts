@@ -1,7 +1,7 @@
 // lib/blob/blob-storage.ts - Shared blob storage utilities
 import { head, put } from '@vercel/blob'
 import seedData from '@/data/seed-data.json'
-import type { Runner } from '@/types/runner'
+import type { Runner, Gender, MatchStatus } from '@/types/runner'
 
 const BLOB_NAME = 'runners.json'
 
@@ -10,6 +10,30 @@ interface RunnersData {
   version: number
   updatedAt?: string
   source?: string
+}
+
+/**
+ * Transform database row format to Runner object (same as seed-loader.ts)
+ */
+function transformDBRunner(row: any): Runner {
+  return {
+    id: row.id,
+    entryId: row.entry_id,
+    firstname: row.firstname,
+    lastname: row.lastname,
+    nationality: row.nationality,
+    gender: row.gender as Gender,
+    duvId: row.duv_id,
+    matchStatus: row.match_status as MatchStatus,
+    matchConfidence: row.match_confidence ?? undefined,
+    personalBestAllTime: row.personal_best_all_time,
+    personalBestAllTimeYear: row.personal_best_all_time_year,
+    personalBestLast3Years: row.personal_best_last_2_years, // DB uses old column name
+    personalBestLast3YearsYear: row.personal_best_last_2_years_year,
+    dateOfBirth: row.date_of_birth,
+    age: row.age ?? undefined,
+    performanceHistory: row.performanceHistory || [],
+  }
 }
 
 /**
@@ -34,10 +58,13 @@ export async function loadRunnersFromBlob(): Promise<RunnersData> {
     }
   }
 
-  // Fallback to imported seed data
+  // Fallback to imported seed data - transform to camelCase
   console.log('Loading runners from seed-data.json (blob not available)')
+  const rawRunners = (seedData as any).runners
+  const transformedRunners = rawRunners.map(transformDBRunner)
+
   return {
-    runners: (seedData as any).runners,
+    runners: transformedRunners,
     version: (seedData as any).version,
     source: 'seed-data.json'
   }
