@@ -22,7 +22,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
-import { ArrowUpDown, Pencil, Check, ChevronsUpDown } from 'lucide-react'
+import { ArrowUpDown, Pencil, Check, ChevronsUpDown, ChevronDown, ChevronUp } from 'lucide-react'
 import { getCountryCodeForFlag } from '@/lib/utils/country-codes'
 import { getCountryName } from '@/lib/utils/country-names'
 import { cn } from '@/lib/utils'
@@ -47,6 +47,7 @@ export function RunnerTable({ runners, onManualMatch, onRowClick }: RunnerTableP
     gender: '' as 'M' | 'W' | ''
   })
   const [isSaving, setIsSaving] = React.useState(false)
+  const [expandedRows, setExpandedRows] = React.useState<Set<number>>(new Set())
 
   // Debounced search
   const debouncedSearchQuery = useDebounce(searchQuery, 300)
@@ -102,6 +103,17 @@ export function RunnerTable({ runners, onManualMatch, onRowClick }: RunnerTableP
     } finally {
       setIsSaving(false)
     }
+  }
+
+  // Toggle expanded row
+  function toggleRow(runnerId: number) {
+    const newExpanded = new Set(expandedRows)
+    if (newExpanded.has(runnerId)) {
+      newExpanded.delete(runnerId)
+    } else {
+      newExpanded.add(runnerId)
+    }
+    setExpandedRows(newExpanded)
   }
 
   const columns: ColumnDef<Runner>[] = React.useMemo(
@@ -427,8 +439,130 @@ export function RunnerTable({ runners, onManualMatch, onRowClick }: RunnerTableP
         </Popover>
       </div>
 
-      {/* Table */}
-      <div className="rounded-md border overflow-x-auto">
+      {/* Mobile Card View */}
+      <div className="md:hidden space-y-2">
+        {table.getRowModel().rows?.length ? (
+          table.getRowModel().rows.map((row) => {
+            const runner = row.original
+            const isExpanded = expandedRows.has(runner.id)
+            const threeLetterCode = runner.nationality
+            const twoLetterCode = getCountryCodeForFlag(threeLetterCode)
+            const countryName = getCountryName(threeLetterCode)
+
+            return (
+              <div key={row.id} className="border rounded-lg overflow-hidden">
+                {/* Collapsed View - Always Visible */}
+                <div
+                  className="p-4 flex items-center justify-between cursor-pointer hover:bg-accent/50"
+                  onClick={() => onRowClick(runner.id)}
+                >
+                  <div className="flex-1">
+                    <div className="font-medium">{runner.firstname} {runner.lastname}</div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <ReactCountryFlag
+                        countryCode={twoLetterCode}
+                        svg
+                        style={{
+                          width: '1.5em',
+                          height: '1em',
+                        }}
+                        title={countryName}
+                      />
+                      <span className="text-sm text-muted-foreground">{threeLetterCode}</span>
+                      <span className="text-sm text-muted-foreground">• {runner.gender}</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      toggleRow(runner.id)
+                    }}
+                    className="p-2 hover:bg-accent rounded-md"
+                  >
+                    {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                  </button>
+                </div>
+
+                {/* Expanded View - Hidden Details */}
+                {isExpanded && (
+                  <div className="px-4 pb-4 space-y-2 bg-accent/20 border-t">
+                    <div className="grid grid-cols-2 gap-2 pt-3">
+                      <div>
+                        <div className="text-xs text-muted-foreground">PB All-Time</div>
+                        <div className="text-sm font-medium">
+                          {runner.personalBestAllTime ? (
+                            <>
+                              {runner.personalBestAllTime.toFixed(2)} km
+                              {runner.personalBestAllTimeYear && (
+                                <span className="text-xs text-muted-foreground ml-1">({runner.personalBestAllTimeYear})</span>
+                              )}
+                            </>
+                          ) : '-'}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-muted-foreground">PB Last 3Y</div>
+                        <div className="text-sm font-medium">
+                          {runner.personalBestLast2Years ? (
+                            <>
+                              {runner.personalBestLast2Years.toFixed(2)} km
+                              {runner.personalBestLast2YearsYear && (
+                                <span className="text-xs text-muted-foreground ml-1">({runner.personalBestLast2YearsYear})</span>
+                              )}
+                            </>
+                          ) : '-'}
+                        </div>
+                      </div>
+                      {runner.dateOfBirth && (
+                        <div>
+                          <div className="text-xs text-muted-foreground">YOB</div>
+                          <div className="text-sm font-medium">{new Date(runner.dateOfBirth).getFullYear()}</div>
+                        </div>
+                      )}
+                    </div>
+                    {isAdmin && (
+                      <div className="flex gap-2 pt-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            openEditDialog(runner)
+                          }}
+                          className="flex-1"
+                        >
+                          <Pencil className="h-3 w-3 mr-1" />
+                          Edit
+                        </Button>
+                        {runner.matchStatus === 'unmatched' && (
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onManualMatch(runner)
+                            }}
+                            className="flex-1"
+                          >
+                            Manual Match
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )
+          })
+        ) : (
+          <div className="border rounded-lg p-8 text-center text-muted-foreground">
+            No results.
+          </div>
+        )}
+      </div>
+
+      {/* Desktop Table View */}
+      <div className="hidden md:block rounded-md border overflow-x-auto">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
