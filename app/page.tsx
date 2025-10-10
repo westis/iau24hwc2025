@@ -37,19 +37,13 @@ export default function Home() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground mb-4">
-                See predicted team rankings from top 3 runners per country (last 2 years PB).
+                See predicted team rankings from top 3 runners per country (last 3 years PB).
               </p>
               <Link href="/teams">
                 <Button className="w-full">View Predictions</Button>
               </Link>
             </CardContent>
           </Card>
-        </div>
-
-        <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-          <p className="text-sm text-blue-800 dark:text-blue-200">
-            <strong>Data Management:</strong> Public viewing platform. Data managed via backend CLI tools.
-          </p>
         </div>
       </div>
     </main>

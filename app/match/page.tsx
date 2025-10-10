@@ -422,7 +422,7 @@ export default function MatchPage() {
         console.log(`${'='.repeat(60)}\n`)
 
         try {
-          const response = await fetch('/api/fetch-performances-db', {
+          const response = await fetch('/api/fetch-performances-blob', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ runners: [runner] }),
@@ -451,7 +451,22 @@ export default function MatchPage() {
 
       if (!controller.signal.aborted) {
         setFetchProgress(null)
-        setFetchMessage(`Successfully fetched PBs and performances for ${successCount}/${total} runners! Team rankings updated automatically.`)
+        setFetchMessage(`Successfully fetched PBs for ${successCount}/${total} runners! Reloading data...`)
+
+        // Reload all runners from blob into localStorage
+        try {
+          const response = await fetch('/api/blob/runners')
+          if (response.ok) {
+            const data = await response.json()
+            localStorage.setItem('runners', JSON.stringify(data.runners))
+            setFetchMessage(`✓ Successfully updated ${successCount}/${total} runners! Data saved to Vercel Blob. Refresh page to see changes.`)
+          } else {
+            setFetchMessage(`⚠️ Fetched PBs but failed to reload data from blob. Try refreshing the page.`)
+          }
+        } catch (err) {
+          console.error('Failed to reload runners from blob:', err)
+          setFetchMessage(`⚠️ Fetched PBs but failed to reload data. Try refreshing the page.`)
+        }
       }
 
     } catch (err: any) {

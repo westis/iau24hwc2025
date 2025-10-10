@@ -85,12 +85,13 @@ function transformDBRunner(row: any): Runner {
 }
 
 // Version of the seed data structure - increment when data structure changes
-const SEED_DATA_VERSION = 4
+const SEED_DATA_VERSION = 5 // Incremented for blob storage migration
 
 /**
- * Load seed data into localStorage if not already present or if version changed
+ * Load seed data from Vercel Blob (or fallback to seed-data.json)
+ * Returns true if data was loaded, false if already loaded
  */
-export function loadSeedData(): boolean {
+export async function loadSeedData(): Promise<boolean> {
   // Check if data version matches
   const existingVersion = localStorage.getItem('seed_data_version')
   const existingData = localStorage.getItem('runners')
@@ -105,7 +106,64 @@ export function loadSeedData(): boolean {
   }
 
   try {
-    console.log('Seed data: Loading from seed-data.json...')
+    let runners: Runner[] = []
+
+    // Try loading from Vercel Blob first
+    try {
+      console.log('Seed data: Attempting to load from Vercel Blob...')
+      const response = await fetch('/api/blob/runners')
+      if (response.ok) {
+        const data = await response.json()
+        if (data.runners && Array.isArray(data.runners)) {
+          runners = data.runners
+          console.log(`Seed data: Loaded ${runners.length} runners from Vercel Blob`)
+        }
+      }
+    } catch (blobError) {
+      console.log('Seed data: Blob not available, falling back to seed-data.json')
+    }
+
+    // Fallback to seed-data.json if blob failed
+    if (runners.length === 0) {
+      console.log('Seed data: Loading from seed-data.json...')
+      const data = seedData as SeedData
+      runners = data.runners.map(transformDBRunner)
+      console.log(`Seed data: Loaded ${runners.length} runners from seed-data.json`)
+    }
+
+    // Save to localStorage
+    localStorage.setItem('runners', JSON.stringify(runners))
+    localStorage.setItem('seed_data_version', String(SEED_DATA_VERSION))
+
+    console.log(`Seed data stats:`)
+    console.log(`  - Total runners: ${runners.length}`)
+    console.log(`  - Auto-matched: ${runners.filter(r => r.matchStatus === 'auto-matched').length}`)
+    console.log(`  - Manually matched: ${runners.filter(r => r.matchStatus === 'manually-matched').length}`)
+    console.log(`  - With performance data: ${runners.filter(r => r.personalBestAllTime !== null).length}`)
+
+    return true
+  } catch (error) {
+    console.error('Failed to load seed data:', error)
+    return false
+  }
+}
+
+/**
+ * Synchronous version for backwards compatibility
+ * Use loadSeedData() (async) for new code
+ */
+export function loadSeedDataSync(): boolean {
+  // Check if data version matches
+  const existingVersion = localStorage.getItem('seed_data_version')
+  const existingData = localStorage.getItem('runners')
+
+  if (existingData && existingVersion === String(SEED_DATA_VERSION)) {
+    console.log('Seed data: Already loaded (version ' + SEED_DATA_VERSION + ')')
+    return false
+  }
+
+  try {
+    console.log('Seed data: Loading from seed-data.json (sync)...')
     const data = seedData as SeedData
 
     // Transform and save runners
@@ -114,12 +172,6 @@ export function loadSeedData(): boolean {
     localStorage.setItem('seed_data_version', String(SEED_DATA_VERSION))
 
     console.log(`Seed data: Loaded ${runners.length} runners (version ${SEED_DATA_VERSION})`)
-    console.log(`Seed data stats:`)
-    console.log(`  - Total runners: ${runners.length}`)
-    console.log(`  - Auto-matched: ${runners.filter(r => r.matchStatus === 'auto-matched').length}`)
-    console.log(`  - Manually matched: ${runners.filter(r => r.matchStatus === 'manually-matched').length}`)
-    console.log(`  - With performance data: ${runners.filter(r => r.personalBestAllTime !== null).length}`)
-
     return true
   } catch (error) {
     console.error('Failed to load seed data:', error)
