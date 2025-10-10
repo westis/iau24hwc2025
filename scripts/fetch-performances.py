@@ -50,6 +50,9 @@ def get_runner_profile(duv_id: int) -> Optional[Dict[str, Any]]:
                 except ValueError:
                     pass  # Skip invalid YOB values
 
+        # Extract AllPBs for efficient PB lookup
+        all_pbs = data.get('AllPBs', [])
+
         # Extract all performances (not just 24h)
         results = []
         all_perfs = data.get('AllPerfs', [])
@@ -115,7 +118,8 @@ def get_runner_profile(duv_id: int) -> Optional[Dict[str, Any]]:
 
         return {
             'YOB': yob,
-            'results': results
+            'results': results,
+            'all_pbs': all_pbs
         }
 
     except Exception as e:
@@ -181,9 +185,40 @@ def fetch_performances(db_path: str):
 
         print(f"  → Found {len(results)} race results", file=sys.stderr)
 
-        # Calculate PBs (only for 24h races)
+        # Extract PBs from AllPBs array (more reliable than manual calculation)
         pb_all_time = None
         pb_last_2_years = None
+        all_pbs = profile.get('all_pbs', [])
+
+        if all_pbs:
+            # Find 24h PBs entry
+            pb_24h = None
+            for pb_entry in all_pbs:
+                if '24h' in pb_entry or '24 h' in pb_entry:
+                    pb_24h = pb_entry.get('24h') or pb_entry.get('24 h')
+                    break
+
+            if pb_24h and isinstance(pb_24h, dict):
+                # Extract overall PB
+                if 'PB' in pb_24h:
+                    try:
+                        pb_all_time = float(pb_24h['PB'])
+                    except (ValueError, TypeError):
+                        pass
+
+                # Extract Last 3 Years PB (since Oct 2022)
+                year_keys = [k for k in pb_24h.keys() if k != 'PB' and k.isdigit()]
+                for year in year_keys:
+                    year_int = int(year)
+                    if year_int >= three_years_ago.year:
+                        year_data = pb_24h[year]
+                        if isinstance(year_data, dict) and 'Perf' in year_data:
+                            try:
+                                perf_value = float(year_data['Perf'])
+                                if pb_last_2_years is None or perf_value > pb_last_2_years:
+                                    pb_last_2_years = perf_value
+                            except (ValueError, TypeError):
+                                pass
 
         # Clear existing performances
         cursor.execute("DELETE FROM performances WHERE runner_id = ?", (runner['id'],))
@@ -214,21 +249,6 @@ def fetch_performances(db_path: str):
                 result.get('Rank'),
                 event_type
             ))
-
-            # Update PBs only for 24h races
-            if '24h' in event_type.lower() or '24 h' in event_type.lower():
-                # Update all-time PB
-                if pb_all_time is None or distance > pb_all_time:
-                    pb_all_time = distance
-
-                # Update last 3 years PB
-                try:
-                    race_date = datetime.fromisoformat(result.get('Startdate', ''))
-                    if race_date >= three_years_ago:
-                        if pb_last_2_years is None or distance > pb_last_2_years:
-                            pb_last_2_years = distance
-                except:
-                    pass
 
         # Calculate age
         yob = profile.get('YOB')

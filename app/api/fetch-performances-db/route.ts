@@ -47,29 +47,66 @@ export async function POST(request: NextRequest) {
 
         // Get all race results
         const allResults = profile.results
-        // Filter 24h races for PB calculation
-        const race24h = allResults.filter(r => r.Length.toLowerCase().includes('24h') || r.Length.toLowerCase().includes('24 h'))
 
-        // Calculate PBs (only for 24h races)
+        // Extract PBs from AllPBs array (more reliable than manual calculation)
         let pbAllTime: number | null = null
+        let pbAllTimeYear: number | undefined
         let pbLast3Years: number | null = null
+        let pbLast3YearsYear: number | undefined
 
-        const threeYearsAgo = new Date()
-        threeYearsAgo.setFullYear(threeYearsAgo.getFullYear() - 3)
+        if (profile.allPBs && profile.allPBs.length > 0) {
+          // Find 24h PBs entry
+          const pb24h = profile.allPBs.find(pb => pb['24h'] || pb['24 h'])
+          const pb24hData = pb24h?.['24h'] || pb24h?.['24 h']
 
-        race24h.forEach(result => {
-          const distance = parseFloat(result.Performance.replace(/[^\d.]/g, ''))
-          if (isNaN(distance)) return
+          if (pb24hData && pb24hData.PB) {
+            // Parse all-time PB
+            const pbValue = parseFloat(pb24hData.PB)
+            if (!isNaN(pbValue)) {
+              pbAllTime = pbValue
 
-          if (pbAllTime === null || distance > pbAllTime) {
-            pbAllTime = distance
+              // Find the year of the all-time PB
+              const yearKeys = Object.keys(pb24hData).filter(k => k !== 'PB' && !isNaN(parseInt(k)))
+              if (yearKeys.length > 0) {
+                // Find which year has the PB performance
+                for (const year of yearKeys) {
+                  const yearData = pb24hData[year]
+                  if (typeof yearData === 'object' && yearData.Perf) {
+                    const perfValue = parseFloat(yearData.Perf)
+                    if (!isNaN(perfValue) && Math.abs(perfValue - pbValue) < 0.01) {
+                      pbAllTimeYear = parseInt(year)
+                      break
+                    }
+                  }
+                }
+              }
+
+              // Calculate Last 3 Years PB (since Oct 2022)
+              const raceDate = new Date('2025-10-17')
+              const threeYearsAgo = new Date('2022-10-18')
+
+              let best3Years: number | null = null
+              let best3YearsYear: number | undefined
+
+              for (const year of yearKeys) {
+                const yearInt = parseInt(year)
+                if (yearInt >= threeYearsAgo.getFullYear()) {
+                  const yearData = pb24hData[year]
+                  if (typeof yearData === 'object' && yearData.Perf) {
+                    const perfValue = parseFloat(yearData.Perf)
+                    if (!isNaN(perfValue) && (best3Years === null || perfValue > best3Years)) {
+                      best3Years = perfValue
+                      best3YearsYear = yearInt
+                    }
+                  }
+                }
+              }
+
+              pbLast3Years = best3Years
+              pbLast3YearsYear = best3YearsYear
+            }
           }
-
-          const raceDate = new Date(result.Startdate)
-          if (raceDate >= threeYearsAgo && (pbLast3Years === null || distance > pbLast3Years)) {
-            pbLast3Years = distance
-          }
-        })
+        }
 
         // Calculate age from YOB
         const currentYear = new Date().getFullYear()

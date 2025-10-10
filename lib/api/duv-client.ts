@@ -200,6 +200,7 @@ export const getRunnerProfile = limiter.wrap(
       // Parse the JSON endpoint response structure
       const personHeader = data.PersonHeader || {}
       const allPerfs = data.AllPerfs || []
+      const allPBs = data.AllPBs || []
 
       // Extract basic runner info
       const yobStr = personHeader.YOB
@@ -274,6 +275,7 @@ export const getRunnerProfile = limiter.wrap(
         Nation: personHeader.Nation || '',
         Sex: personHeader.Sex || 'M',
         results,
+        allPBs,
       } as DUVRunnerProfile
     } catch (error) {
       if (error instanceof DUVApiError) {
