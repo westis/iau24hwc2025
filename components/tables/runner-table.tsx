@@ -463,47 +463,42 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
               <div key={row.id} className="border rounded-lg overflow-hidden">
                 {/* Collapsed View - Always Visible */}
                 <div
-                  className="p-4 cursor-pointer hover:bg-accent/50"
+                  className="p-3 cursor-pointer hover:bg-accent/50"
                   onClick={() => onRowClick(runner.id)}
                 >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex-1">
-                      <div className="font-medium">{runner.firstname} {runner.lastname}</div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <ReactCountryFlag
-                          countryCode={twoLetterCode}
-                          svg
-                          style={{
-                            width: '1.5em',
-                            height: '1em',
-                          }}
-                          title={countryName}
-                        />
-                        <span className="text-sm text-muted-foreground">{threeLetterCode}</span>
-                        <span className="text-sm text-muted-foreground">• {runner.gender}</span>
-                      </div>
-                    </div>
+                  <div className="flex items-start justify-between gap-2 mb-1">
+                    <div className="font-medium text-sm">{runner.firstname} {runner.lastname}</div>
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
                         toggleRow(runner.id)
                       }}
-                      className="p-2 hover:bg-accent rounded-md"
+                      className="p-1 hover:bg-accent rounded-md flex-shrink-0"
                     >
-                      {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                      {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     </button>
                   </div>
-                  <div className="text-sm">
-                    <span className="text-muted-foreground text-xs">PB {selectedLabel}: </span>
-                    <span className="font-medium">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground flex-wrap">
+                    <ReactCountryFlag
+                      countryCode={twoLetterCode}
+                      svg
+                      style={{
+                        width: '1.2em',
+                        height: '0.8em',
+                      }}
+                      title={countryName}
+                    />
+                    <span>{threeLetterCode}</span>
+                    <span>•</span>
+                    <span>{runner.gender}</span>
+                    <span>•</span>
+                    <span className="font-medium text-foreground">
                       {selectedPB ? (
                         <>
-                          {selectedPB.toFixed(2)} km
-                          {selectedPBYear && (
-                            <span className="text-xs text-muted-foreground ml-1">({selectedPBYear})</span>
-                          )}
+                          {selectedPB.toFixed(1)}km
+                          {selectedPBYear && <span className="text-muted-foreground ml-0.5">({selectedPBYear})</span>}
                         </>
-                      ) : '-'}
+                      ) : 'No PB'}
                     </span>
                   </div>
                 </div>
