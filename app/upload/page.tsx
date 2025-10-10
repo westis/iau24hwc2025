@@ -124,12 +124,12 @@ export default function UploadPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 p-4 sm:p-8">
+    <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20 p-4 sm:p-8">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
         <div className="text-center space-y-2">
-          <h1 className="text-4xl font-bold text-slate-900">IAU 24h World Championships 2025</h1>
-          <p className="text-xl text-slate-600">Runner Analytics Platform</p>
+          <h1 className="text-4xl font-bold text-foreground">IAU 24h World Championships 2025</h1>
+          <p className="text-xl text-muted-foreground">Runner Analytics Platform</p>
         </div>
 
         {/* Upload Card */}
@@ -148,7 +148,7 @@ export default function UploadPage() {
             <div
               onDrop={handleDrop}
               onDragOver={handleDragOver}
-              className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center hover:border-slate-400 transition-colors cursor-pointer"
+              className="border-2 border-dashed border-muted rounded-lg p-8 text-center hover:border-muted-foreground transition-colors cursor-pointer"
               onClick={() => fileInputRef.current?.click()}
             >
               <input
@@ -158,20 +158,20 @@ export default function UploadPage() {
                 onChange={handleFileChange}
                 className="hidden"
               />
-              <FileText className="h-12 w-12 mx-auto text-slate-400 mb-4" />
+              <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               {file ? (
                 <div>
-                  <p className="text-sm font-medium text-slate-900">{file.name}</p>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-sm font-medium text-foreground">{file.name}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
                     {(file.size / 1024 / 1024).toFixed(2)} MB
                   </p>
                 </div>
               ) : (
                 <div>
-                  <p className="text-sm font-medium text-slate-900">
+                  <p className="text-sm font-medium text-foreground">
                     Drop PDF here or click to browse
                   </p>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     Accepts .pdf files only
                   </p>
                 </div>
