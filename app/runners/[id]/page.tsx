@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/auth/auth-context'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -41,6 +42,7 @@ interface RunnerProfile {
 export default function RunnerProfilePage() {
   const params = useParams()
   const router = useRouter()
+  const { isAdmin } = useAuth()
   const [runner, setRunner] = useState<RunnerProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -101,6 +103,13 @@ export default function RunnerProfilePage() {
             event_type: p.eventType,
           }))
         }
+
+        console.log('Runner loaded:', {
+          name: `${foundRunner.firstname} ${foundRunner.lastname}`,
+          hasPerformanceHistory: !!foundRunner.performanceHistory,
+          performanceCount: foundRunner.performanceHistory?.length || 0,
+          samplePerformance: foundRunner.performanceHistory?.[0]
+        })
 
         setRunner(runnerProfile)
       } catch (err) {
@@ -233,14 +242,16 @@ export default function RunnerProfilePage() {
             <h1 className="text-3xl font-bold">
               {runner.firstname} {runner.lastname}
             </h1>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={openEditDialog}
-            >
-              <Pencil className="h-4 w-4 mr-2" />
-              Edit
-            </Button>
+            {isAdmin && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={openEditDialog}
+              >
+                <Pencil className="h-4 w-4 mr-2" />
+                Edit
+              </Button>
+            )}
           </div>
           <div className="flex gap-2 mt-2">
             <Badge variant="outline">{runner.nationality}</Badge>

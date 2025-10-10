@@ -202,7 +202,16 @@ export function RunnerTable({ runners, onManualMatch, onRowClick }: RunnerTableP
         },
         cell: ({ row }) => {
           const pb = row.getValue('personalBestAllTime') as number | null
-          return <div className="text-right">{pb ? `${pb.toFixed(2)} km` : '-'}</div>
+          const pbYear = row.original.personalBestAllTimeYear
+          return (
+            <div className="text-right">
+              {pb ? (
+                <>
+                  {pb.toFixed(2)} km{pbYear && <span className="text-muted-foreground text-xs ml-1">({pbYear})</span>}
+                </>
+              ) : '-'}
+            </div>
+          )
         },
       },
       {
@@ -221,7 +230,16 @@ export function RunnerTable({ runners, onManualMatch, onRowClick }: RunnerTableP
         },
         cell: ({ row }) => {
           const pb = row.getValue('personalBestLast2Years') as number | null
-          return <div className="text-right">{pb ? `${pb.toFixed(2)} km` : '-'}</div>
+          const pbYear = row.original.personalBestLast2YearsYear
+          return (
+            <div className="text-right">
+              {pb ? (
+                <>
+                  {pb.toFixed(2)} km{pbYear && <span className="text-muted-foreground text-xs ml-1">({pbYear})</span>}
+                </>
+              ) : '-'}
+            </div>
+          )
         },
       },
       {
