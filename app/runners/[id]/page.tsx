@@ -216,8 +216,36 @@ export default function RunnerProfilePage() {
     )
   }
 
-  const performances24h = runner.performances.filter(p => p.event_type === '24h')
-  const displayedPerformances = showAllRaces ? runner.performances : performances24h
+  // Filter out splits and deduplicate by date
+  const filterPerformances = (perfs: Performance[]) => {
+    // First, filter out events with "split" or "Split" in the name
+    const nonSplits = perfs.filter(p => !p.event_name.toLowerCase().includes('split'))
+
+    // Group by date and keep only one per date (prefer non-combined events)
+    const byDate = new Map<string, Performance>()
+    for (const perf of nonSplits) {
+      const existing = byDate.get(perf.event_date)
+      if (!existing) {
+        byDate.set(perf.event_date, perf)
+      } else {
+        // Prefer events without "combined" or "all races" in the name
+        const isCombined = perf.event_name.toLowerCase().includes('combined') ||
+                          perf.event_name.toLowerCase().includes('all races')
+        const existingIsCombined = existing.event_name.toLowerCase().includes('combined') ||
+                                   existing.event_name.toLowerCase().includes('all races')
+
+        if (existingIsCombined && !isCombined) {
+          byDate.set(perf.event_date, perf)
+        }
+      }
+    }
+
+    return Array.from(byDate.values())
+  }
+
+  const filteredPerformances = filterPerformances(runner.performances)
+  const performances24h = filteredPerformances.filter(p => p.event_type === '24h')
+  const displayedPerformances = showAllRaces ? filteredPerformances : performances24h
 
   // Helper to determine if event is time-based (where result is distance) or distance-based (where result is time/laps)
   const isTimeBased = (eventType: string) => {
@@ -225,9 +253,17 @@ export default function RunnerProfilePage() {
     return timeBasedEvents.some(type => eventType.toLowerCase().includes(type))
   }
 
+  // Format seconds as h:mm:ss
+  const formatTime = (seconds: number): string => {
+    const hours = Math.floor(seconds / 3600)
+    const minutes = Math.floor((seconds % 3600) / 60)
+    const secs = Math.floor(seconds % 60)
+    return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+  }
+
   // Calculate PBs for other distances from performance history
   const calculatePBForEventType = (eventType: string): { distance: number; year: number } | null => {
-    const performances = runner.performances.filter(p =>
+    const performances = filteredPerformances.filter(p =>
       p.event_type.toLowerCase().includes(eventType.toLowerCase())
     )
     if (performances.length === 0) return null
@@ -245,6 +281,7 @@ export default function RunnerProfilePage() {
   const pb6h = calculatePBForEventType('6h')
   const pb12h = calculatePBForEventType('12h')
   const pb48h = calculatePBForEventType('48h')
+  const hasOtherPBs = pb6h || pb12h || pb48h
 
   return (
     <main className="min-h-screen py-8">
@@ -297,7 +334,7 @@ export default function RunnerProfilePage() {
           </div>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 mb-6">
+        <div className={`grid gap-6 ${hasOtherPBs ? 'md:grid-cols-2' : 'md:grid-cols-1 max-w-2xl'} mb-6`}>
           <Card>
             <CardHeader>
               <CardTitle>Personal Bests</CardTitle>
@@ -334,48 +371,44 @@ export default function RunnerProfilePage() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Other PBs</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">6h PB</p>
-                  <p className="text-2xl font-bold text-primary">
-                    {pb6h ? (
-                      <>
+          {hasOtherPBs && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Other PBs</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {pb6h && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">6h PB</p>
+                      <p className="text-2xl font-bold text-primary">
                         {pb6h.distance.toFixed(2)} km
                         <span className="text-base text-muted-foreground ml-2">({pb6h.year})</span>
-                      </>
-                    ) : 'N/A'}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">12h PB</p>
-                  <p className="text-2xl font-bold text-primary">
-                    {pb12h ? (
-                      <>
+                      </p>
+                    </div>
+                  )}
+                  {pb12h && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">12h PB</p>
+                      <p className="text-2xl font-bold text-primary">
                         {pb12h.distance.toFixed(2)} km
                         <span className="text-base text-muted-foreground ml-2">({pb12h.year})</span>
-                      </>
-                    ) : 'N/A'}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">48h PB</p>
-                  <p className="text-2xl font-bold text-primary">
-                    {pb48h ? (
-                      <>
+                      </p>
+                    </div>
+                  )}
+                  {pb48h && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">48h PB</p>
+                      <p className="text-2xl font-bold text-primary">
                         {pb48h.distance.toFixed(2)} km
                         <span className="text-base text-muted-foreground ml-2">({pb48h.year})</span>
-                      </>
-                    ) : 'N/A'}
-                  </p>
+                      </p>
+                    </div>
+                  )}
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         <Card>
@@ -440,8 +473,8 @@ export default function RunnerProfilePage() {
                               // For time-based events, distance is the result in km
                               `${perf.distance.toFixed(2)} km`
                             ) : (
-                              // For distance-based events, show the raw value (could be time, laps, etc.)
-                              perf.distance.toFixed(2)
+                              // For distance-based events, format as time (h:mm:ss)
+                              formatTime(perf.distance)
                             )}
                           </td>
                           <td className="py-2 px-4 text-sm text-right">
