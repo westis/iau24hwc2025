@@ -28,7 +28,42 @@ interface SeedData {
 /**
  * Transform database row to Runner object
  */
-function transformDBRunner(row: DBRunner): Runner {
+function transformDBRunner(row: any): Runner {
+  // Calculate years from performance history if not provided
+  let allTimeYear: number | undefined
+  let last2YearsYear: number | undefined
+
+  if (row.performanceHistory && Array.isArray(row.performanceHistory)) {
+    const performances = row.performanceHistory
+
+    // Find all-time PB year
+    if (row.personal_best_all_time && !row.personal_best_all_time_year) {
+      const allTimeBestPerf = performances.find((p: any) =>
+        Math.abs(p.distance - row.personal_best_all_time) < 0.01
+      )
+      if (allTimeBestPerf) {
+        allTimeYear = new Date(allTimeBestPerf.date).getFullYear()
+      }
+    }
+
+    // Find last 2 years PB year
+    if (row.personal_best_last_2_years && !row.personal_best_last_2_years_year) {
+      const threeYearsAgo = new Date()
+      threeYearsAgo.setFullYear(threeYearsAgo.getFullYear() - 3)
+
+      const recentPerformances = performances.filter((p: any) =>
+        new Date(p.date) >= threeYearsAgo
+      )
+
+      const last2YearsBestPerf = recentPerformances.find((p: any) =>
+        Math.abs(p.distance - row.personal_best_last_2_years) < 0.01
+      )
+      if (last2YearsBestPerf) {
+        last2YearsYear = new Date(last2YearsBestPerf.date).getFullYear()
+      }
+    }
+  }
+
   return {
     id: row.id,
     entryId: row.entry_id,
@@ -40,7 +75,9 @@ function transformDBRunner(row: DBRunner): Runner {
     matchStatus: row.match_status as MatchStatus,
     matchConfidence: row.match_confidence ?? undefined,
     personalBestAllTime: row.personal_best_all_time,
+    personalBestAllTimeYear: row.personal_best_all_time_year ?? allTimeYear,
     personalBestLast2Years: row.personal_best_last_2_years,
+    personalBestLast2YearsYear: row.personal_best_last_2_years_year ?? last2YearsYear,
     dateOfBirth: row.date_of_birth,
     age: row.age ?? undefined,
   }

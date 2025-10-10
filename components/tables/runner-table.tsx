@@ -248,28 +248,27 @@ export function RunnerTable({ runners, onManualMatch, onRowClick }: RunnerTableP
           return <div className="text-center text-muted-foreground">-</div>
         },
       },
-      {
-        id: 'actions',
+      // Only include actions column if admin
+      ...(isAdmin ? [{
+        id: 'actions' as const,
         header: 'Actions',
-        cell: ({ row }) => {
-          const runner = row.original
+        cell: ({ row }: { row: any }) => {
+          const runner = row.original as Runner
           return (
             <div className="flex flex-col sm:flex-row gap-2">
-              {isAdmin && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    openEditDialog(runner)
-                  }}
-                  className="whitespace-nowrap"
-                >
-                  <Pencil className="h-4 w-4 mr-1" />
-                  Edit
-                </Button>
-              )}
-              {isAdmin && runner.matchStatus === 'unmatched' && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  openEditDialog(runner)
+                }}
+                className="whitespace-nowrap"
+              >
+                <Pencil className="h-4 w-4 mr-1" />
+                Edit
+              </Button>
+              {runner.matchStatus === 'unmatched' && (
                 <Button
                   variant="default"
                   size="sm"
@@ -285,7 +284,7 @@ export function RunnerTable({ runners, onManualMatch, onRowClick }: RunnerTableP
             </div>
           )
         },
-      },
+      }] : []),
     ],
     [onManualMatch, isAdmin]
   )

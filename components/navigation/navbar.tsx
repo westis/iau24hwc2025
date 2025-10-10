@@ -16,7 +16,6 @@ export function Navbar() {
     { href: '/', label: 'Home' },
     { href: '/runners', label: 'Runners' },
     { href: '/teams', label: 'Teams' },
-    { href: '/rankings', label: 'Rankings' },
   ]
 
   const adminNavItems = [

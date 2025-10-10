@@ -29,7 +29,9 @@ interface RunnerProfile {
   gender: string
   duv_id: number | null
   personal_best_all_time: number | null
+  personal_best_all_time_year?: number
   personal_best_last_2_years: number | null
+  personal_best_last_2_years_year?: number
   date_of_birth: string | null
   age: number | null
   match_status: string
@@ -54,13 +56,55 @@ export default function RunnerProfilePage() {
   const [isUnmatching, setIsUnmatching] = useState(false)
 
   useEffect(() => {
-    async function loadRunner() {
+    function loadRunner() {
       try {
-        const response = await fetch(`/api/runners/${params.id}`)
-        if (!response.ok) throw new Error('Failed to load runner')
-        const data = await response.json()
-        setRunner(data.runner)
+        // Load from localStorage
+        const stored = localStorage.getItem('runners')
+        if (!stored) {
+          setError('No runners found in storage')
+          setLoading(false)
+          return
+        }
+
+        const runners = JSON.parse(stored)
+        // Find runner by ID (the ID in the URL is actually entry_id)
+        const foundRunner = runners.find((r: any) => r.entryId === params.id || r.id === Number(params.id))
+
+        if (!foundRunner) {
+          setError('Runner not found')
+          setLoading(false)
+          return
+        }
+
+        // Transform to match the expected structure
+        const runnerProfile: RunnerProfile = {
+          id: foundRunner.id,
+          entry_id: foundRunner.entryId,
+          firstname: foundRunner.firstname,
+          lastname: foundRunner.lastname,
+          nationality: foundRunner.nationality,
+          gender: foundRunner.gender,
+          duv_id: foundRunner.duvId,
+          personal_best_all_time: foundRunner.personalBestAllTime,
+          personal_best_all_time_year: foundRunner.personalBestAllTimeYear,
+          personal_best_last_2_years: foundRunner.personalBestLast2Years,
+          personal_best_last_2_years_year: foundRunner.personalBestLast2YearsYear,
+          date_of_birth: foundRunner.dateOfBirth,
+          age: foundRunner.age,
+          match_status: foundRunner.matchStatus,
+          performances: (foundRunner.performanceHistory || []).map((p: any) => ({
+            id: p.eventId,
+            event_name: p.eventName,
+            event_date: p.date,
+            distance: p.distance,
+            rank: p.rank,
+            event_type: p.eventType,
+          }))
+        }
+
+        setRunner(runnerProfile)
       } catch (err) {
+        console.error('Error loading runner:', err)
         setError(err instanceof Error ? err.message : 'Failed to load runner')
       } finally {
         setLoading(false)
@@ -215,13 +259,27 @@ export default function RunnerProfilePage() {
                 <div>
                   <p className="text-sm text-muted-foreground">All-Time PB</p>
                   <p className="text-2xl font-bold text-primary">
-                    {runner.personal_best_all_time ? `${runner.personal_best_all_time.toFixed(2)} km` : 'N/A'}
+                    {runner.personal_best_all_time ? (
+                      <>
+                        {runner.personal_best_all_time.toFixed(2)} km
+                        {runner.personal_best_all_time_year && (
+                          <span className="text-base text-muted-foreground ml-2">({runner.personal_best_all_time_year})</span>
+                        )}
+                      </>
+                    ) : 'N/A'}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Last 3 Years PB (since Oct 2022)</p>
                   <p className="text-2xl font-bold text-primary">
-                    {runner.personal_best_last_2_years ? `${runner.personal_best_last_2_years.toFixed(2)} km` : 'N/A'}
+                    {runner.personal_best_last_2_years ? (
+                      <>
+                        {runner.personal_best_last_2_years.toFixed(2)} km
+                        {runner.personal_best_last_2_years_year && (
+                          <span className="text-base text-muted-foreground ml-2">({runner.personal_best_last_2_years_year})</span>
+                        )}
+                      </>
+                    ) : 'N/A'}
                   </p>
                 </div>
               </div>
