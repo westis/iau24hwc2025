@@ -66,7 +66,7 @@ export function ManualMatchDialog({
         <DialogHeader>
           <DialogTitle>Manual Match Runner</DialogTitle>
           <DialogDescription>
-            Select the correct DUV profile for this runner or mark as "No Match Found"
+            Select the correct DUV profile for this runner or mark as &quot;No Match Found&quot;
           </DialogDescription>
         </DialogHeader>
 

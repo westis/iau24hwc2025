@@ -347,7 +347,7 @@ export default function RunnerProfilePage() {
             <DialogHeader>
               <DialogTitle>Edit Runner</DialogTitle>
               <DialogDescription>
-                Make changes to runner information. Click save when you're done.
+                Make changes to runner information. Click save when you&apos;re done.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
