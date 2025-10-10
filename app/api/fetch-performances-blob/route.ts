@@ -1,10 +1,8 @@
 // app/api/fetch-performances-blob/route.ts - Fetch PBs and save to Vercel Blob
 import { NextRequest, NextResponse } from 'next/server'
-import { put } from '@vercel/blob'
 import { getRunnerProfile } from '@/lib/api/duv-client'
+import { loadRunnersFromBlob, saveRunnersToBlob } from '@/lib/blob/blob-storage'
 import type { Runner } from '@/types/runner'
-
-const BLOB_NAME = 'runners.json'
 
 export async function POST(request: NextRequest) {
   console.log('='.repeat(80))
@@ -24,28 +22,17 @@ export async function POST(request: NextRequest) {
 
     console.log(`Processing ${runnersToEnrich.length} runner(s)`)
 
-    // Load ALL runners via the GET endpoint (handles blob + seed.json fallback)
+    // Load ALL runners from blob (or seed data)
     let allRunners: Runner[] = []
     let version = 1
 
     try {
-      // Use the blob GET endpoint which has proper fallback logic
-      const baseUrl = process.env.VERCEL_URL
-        ? `https://${process.env.VERCEL_URL}`
-        : 'http://localhost:3000'
-
-      const response = await fetch(`${baseUrl}/api/blob/runners`)
-
-      if (response.ok) {
-        const data = await response.json()
-        allRunners = data.runners || []
-        version = data.version || 1
-        console.log(`Loaded ${allRunners.length} runners from blob GET endpoint`)
-      } else {
-        throw new Error(`Failed to load runners: ${response.status}`)
-      }
+      const data = await loadRunnersFromBlob()
+      allRunners = data.runners || []
+      version = data.version || 1
+      console.log(`Loaded ${allRunners.length} runners`)
     } catch (err) {
-      console.error('Failed to load runners from blob endpoint:', err)
+      console.error('Failed to load runners:', err)
       return NextResponse.json(
         { error: 'Failed to load existing runners data', details: String(err) },
         { status: 500 }
@@ -159,15 +146,7 @@ export async function POST(request: NextRequest) {
     // Save all runners back to blob
     if (process.env.BLOB_READ_WRITE_TOKEN) {
       try {
-        const blob = await put(
-          BLOB_NAME,
-          JSON.stringify({ runners: allRunners, version, updatedAt: new Date().toISOString() }),
-          {
-            access: 'public',
-            token: process.env.BLOB_READ_WRITE_TOKEN,
-          }
-        )
-        console.log(`✓ Saved ${allRunners.length} runners to blob at ${blob.url}`)
+        await saveRunnersToBlob(allRunners, version)
       } catch (err) {
         console.error('✗ Failed to save to blob:', err)
         return NextResponse.json(

@@ -1,10 +1,6 @@
 // app/api/blob/runners/route.ts - Vercel Blob storage for runners data
 import { NextRequest, NextResponse } from 'next/server'
-import { put, head } from '@vercel/blob'
-import type { Runner } from '@/types/runner'
-import seedData from '@/data/seed-data.json'
-
-const BLOB_NAME = 'runners.json'
+import { loadRunnersFromBlob, saveRunnersToBlob } from '@/lib/blob/blob-storage'
 
 /**
  * GET /api/blob/runners
@@ -12,33 +8,8 @@ const BLOB_NAME = 'runners.json'
  */
 export async function GET(request: NextRequest) {
   try {
-    // Try to get from Vercel Blob first
-    if (process.env.BLOB_READ_WRITE_TOKEN) {
-      try {
-        const blob = await head(BLOB_NAME, {
-          token: process.env.BLOB_READ_WRITE_TOKEN,
-        })
-
-        if (blob) {
-          const response = await fetch(blob.url)
-          const data = await response.json()
-          console.log(`Loaded ${data.runners?.length || 0} runners from Vercel Blob`)
-          return NextResponse.json(data)
-        }
-      } catch (blobError) {
-        console.log('Blob not found or error, falling back to seed.json:', blobError)
-      }
-    }
-
-    // Fallback to imported seed data
-    console.log('Loading runners from seed-data.json (blob not available)')
-
-    return NextResponse.json({
-      runners: (seedData as any).runners,
-      version: (seedData as any).version,
-      source: 'seed-data.json'
-    })
-
+    const data = await loadRunnersFromBlob()
+    return NextResponse.json(data)
   } catch (error) {
     console.error('Error loading runners:', error)
     return NextResponse.json(
@@ -71,17 +42,11 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    // Upload to Vercel Blob
-    const blob = await put(BLOB_NAME, JSON.stringify({ runners, version, updatedAt: new Date().toISOString() }), {
-      access: 'public',
-      token: process.env.BLOB_READ_WRITE_TOKEN,
-    })
-
-    console.log(`✓ Uploaded ${runners.length} runners to Vercel Blob at ${blob.url}`)
+    const url = await saveRunnersToBlob(runners, version)
 
     return NextResponse.json({
       success: true,
-      url: blob.url,
+      url,
       count: runners.length,
     })
 
