@@ -422,7 +422,7 @@ export default function MatchPage() {
         console.log(`${'='.repeat(60)}\n`)
 
         try {
-          const response = await fetch('/api/fetch-performances-db', {
+          const response = await fetch('/api/fetch-performances', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ runners: [runner] }),
@@ -433,6 +433,32 @@ export default function MatchPage() {
             console.log(`✓ API call successful for ${runner.firstname} ${runner.lastname}`)
             const responseData = await response.json()
             console.log('Response data:', responseData)
+
+            // Update localStorage with enriched runner data
+            if (responseData.runners && responseData.runners.length > 0) {
+              const enrichedRunner = responseData.runners[0]
+              const stored = localStorage.getItem('runners')
+              if (stored) {
+                const allRunners = JSON.parse(stored)
+                const index = allRunners.findIndex((r: any) => r.id === runner.id)
+                if (index !== -1) {
+                  // Update the runner with new PB data
+                  allRunners[index] = {
+                    ...allRunners[index],
+                    personalBestAllTime: enrichedRunner.personalBestAllTime,
+                    personalBestAllTimeYear: enrichedRunner.personalBestAllTimeYear,
+                    personalBestLast3Years: enrichedRunner.personalBestLast3Years,
+                    personalBestLast3YearsYear: enrichedRunner.personalBestLast3YearsYear,
+                    dateOfBirth: enrichedRunner.dateOfBirth,
+                    age: enrichedRunner.age,
+                    performanceHistory: enrichedRunner.performanceHistory,
+                  }
+                  localStorage.setItem('runners', JSON.stringify(allRunners))
+                  console.log('✓ Updated localStorage with new PB data')
+                }
+              }
+            }
+
             successCount++
           } else {
             console.error(`✗ API call failed for ${runner.firstname} ${runner.lastname}`)
