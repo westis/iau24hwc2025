@@ -69,10 +69,31 @@ export default function MatchPage() {
 
   async function loadUnmatchedRunners() {
     try {
-      const response = await fetch('/api/runners/unmatched')
-      if (!response.ok) throw new Error('Failed to load unmatched runners')
-      const data = await response.json()
-      setRunners(data.runners || [])
+      // Load from localStorage
+      const stored = localStorage.getItem('runners')
+      if (!stored) {
+        setError('No runners found in storage')
+        setLoading(false)
+        return
+      }
+
+      const allRunners = JSON.parse(stored)
+
+      // Filter for unmatched runners (no DUV ID and not marked as no-match)
+      const unmatched = allRunners.filter((r: any) =>
+        !r.duvId && r.matchStatus !== 'no-match'
+      ).map((r: any) => ({
+        id: r.id,
+        entry_id: r.entryId,
+        firstname: r.firstname,
+        lastname: r.lastname,
+        nationality: r.nationality,
+        gender: r.gender,
+        match_status: r.matchStatus,
+        candidates: [] // No pre-stored candidates in localStorage mode
+      }))
+
+      setRunners(unmatched)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load runners')
     } finally {
@@ -292,32 +313,32 @@ export default function MatchPage() {
     setFetchProgress(null)
 
     try {
-      // Fetch all matched runners from the database
-      const runnersResponse = await fetch('/api/runners')
-      if (!runnersResponse.ok) throw new Error('Failed to fetch runners')
+      // Load all runners from localStorage
+      const stored = localStorage.getItem('runners')
+      if (!stored) throw new Error('No runners found in storage')
 
-      const runnersData = await runnersResponse.json()
+      const allRunners = JSON.parse(stored)
 
       // Filter for runners with DUV ID (regardless of match status)
       // If they have a DUV ID, they should be fetchable
-      let matchedRunners = runnersData.runners.filter((r: any) => r.duvId)
+      let matchedRunners = allRunners.filter((r: any) => r.duvId)
 
       // Debug: log match status distribution
-      const withDuvId = runnersData.runners.filter((r: any) => r.duvId).length
-      const withoutDuvId = runnersData.runners.filter((r: any) => !r.duvId).length
-      const statusCounts = runnersData.runners.reduce((acc: any, r: any) => {
+      const withDuvId = allRunners.filter((r: any) => r.duvId).length
+      const withoutDuvId = allRunners.filter((r: any) => !r.duvId).length
+      const statusCounts = allRunners.reduce((acc: any, r: any) => {
         const status = r.duvId ? r.matchStatus : 'no-duv-id'
         acc[status] = (acc[status] || 0) + 1
         return acc
       }, {})
 
       // Find runners without DUV ID
-      const runnersWithoutDuvId = runnersData.runners
+      const runnersWithoutDuvId = allRunners
         .filter((r: any) => !r.duvId)
         .map((r: any) => `${r.firstname} ${r.lastname} (${r.nationality})`)
 
       console.log('=== RUNNER DEBUG INFO ===')
-      console.log(`Total runners: ${runnersData.runners.length}`)
+      console.log(`Total runners: ${allRunners.length}`)
       console.log(`With DUV ID: ${withDuvId}`)
       console.log(`Without DUV ID: ${withoutDuvId}`)
       console.log('Status distribution:', statusCounts)
@@ -325,7 +346,7 @@ export default function MatchPage() {
       console.log('=========================')
 
       // Show this info to user briefly
-      setFetchMessage(`Found: ${runnersData.runners.length} total, ${withDuvId} with DUV ID, ${withoutDuvId} without. Check console for details.`)
+      setFetchMessage(`Found: ${allRunners.length} total, ${withDuvId} with DUV ID, ${withoutDuvId} without. Check console for details.`)
       await new Promise(resolve => setTimeout(resolve, 2000)) // Show for 2 seconds
 
       // Apply filter
@@ -358,7 +379,7 @@ export default function MatchPage() {
           console.log('  Entry ID:', runner284.entryId)
         } else {
           console.log('✗ Runner 284 is NOT in the manually-matched list')
-          const runner284All = runnersData.runners.find((r: any) => r.id === 284)
+          const runner284All = allRunners.find((r: any) => r.id === 284)
           if (runner284All) {
             console.log('  But runner 284 exists in all runners:')
             console.log('  Name:', runner284All.firstname, runner284All.lastname)

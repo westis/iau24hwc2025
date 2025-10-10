@@ -19,7 +19,7 @@ export function Navbar() {
   ]
 
   const adminNavItems = [
-    { href: '/matching', label: 'Matching', adminOnly: true },
+    { href: '/match', label: 'Match', adminOnly: true },
   ]
 
   const navItems = isAdmin ? [...publicNavItems, ...adminNavItems] : publicNavItems
