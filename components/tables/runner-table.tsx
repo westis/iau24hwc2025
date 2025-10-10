@@ -220,7 +220,7 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
             <div className="text-right">
               {pb ? (
                 <>
-                  {pb.toFixed(2)} km{pbYear && <span className="text-muted-foreground text-xs ml-1">({pbYear})</span>}
+                  {pb.toFixed(3)} km{pbYear && <span className="text-muted-foreground text-xs ml-1">({pbYear})</span>}
                 </>
               ) : '-'}
             </div>
@@ -248,7 +248,7 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
             <div className="text-right">
               {pb ? (
                 <>
-                  {pb.toFixed(2)} km{pbYear && <span className="text-muted-foreground text-xs ml-1">({pbYear})</span>}
+                  {pb.toFixed(3)} km{pbYear && <span className="text-muted-foreground text-xs ml-1">({pbYear})</span>}
                 </>
               ) : '-'}
             </div>
@@ -495,7 +495,7 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
                     <span className="font-medium text-foreground">
                       {selectedPB ? (
                         <>
-                          {selectedPB.toFixed(1)}km
+                          {selectedPB.toFixed(3)}km
                           {selectedPBYear && <span className="text-muted-foreground ml-0.5">({selectedPBYear})</span>}
                         </>
                       ) : 'No PB'}
@@ -511,7 +511,7 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
                       <div className="text-sm font-medium">
                         {alternatePB ? (
                           <>
-                            {alternatePB.toFixed(2)} km
+                            {alternatePB.toFixed(3)} km
                             {alternatePBYear && (
                               <span className="text-xs text-muted-foreground ml-1">({alternatePBYear})</span>
                             )}

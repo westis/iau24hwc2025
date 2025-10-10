@@ -346,7 +346,7 @@ export default function RunnerProfilePage() {
                   <p className="text-2xl font-bold text-primary">
                     {runner.personal_best_all_time ? (
                       <>
-                        {runner.personal_best_all_time.toFixed(2)} km
+                        {runner.personal_best_all_time.toFixed(3)} km
                         {runner.personal_best_all_time_year && (
                           <span className="text-base text-muted-foreground ml-2">({runner.personal_best_all_time_year})</span>
                         )}
@@ -359,7 +359,7 @@ export default function RunnerProfilePage() {
                   <p className="text-2xl font-bold text-primary">
                     {runner.personal_best_last_3_years ? (
                       <>
-                        {runner.personal_best_last_3_years.toFixed(2)} km
+                        {runner.personal_best_last_3_years.toFixed(3)} km
                         {runner.personal_best_last_3_years_year && (
                           <span className="text-base text-muted-foreground ml-2">({runner.personal_best_last_3_years_year})</span>
                         )}
@@ -382,7 +382,7 @@ export default function RunnerProfilePage() {
                     <div>
                       <p className="text-sm text-muted-foreground">6h PB</p>
                       <p className="text-2xl font-bold text-primary">
-                        {pb6h.distance.toFixed(2)} km
+                        {pb6h.distance.toFixed(3)} km
                         <span className="text-base text-muted-foreground ml-2">({pb6h.year})</span>
                       </p>
                     </div>
@@ -391,7 +391,7 @@ export default function RunnerProfilePage() {
                     <div>
                       <p className="text-sm text-muted-foreground">12h PB</p>
                       <p className="text-2xl font-bold text-primary">
-                        {pb12h.distance.toFixed(2)} km
+                        {pb12h.distance.toFixed(3)} km
                         <span className="text-base text-muted-foreground ml-2">({pb12h.year})</span>
                       </p>
                     </div>
@@ -400,7 +400,7 @@ export default function RunnerProfilePage() {
                     <div>
                       <p className="text-sm text-muted-foreground">48h PB</p>
                       <p className="text-2xl font-bold text-primary">
-                        {pb48h.distance.toFixed(2)} km
+                        {pb48h.distance.toFixed(3)} km
                         <span className="text-base text-muted-foreground ml-2">({pb48h.year})</span>
                       </p>
                     </div>
@@ -471,7 +471,7 @@ export default function RunnerProfilePage() {
                           <td className="py-2 px-4 text-sm text-right font-medium">
                             {timeBased ? (
                               // For time-based events, distance is the result in km
-                              `${perf.distance.toFixed(2)} km`
+                              `${perf.distance.toFixed(3)} km`
                             ) : (
                               // For distance-based events, format as time (h:mm:ss)
                               formatTime(perf.distance)

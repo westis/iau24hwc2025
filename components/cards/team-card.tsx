@@ -51,7 +51,7 @@ export function TeamCard({ rank, team, gender, metric }: TeamCardProps) {
         </div>
         <div className="text-right">
           <div className="text-xs text-muted-foreground">Total</div>
-          <div className="text-lg font-semibold">{team.teamTotal.toFixed(2)} km</div>
+          <div className="text-lg font-semibold">{team.teamTotal.toFixed(3)} km</div>
         </div>
       </div>
 
@@ -92,7 +92,7 @@ export function TeamCard({ rank, team, gender, metric }: TeamCardProps) {
                 </div>
                 {pb && (
                   <span className="text-muted-foreground text-xs">
-                    {pb.toFixed(1)} {pbYear && `(${pbYear})`}
+                    {pb.toFixed(3)} {pbYear && `(${pbYear})`}
                   </span>
                 )}
               </div>
@@ -122,7 +122,7 @@ export function TeamCard({ rank, team, gender, metric }: TeamCardProps) {
                 </div>
                 {pb && (
                   <span className="text-muted-foreground text-xs">
-                    {pb.toFixed(1)} {pbYear && `(${pbYear})`}
+                    {pb.toFixed(3)} {pbYear && `(${pbYear})`}
                   </span>
                 )}
               </div>

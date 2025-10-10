@@ -148,7 +148,7 @@ export function ManualMatchDialog({
                           </div>
                           <div>
                             <span className="font-medium">PB:</span>{' '}
-                            {candidate.PersonalBest ? `${parseFloat(candidate.PersonalBest).toFixed(2)} km` : '-'}
+                            {candidate.PersonalBest ? `${parseFloat(candidate.PersonalBest).toFixed(3)} km` : '-'}
                           </div>
                         </div>
                       </div>
