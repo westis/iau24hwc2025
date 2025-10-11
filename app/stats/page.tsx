@@ -3,6 +3,8 @@
 import { useEffect, useState, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { WorldMap } from '@/components/world-map'
 import type { Runner, Gender } from '@/types/runner'
 
 export default function StatsPage() {
@@ -136,7 +138,7 @@ export default function StatsPage() {
     }
   }, [filteredRunners])
 
-  // Calculate country participation (all genders)
+  // Calculate country participation (all genders - not filtered)
   const countryParticipation = useMemo(() => {
     const countryMap = new Map<string, { men: number; women: number; total: number }>()
 
@@ -248,120 +250,144 @@ export default function StatsPage() {
         </Card>
       </div>
 
-      {/* Age Distribution */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Age Distribution</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {ageDistribution.map((bucket) => (
-              <div key={bucket.range}>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-medium">{bucket.range} years</span>
-                  <span className="text-sm text-muted-foreground">{bucket.count} runners</span>
-                </div>
-                <div className="w-full bg-muted rounded-full h-8 overflow-hidden">
-                  <div
-                    className="bg-primary h-full flex items-center justify-end pr-2 transition-all"
-                    style={{ width: `${bucket.percentage}%` }}
-                  >
-                    {bucket.count > 0 && (
-                      <span className="text-xs font-medium text-primary-foreground">
-                        {bucket.count}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Tabs for different stats */}
+      <Tabs defaultValue="age" className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="age">Age Distribution</TabsTrigger>
+          <TabsTrigger value="pb">PB Distribution</TabsTrigger>
+          <TabsTrigger value="countries">Countries</TabsTrigger>
+          <TabsTrigger value="map">Map</TabsTrigger>
+        </TabsList>
 
-      {/* PB Distribution */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>PB Distribution (2023-2025)</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {pbDistribution.length === 0 ? (
-              <p className="text-muted-foreground">No PB data available</p>
-            ) : (
-              pbDistribution.map((bucket) => (
-                <div key={bucket.range}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-medium">{bucket.range} km</span>
-                    <span className="text-sm text-muted-foreground">{bucket.count} runners</span>
+        {/* Age Distribution Tab */}
+        <TabsContent value="age">
+          <Card>
+            <CardHeader>
+              <CardTitle>Age Distribution - {selectedGender === 'M' ? 'Men' : 'Women'}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-end justify-around h-80 gap-2">
+                {ageDistribution.map((bucket) => (
+                  <div key={bucket.range} className="flex flex-col items-center flex-1">
+                    <div className="text-sm font-medium mb-1">{bucket.count}</div>
+                    <div className="w-full flex flex-col justify-end items-center" style={{ height: '16rem' }}>
+                      <div
+                        className="bg-primary w-full rounded-t-md transition-all flex items-end justify-center pb-2"
+                        style={{ height: `${bucket.percentage}%`, minHeight: bucket.count > 0 ? '20px' : '0' }}
+                      >
+                        {bucket.count > 0 && (
+                          <span className="text-xs font-medium text-primary-foreground transform rotate-0">
+                            {bucket.count}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-xs mt-2 text-muted-foreground whitespace-nowrap">{bucket.range}</div>
                   </div>
-                  <div className="w-full bg-muted rounded-full h-8 overflow-hidden">
-                    <div
-                      className="bg-primary h-full flex items-center justify-end pr-2 transition-all"
-                      style={{ width: `${bucket.percentage}%` }}
-                    >
-                      {bucket.count > 0 && (
-                        <span className="text-xs font-medium text-primary-foreground">
-                          {bucket.count}
-                        </span>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* PB Distribution Tab */}
+        <TabsContent value="pb">
+          <Card>
+            <CardHeader>
+              <CardTitle>PB Distribution (2023-2025) - {selectedGender === 'M' ? 'Men' : 'Women'}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {pbDistribution.length === 0 ? (
+                <p className="text-muted-foreground">No PB data available</p>
+              ) : (
+                <div className="flex items-end justify-around h-80 gap-1">
+                  {pbDistribution.map((bucket) => (
+                    <div key={bucket.range} className="flex flex-col items-center flex-1">
+                      <div className="text-sm font-medium mb-1">{bucket.count}</div>
+                      <div className="w-full flex flex-col justify-end items-center" style={{ height: '16rem' }}>
+                        <div
+                          className="bg-primary w-full rounded-t-md transition-all flex items-end justify-center pb-2"
+                          style={{ height: `${bucket.percentage}%`, minHeight: bucket.count > 0 ? '20px' : '0' }}
+                        >
+                          {bucket.count > 0 && (
+                            <span className="text-xs font-medium text-primary-foreground">
+                              {bucket.count}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-xs mt-2 text-muted-foreground whitespace-nowrap">{bucket.range} km</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Countries Tab */}
+        <TabsContent value="countries">
+          <Card>
+            <CardHeader>
+              <CardTitle>Participating Countries ({countryParticipation.length}) - All Genders</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {countryParticipation.map((country) => (
+                  <div
+                    key={country.country}
+                    className="border border-border rounded-lg p-3 hover:bg-accent transition-colors"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-semibold text-lg">{country.country}</span>
+                      <span className="text-sm font-medium text-muted-foreground">
+                        Total: {country.total}
+                      </span>
+                    </div>
+                    <div className="flex gap-4 text-sm">
+                      <div className="flex items-center gap-1">
+                        <span className="text-muted-foreground">M:</span>
+                        <span className="font-medium">{country.men}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-muted-foreground">W:</span>
+                        <span className="font-medium">{country.women}</span>
+                      </div>
+                    </div>
+                    {/* Visual bar showing men/women ratio */}
+                    <div className="mt-2 h-2 w-full bg-muted rounded-full overflow-hidden flex">
+                      {country.men > 0 && (
+                        <div
+                          className="bg-blue-500 h-full"
+                          style={{ width: `${(country.men / country.total) * 100}%` }}
+                        />
+                      )}
+                      {country.women > 0 && (
+                        <div
+                          className="bg-pink-500 h-full"
+                          style={{ width: `${(country.women / country.total) * 100}%` }}
+                        />
                       )}
                     </div>
                   </div>
-                </div>
-              ))
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Country Participation Map */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Participating Countries ({countryParticipation.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {countryParticipation.map((country) => (
-              <div
-                key={country.country}
-                className="border border-border rounded-lg p-3 hover:bg-accent transition-colors"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold text-lg">{country.country}</span>
-                  <span className="text-sm font-medium text-muted-foreground">
-                    Total: {country.total}
-                  </span>
-                </div>
-                <div className="flex gap-4 text-sm">
-                  <div className="flex items-center gap-1">
-                    <span className="text-muted-foreground">M:</span>
-                    <span className="font-medium">{country.men}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-muted-foreground">W:</span>
-                    <span className="font-medium">{country.women}</span>
-                  </div>
-                </div>
-                {/* Visual bar showing men/women ratio */}
-                <div className="mt-2 h-2 w-full bg-muted rounded-full overflow-hidden flex">
-                  {country.men > 0 && (
-                    <div
-                      className="bg-blue-500 h-full"
-                      style={{ width: `${(country.men / country.total) * 100}%` }}
-                    />
-                  )}
-                  {country.women > 0 && (
-                    <div
-                      className="bg-pink-500 h-full"
-                      style={{ width: `${(country.women / country.total) * 100}%` }}
-                    />
-                  )}
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Map Tab */}
+        <TabsContent value="map">
+          <Card>
+            <CardHeader>
+              <CardTitle>World Map - Participating Countries ({countryParticipation.length})</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <WorldMap countries={countryParticipation} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </main>
   )
 }
