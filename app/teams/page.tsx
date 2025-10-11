@@ -1,13 +1,13 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { TeamCard } from '@/components/cards/team-card'
 import { Button } from '@/components/ui/button'
 import type { Team } from '@/types/team'
 import type { Runner, Gender } from '@/types/runner'
 
-export default function TeamsPage() {
+function TeamsPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [runners, setRunners] = useState<Runner[]>([])
@@ -237,5 +237,20 @@ export default function TeamsPage() {
         )}
       </div>
     </main>
+  )
+}
+
+export default function TeamsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-foreground mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    }>
+      <TeamsPageContent />
+    </Suspense>
   )
 }

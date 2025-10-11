@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import ReactCountryFlag from 'react-country-flag'
 import { RunnerTable } from '@/components/tables/runner-table'
@@ -14,7 +14,7 @@ import { getCountryCodeForFlag } from '@/lib/utils/country-codes'
 import { cn } from '@/lib/utils'
 import type { Runner } from '@/types/runner'
 
-export default function RunnersPage() {
+function RunnersPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [runners, setRunners] = useState<Runner[]>([])
@@ -365,5 +365,20 @@ export default function RunnersPage() {
         />
       </div>
     </main>
+  )
+}
+
+export default function RunnersPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-foreground mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    }>
+      <RunnersPageContent />
+    </Suspense>
   )
 }
