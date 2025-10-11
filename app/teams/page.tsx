@@ -1,17 +1,36 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { TeamCard } from '@/components/cards/team-card'
 import { Button } from '@/components/ui/button'
 import type { Team } from '@/types/team'
 import type { Runner, Gender } from '@/types/runner'
 
 export default function TeamsPage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const [runners, setRunners] = useState<Runner[]>([])
-  const [metric, setMetric] = useState<'all-time' | 'last-3-years'>('last-3-years')
-  const [gender, setGender] = useState<Gender>('M')
+  const [metric, setMetric] = useState<'all-time' | 'last-3-years'>(() => {
+    const m = searchParams.get('metric')
+    return (m === 'all-time' ? 'all-time' : 'last-3-years') as 'all-time' | 'last-3-years'
+  })
+  const [gender, setGender] = useState<Gender>(() => {
+    const g = searchParams.get('gender')
+    return (g === 'W' ? 'W' : 'M') as Gender
+  })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  // Update URL when filters change
+  const updateURL = (params: { gender?: Gender; metric?: 'all-time' | 'last-3-years' }) => {
+    const newParams = new URLSearchParams(searchParams.toString())
+
+    if (params.gender) newParams.set('gender', params.gender)
+    if (params.metric) newParams.set('metric', params.metric)
+
+    router.push(`/teams?${newParams.toString()}`, { scroll: false })
+  }
 
   useEffect(() => {
     // Fetch runners from API (Supabase)
@@ -148,7 +167,10 @@ export default function TeamsPage() {
           <Button
             variant={gender === 'M' ? 'default' : 'ghost'}
             size="sm"
-            onClick={() => setGender('M')}
+            onClick={() => {
+              setGender('M')
+              updateURL({ gender: 'M', metric })
+            }}
             className={gender === 'M' ? '' : 'hover:bg-accent'}
           >
             Men
@@ -156,7 +178,10 @@ export default function TeamsPage() {
           <Button
             variant={gender === 'W' ? 'default' : 'ghost'}
             size="sm"
-            onClick={() => setGender('W')}
+            onClick={() => {
+              setGender('W')
+              updateURL({ gender: 'W', metric })
+            }}
             className={gender === 'W' ? '' : 'hover:bg-accent'}
           >
             Women
@@ -168,7 +193,10 @@ export default function TeamsPage() {
           <Button
             variant={metric === 'last-3-years' ? 'default' : 'ghost'}
             size="sm"
-            onClick={() => setMetric('last-3-years')}
+            onClick={() => {
+              setMetric('last-3-years')
+              updateURL({ gender, metric: 'last-3-years' })
+            }}
             className={metric === 'last-3-years' ? '' : 'hover:bg-accent'}
           >
             Last 3 Years
@@ -176,7 +204,10 @@ export default function TeamsPage() {
           <Button
             variant={metric === 'all-time' ? 'default' : 'ghost'}
             size="sm"
-            onClick={() => setMetric('all-time')}
+            onClick={() => {
+              setMetric('all-time')
+              updateURL({ gender, metric: 'all-time' })
+            }}
             className={metric === 'all-time' ? '' : 'hover:bg-accent'}
           >
             All-Time

@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import { useEffect, useState, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import ReactCountryFlag from 'react-country-flag'
 import { RunnerTable } from '@/components/tables/runner-table'
 import { Button } from '@/components/ui/button'
@@ -16,15 +16,42 @@ import type { Runner } from '@/types/runner'
 
 export default function RunnersPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [runners, setRunners] = useState<Runner[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [selectedGender, setSelectedGender] = useState<'M' | 'W'>('M')
-  const [selectedMetric, setSelectedMetric] = useState<'last-3-years' | 'all-time'>('last-3-years')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [countryFilter, setCountryFilter] = useState<string>('all')
+  const [selectedGender, setSelectedGender] = useState<'M' | 'W'>(() => {
+    const gender = searchParams.get('gender')
+    return (gender === 'W' ? 'W' : 'M') as 'M' | 'W'
+  })
+  const [selectedMetric, setSelectedMetric] = useState<'last-3-years' | 'all-time'>(() => {
+    const metric = searchParams.get('metric')
+    return (metric === 'all-time' ? 'all-time' : 'last-3-years') as 'last-3-years' | 'all-time'
+  })
+  const [searchQuery, setSearchQuery] = useState(() => searchParams.get('search') || '')
+  const [countryFilter, setCountryFilter] = useState<string>(() => searchParams.get('country') || 'all')
   const [countryComboboxOpen, setCountryComboboxOpen] = useState(false)
   const [isPending, startTransition] = React.useTransition()
+
+  // Update URL when filters change
+  const updateURL = (params: { gender?: 'M' | 'W'; metric?: 'last-3-years' | 'all-time'; country?: string; search?: string }) => {
+    const newParams = new URLSearchParams(searchParams.toString())
+
+    if (params.gender) newParams.set('gender', params.gender)
+    if (params.metric) newParams.set('metric', params.metric)
+    if (params.country && params.country !== 'all') {
+      newParams.set('country', params.country)
+    } else {
+      newParams.delete('country')
+    }
+    if (params.search && params.search.trim()) {
+      newParams.set('search', params.search)
+    } else {
+      newParams.delete('search')
+    }
+
+    router.push(`/runners?${newParams.toString()}`, { scroll: false })
+  }
 
   // Get unique countries from runners
   const uniqueCountries = useMemo(() => {
@@ -175,7 +202,10 @@ export default function RunnersPage() {
               <Button
                 variant={selectedGender === 'M' ? 'default' : 'ghost'}
                 size="sm"
-                onClick={() => startTransition(() => setSelectedGender('M'))}
+                onClick={() => startTransition(() => {
+                  setSelectedGender('M')
+                  updateURL({ gender: 'M', metric: selectedMetric, country: countryFilter, search: searchQuery })
+                })}
                 className={selectedGender === 'M' ? '' : 'hover:bg-accent'}
                 disabled={isPending}
               >
@@ -184,7 +214,10 @@ export default function RunnersPage() {
               <Button
                 variant={selectedGender === 'W' ? 'default' : 'ghost'}
                 size="sm"
-                onClick={() => startTransition(() => setSelectedGender('W'))}
+                onClick={() => startTransition(() => {
+                  setSelectedGender('W')
+                  updateURL({ gender: 'W', metric: selectedMetric, country: countryFilter, search: searchQuery })
+                })}
                 className={selectedGender === 'W' ? '' : 'hover:bg-accent'}
                 disabled={isPending}
               >
@@ -195,7 +228,10 @@ export default function RunnersPage() {
               <Button
                 variant={selectedMetric === 'last-3-years' ? 'default' : 'ghost'}
                 size="sm"
-                onClick={() => startTransition(() => setSelectedMetric('last-3-years'))}
+                onClick={() => startTransition(() => {
+                  setSelectedMetric('last-3-years')
+                  updateURL({ gender: selectedGender, metric: 'last-3-years', country: countryFilter, search: searchQuery })
+                })}
                 className={selectedMetric === 'last-3-years' ? '' : 'hover:bg-accent'}
                 disabled={isPending}
               >
@@ -204,7 +240,10 @@ export default function RunnersPage() {
               <Button
                 variant={selectedMetric === 'all-time' ? 'default' : 'ghost'}
                 size="sm"
-                onClick={() => startTransition(() => setSelectedMetric('all-time'))}
+                onClick={() => startTransition(() => {
+                  setSelectedMetric('all-time')
+                  updateURL({ gender: selectedGender, metric: 'all-time', country: countryFilter, search: searchQuery })
+                })}
                 className={selectedMetric === 'all-time' ? '' : 'hover:bg-accent'}
                 disabled={isPending}
               >
@@ -218,7 +257,11 @@ export default function RunnersPage() {
             <Input
               placeholder="Search by name..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value
+                setSearchQuery(value)
+                updateURL({ gender: selectedGender, metric: selectedMetric, country: countryFilter, search: value })
+              }}
               className="w-full sm:w-[200px]"
             />
             <Popover open={countryComboboxOpen} onOpenChange={setCountryComboboxOpen}>
@@ -257,6 +300,7 @@ export default function RunnersPage() {
                         value="all"
                         onSelect={() => {
                           setCountryFilter('all')
+                          updateURL({ gender: selectedGender, metric: selectedMetric, country: 'all', search: searchQuery })
                           setCountryComboboxOpen(false)
                         }}
                       >
@@ -275,7 +319,9 @@ export default function RunnersPage() {
                             key={country}
                             value={country}
                             onSelect={(currentValue) => {
-                              setCountryFilter(currentValue.toUpperCase())
+                              const upperValue = currentValue.toUpperCase()
+                              setCountryFilter(upperValue)
+                              updateURL({ gender: selectedGender, metric: selectedMetric, country: upperValue, search: searchQuery })
                               setCountryComboboxOpen(false)
                             }}
                           >
