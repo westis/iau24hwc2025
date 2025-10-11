@@ -8,6 +8,15 @@ const nextConfig: NextConfig = {
   eslint: {
     dirs: ['app', 'components', 'lib', 'types'],
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'www.albi24h.fr',
+        pathname: '/wp-content/uploads/**',
+      },
+    ],
+  },
 }
 
 export default nextConfig
