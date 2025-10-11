@@ -1,8 +1,7 @@
 #!/usr/bin/env tsx
-// scripts/fetch-pbs.ts - Fetch PBs from DUV and update seed-data.json
+// scripts/fetch-pbs.ts - Fetch PBs from DUV and update Supabase directly
 
-import { readFileSync, writeFileSync } from 'fs'
-import { join } from 'path'
+import { getDatabase } from '../lib/db/database'
 
 // DUV API configuration
 const DUV_JSON_API_BASE = 'https://statistik.d-u-v.org/json'
@@ -62,13 +61,14 @@ async function getRunnerProfile(personId: number): Promise<DUVRunnerProfile> {
 }
 
 async function main() {
-  const seedPath = join(process.cwd(), 'data', 'seed-data.json')
-  console.log('Loading seed data from:', seedPath)
+  const db = getDatabase()
+  console.log('Loading runners from Supabase...')
 
-  const seedData = JSON.parse(readFileSync(seedPath, 'utf-8'))
-  const runners = seedData.runners
+  // Fetch all runners from database
+  const result = await db.query('SELECT * FROM runners ORDER BY entry_id')
+  const runners = result.rows
 
-  console.log(`\nFound ${runners.length} runners in seed data`)
+  console.log(`\nFound ${runners.length} runners in database`)
 
   // Filter runners with DUV IDs
   const runnersWithDuvId = runners.filter((r: any) => r.duv_id)
@@ -168,22 +168,30 @@ async function main() {
       const currentYear = new Date().getFullYear()
       const age = profile.YOB ? currentYear - profile.YOB : null
 
-      // Update runner in seed data
-      const index = runners.findIndex((r: any) => r.duv_id === runner.duv_id)
-      if (index !== -1) {
-        runners[index].personal_best_all_time = pbAllTime
-        runners[index].personal_best_all_time_year = pbAllTimeYear
-        runners[index].personal_best_last_2_years = pbLast3Years
-        runners[index].personal_best_last_2_years_year = pbLast3YearsYear
-        runners[index].date_of_birth = profile.YOB ? `${profile.YOB}-01-01` : null
-        runners[index].age = age
+      // Update runner directly in Supabase
+      await db.query(`
+        UPDATE runners SET
+          personal_best_all_time = $1,
+          personal_best_all_time_year = $2,
+          personal_best_last_2_years = $3,
+          personal_best_last_2_years_year = $4,
+          date_of_birth = $5,
+          age = $6,
+          all_pbs = $7
+        WHERE id = $8
+      `, [
+        pbAllTime,
+        pbAllTimeYear,
+        pbLast3Years,
+        pbLast3YearsYear,
+        profile.YOB ? `${profile.YOB}-01-01` : null,
+        age,
+        JSON.stringify(profile.allPBs || []),
+        runner.id
+      ])
 
-        // Save entire AllPBs array for displaying all distances (6h, 12h, 48h, etc.)
-        runners[index].all_pbs = profile.allPBs || []
-
-        console.log(`  ✓ All-time: ${pbAllTime ? pbAllTime.toFixed(3) : 'N/A'} (${pbAllTimeYear || 'N/A'}) | Last 3Y: ${pbLast3Years ? pbLast3Years.toFixed(3) : 'N/A'} (${pbLast3YearsYear || 'N/A'})`)
-        successCount++
-      }
+      console.log(`  ✓ All-time: ${pbAllTime ? pbAllTime.toFixed(3) : 'N/A'} (${pbAllTimeYear || 'N/A'}) | Last 3Y: ${pbLast3Years ? pbLast3Years.toFixed(3) : 'N/A'} (${pbLast3YearsYear || 'N/A'})`)
+      successCount++
 
       // Rate limit: wait 100ms between requests
       await new Promise(resolve => setTimeout(resolve, 100))
@@ -194,26 +202,20 @@ async function main() {
     }
   }
 
-  // Save updated seed data
+  // Summary
   console.log(`\n${'='.repeat(60)}`)
   console.log(`Fetch complete: ${successCount} successful, ${errorCount} errors`)
   console.log(`${'='.repeat(60)}\n`)
 
   if (successCount > 0) {
-    seedData.version = (seedData.version || 1) + 1
-    seedData.updatedAt = new Date().toISOString()
-
-    writeFileSync(seedPath, JSON.stringify(seedData, null, 2))
-    console.log(`✓ Saved to ${seedPath}`)
-    console.log(`✓ Version bumped to ${seedData.version}`)
-    console.log(`\nNext steps:`)
-    console.log(`  1. git add data/seed-data.json`)
-    console.log(`  2. git commit -m "Update PBs from DUV (${successCount} runners)"`)
-    console.log(`  3. git push origin main`)
-    console.log(`\nVercel will auto-deploy and all users will see the updated PBs!\n`)
+    console.log(`✓ Updated ${successCount} runners in Supabase`)
+    console.log(`✓ Data is now available on both local and Vercel!`)
+    console.log(`\nRefresh your app to see the updated PBs (6h, 12h, 48h, etc.)\n`)
   } else {
     console.log('No changes made.\n')
   }
+
+  process.exit(0)
 }
 
 main().catch(console.error)
