@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "fetch-pbs": "tsx scripts/fetch-pbs.ts",
+    "fetch-pbs:missing": "tsx scripts/fetch-pbs.ts missing",
+    "fetch-pbs:manual": "tsx scripts/fetch-pbs.ts manual"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",
@@ -45,6 +48,7 @@
     "autoprefixer": "^10.4.20",
     "eslint": "^9.37.0",
     "eslint-config-next": "^15.5.4",
-    "postcss": "^8.4.49"
+    "postcss": "^8.4.49",
+    "tsx": "^4.20.6"
   }
 }
