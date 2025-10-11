@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const runners = getRunners()
+    const runners = await getRunners()
 
     return NextResponse.json({
       success: true,
