@@ -86,7 +86,7 @@ function transformDBRunner(row: any): Runner {
 }
 
 // Version of the seed data structure - increment when data structure changes
-const SEED_DATA_VERSION = 5 // Incremented for blob storage migration
+const SEED_DATA_VERSION = 6 // Disabled blob storage, loading from seed-data.json only
 
 /**
  * Load seed data from Vercel Blob (or fallback to seed-data.json)
