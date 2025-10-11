@@ -139,8 +139,9 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
         header: 'Rank',
         cell: ({ row }) => {
           const rank = (row.original as any).rank
-          return rank ? <div className="font-bold text-lg">{rank}</div> : <div className="text-muted-foreground">-</div>
+          return rank ? <div className="font-bold text-center w-12">{rank}</div> : <div className="text-muted-foreground text-center w-12">-</div>
         },
+        size: 60,
       },
       {
         accessorKey: 'name',
@@ -487,7 +488,7 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
                 >
                   {/* Rank - spans both rows */}
                   {rank && (
-                    <div className="flex items-center justify-center min-w-[40px] font-bold text-2xl text-primary">
+                    <div className="flex items-center justify-center w-8 font-bold text-lg text-primary">
                       {rank}
                     </div>
                   )}
