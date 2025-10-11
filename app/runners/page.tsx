@@ -71,15 +71,11 @@ export default function RunnersPage() {
     // Filter by gender
     let filtered = runners.filter(runner => runner.gender === selectedGender)
 
-    // Separate DNS and non-DNS runners
-    const dnsRunners = filtered.filter(r => r.dns)
-    const activeRunners = filtered.filter(r => !r.dns)
+    // Separate matched (with DUV ID) and unmatched runners
+    const matched = filtered.filter(r => r.duvId !== null)
+    const unmatched = filtered.filter(r => r.duvId === null)
 
-    // Separate matched (with DUV ID) and unmatched active runners
-    const matched = activeRunners.filter(r => r.duvId !== null)
-    const unmatched = activeRunners.filter(r => r.duvId === null)
-
-    // Sort matched runners by PB (highest first)
+    // Sort matched runners by PB (highest first) - includes both DNS and non-DNS
     const sortedMatched = matched.sort((a, b) => {
       const aPB = getPB(a)
       const bPB = getPB(b)
@@ -93,21 +89,20 @@ export default function RunnersPage() {
       return aName.localeCompare(bName)
     })
 
-    // Sort DNS runners by name
-    const sortedDNS = dnsRunners.sort((a, b) => {
-      const aName = `${a.lastname} ${a.firstname}`.toLowerCase()
-      const bName = `${b.lastname} ${b.firstname}`.toLowerCase()
-      return aName.localeCompare(bName)
+    // Assign rankings only to non-DNS runners with DUV ID
+    let currentRank = 1
+    const rankedMatched = sortedMatched.map((runner) => {
+      if (runner.dns) {
+        // DNS runner - no rank
+        return { ...runner, rank: undefined }
+      } else {
+        // Active runner - assign rank
+        return { ...runner, rank: currentRank++ }
+      }
     })
 
-    // Assign rankings to matched runners only
-    const rankedMatched = sortedMatched.map((runner, index) => ({
-      ...runner,
-      rank: index + 1
-    }))
-
-    // Combine: ranked matched first, then unmatched, then DNS (all without rankings)
-    return [...rankedMatched, ...sortedUnmatched, ...sortedDNS]
+    // Combine: ranked matched first (with DNS in natural position), then unmatched
+    return [...rankedMatched, ...sortedUnmatched]
   }, [runners, selectedGender, selectedMetric])
 
   if (loading) {
