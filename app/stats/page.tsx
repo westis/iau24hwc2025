@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { WorldMap } from '@/components/world-map'
+import { ChoroplethMap } from '@/components/choropleth-map'
 import type { Runner, Gender } from '@/types/runner'
 
 export default function StatsPage() {
@@ -383,7 +383,7 @@ export default function StatsPage() {
               <CardTitle>World Map - Participating Countries ({countryParticipation.length})</CardTitle>
             </CardHeader>
             <CardContent>
-              <WorldMap countries={countryParticipation} />
+              <ChoroplethMap countries={countryParticipation} />
             </CardContent>
           </Card>
         </TabsContent>
