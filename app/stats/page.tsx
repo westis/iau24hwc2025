@@ -266,23 +266,23 @@ export default function StatsPage() {
               <CardTitle>Age Distribution - {selectedGender === 'M' ? 'Men' : 'Women'}</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex items-end justify-around h-80 gap-2">
+              <div className="flex items-end justify-between h-80 gap-0.5">
                 {ageDistribution.map((bucket) => (
-                  <div key={bucket.range} className="flex flex-col items-center flex-1">
+                  <div key={bucket.range} className="flex flex-col items-center flex-1 min-w-0">
                     <div className="text-sm font-medium mb-1">{bucket.count}</div>
                     <div className="w-full flex flex-col justify-end items-center" style={{ height: '16rem' }}>
                       <div
-                        className="bg-primary w-full rounded-t-md transition-all flex items-end justify-center pb-2"
+                        className="bg-primary w-full rounded-t-md transition-all flex items-end justify-center pb-1"
                         style={{ height: `${bucket.percentage}%`, minHeight: bucket.count > 0 ? '20px' : '0' }}
                       >
                         {bucket.count > 0 && (
-                          <span className="text-xs font-medium text-primary-foreground transform rotate-0">
+                          <span className="text-xs font-medium text-primary-foreground">
                             {bucket.count}
                           </span>
                         )}
                       </div>
                     </div>
-                    <div className="text-xs mt-2 text-muted-foreground whitespace-nowrap">{bucket.range}</div>
+                    <div className="text-xs mt-2 text-muted-foreground whitespace-nowrap truncate w-full text-center">{bucket.range}</div>
                   </div>
                 ))}
               </div>
@@ -300,13 +300,13 @@ export default function StatsPage() {
               {pbDistribution.length === 0 ? (
                 <p className="text-muted-foreground">No PB data available</p>
               ) : (
-                <div className="flex items-end justify-around h-80 gap-1">
+                <div className="flex items-end justify-between h-80 gap-0.5 overflow-x-auto">
                   {pbDistribution.map((bucket) => (
-                    <div key={bucket.range} className="flex flex-col items-center flex-1">
+                    <div key={bucket.range} className="flex flex-col items-center flex-1 min-w-0">
                       <div className="text-sm font-medium mb-1">{bucket.count}</div>
                       <div className="w-full flex flex-col justify-end items-center" style={{ height: '16rem' }}>
                         <div
-                          className="bg-primary w-full rounded-t-md transition-all flex items-end justify-center pb-2"
+                          className="bg-primary w-full rounded-t-md transition-all flex items-end justify-center pb-1"
                           style={{ height: `${bucket.percentage}%`, minHeight: bucket.count > 0 ? '20px' : '0' }}
                         >
                           {bucket.count > 0 && (
@@ -316,7 +316,7 @@ export default function StatsPage() {
                           )}
                         </div>
                       </div>
-                      <div className="text-xs mt-2 text-muted-foreground whitespace-nowrap">{bucket.range} km</div>
+                      <div className="text-xs mt-2 text-muted-foreground whitespace-nowrap truncate w-full text-center">{bucket.range} km</div>
                     </div>
                   ))}
                 </div>
