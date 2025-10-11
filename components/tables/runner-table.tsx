@@ -11,6 +11,7 @@ import {
 } from '@tanstack/react-table'
 import ReactCountryFlag from 'react-country-flag'
 import { useAuth } from '@/lib/auth/auth-context'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 import type { Runner, Gender } from '@/types/runner'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Input } from '@/components/ui/input'
@@ -33,6 +34,7 @@ interface RunnerTableProps {
 
 export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: RunnerTableProps) {
   const { isAdmin } = useAuth()
+  const { t } = useLanguage()
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnVisibility, setColumnVisibility] = React.useState<Record<string, boolean>>({
     personalBestAllTime: metric === 'all-time',
@@ -116,7 +118,7 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
     () => [
       {
         accessorKey: 'rank',
-        header: 'Rank',
+        header: t.runners.rank,
         cell: ({ row }) => {
           const rank = (row.original as any).rank
           return rank ? <div className="font-bold text-center w-12">{rank}</div> : <div className="text-muted-foreground text-center w-12">-</div>
@@ -132,7 +134,7 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
               onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
               className="h-8 px-2"
             >
-              Name
+              {t.runners.name}
               <ArrowUpDown className="ml-2 h-4 w-4" />
             </Button>
           )
@@ -160,7 +162,7 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
               onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
               className="h-8 px-2"
             >
-              Nation
+              {t.runners.nation}
               <ArrowUpDown className="ml-2 h-4 w-4" />
             </Button>
           )
@@ -191,7 +193,7 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
       },
       {
         accessorKey: 'gender',
-        header: 'Gender',
+        header: t.runners.gender,
         cell: ({ row }) => <div>{row.getValue('gender')}</div>,
         filterFn: (row, id, value) => {
           if (value === 'all') return true
@@ -207,7 +209,7 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
               onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
               className="h-8 px-2"
             >
-              PB All-Time
+              {t.runners.pbAllTime}
               <ArrowUpDown className="ml-2 h-4 w-4" />
             </Button>
           )
@@ -235,7 +237,7 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
               onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
               className="h-8 px-2"
             >
-              PB 2023-2025
+              {t.runners.pb20232025}
               <ArrowUpDown className="ml-2 h-4 w-4" />
             </Button>
           )
@@ -263,7 +265,7 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
               onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
               className="h-8 px-2"
             >
-              YOB
+              {t.runners.yob}
               <ArrowUpDown className="ml-2 h-4 w-4" />
             </Button>
           )
@@ -281,7 +283,7 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
       // Only include actions column if admin
       ...(isAdmin ? [{
         id: 'actions' as const,
-        header: 'Actions',
+        header: t.runners.actions,
         cell: ({ row }: { row: any }) => {
           const runner = row.original as Runner
           return (
@@ -296,7 +298,7 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
                 className="whitespace-nowrap"
               >
                 <Pencil className="h-4 w-4 mr-1" />
-                Edit
+                {t.runners.edit}
               </Button>
               {runner.matchStatus === 'unmatched' && (
                 <Button
@@ -308,7 +310,7 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
                   }}
                   className="whitespace-nowrap"
                 >
-                  Manual Match
+                  {t.runners.manualMatch}
                 </Button>
               )}
             </div>
@@ -316,7 +318,7 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
         },
       }] : []),
     ],
-    [onManualMatch, isAdmin]
+    [onManualMatch, isAdmin, t]
   )
 
   const table = useReactTable({
@@ -348,11 +350,11 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
             // Get selected and alternate PB values
             const selectedPB = metric === 'last-3-years' ? runner.personalBestLast3Years : runner.personalBestAllTime
             const selectedPBYear = metric === 'last-3-years' ? runner.personalBestLast3YearsYear : runner.personalBestAllTimeYear
-            const selectedLabel = metric === 'last-3-years' ? '2023-2025' : 'All-Time'
+            const selectedLabel = metric === 'last-3-years' ? t.runners.last3Years : t.runners.allTime
 
             const alternatePB = metric === 'last-3-years' ? runner.personalBestAllTime : runner.personalBestLast3Years
             const alternatePBYear = metric === 'last-3-years' ? runner.personalBestAllTimeYear : runner.personalBestLast3YearsYear
-            const alternateLabel = metric === 'last-3-years' ? 'All-Time' : '2023-2025'
+            const alternateLabel = metric === 'last-3-years' ? t.runners.allTime : t.runners.last3Years
 
             const rank = (runner as any).rank
 
@@ -408,7 +410,7 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
                             {selectedPB.toFixed(3)}km
                             {selectedPBYear && <span className="text-muted-foreground ml-0.5">({selectedPBYear})</span>}
                           </>
-                        ) : 'No PB'}
+                        ) : t.runners.noPB}
                       </span>
                     </div>
                   </div>
@@ -418,7 +420,7 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
                 {isExpanded && (
                   <div className="px-4 pb-4 space-y-3 bg-accent/20 border-t">
                     <div className="pt-3">
-                      <div className="text-xs text-muted-foreground">PB {alternateLabel}</div>
+                      <div className="text-xs text-muted-foreground">{t.runners.pb} {alternateLabel}</div>
                       <div className="text-sm font-medium">
                         {alternatePB ? (
                           <>
@@ -432,7 +434,7 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
                     </div>
                     {runner.dateOfBirth && (
                       <div>
-                        <div className="text-xs text-muted-foreground">Year of Birth</div>
+                        <div className="text-xs text-muted-foreground">{t.runners.yearOfBirth}</div>
                         <div className="text-sm font-medium">{new Date(runner.dateOfBirth).getFullYear()}</div>
                       </div>
                     )}
@@ -448,7 +450,7 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
                           className="flex-1"
                         >
                           <Pencil className="h-3 w-3 mr-1" />
-                          Edit
+                          {t.runners.edit}
                         </Button>
                         {runner.matchStatus === 'unmatched' && (
                           <Button
@@ -460,7 +462,7 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
                             }}
                             className="flex-1"
                           >
-                            Manual Match
+                            {t.runners.manualMatch}
                           </Button>
                         )}
                       </div>
@@ -472,7 +474,7 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
           })
         ) : (
           <div className="col-span-full border rounded-lg p-8 text-center text-muted-foreground">
-            No results.
+            {t.runners.noResults}
           </div>
         )}
       </div>
@@ -515,7 +517,7 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-24 text-center">
-                  No results.
+                  {t.runners.noResults}
                 </TableCell>
               </TableRow>
             )}
@@ -525,22 +527,22 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
 
       {/* Results count */}
       <div className="text-sm text-muted-foreground">
-        Showing {table.getRowModel().rows.length} of {runners.length} runner(s)
+        {t.runners.showingRunners.replace('{count}', table.getRowModel().rows.length.toString()).replace('{total}', runners.length.toString())}
       </div>
 
       {/* Edit Dialog */}
       <Dialog open={!!editingRunner} onOpenChange={(open) => !open && closeEditDialog()}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Runner</DialogTitle>
+            <DialogTitle>{t.runners.editRunner}</DialogTitle>
             <DialogDescription>
-              Make changes to runner information. Click save when you&apos;re done.
+              {t.runners.editDescription}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="firstname" className="text-right">
-                First Name
+                {t.runners.firstName}
               </Label>
               <Input
                 id="firstname"
@@ -551,7 +553,7 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="lastname" className="text-right">
-                Last Name
+                {t.runners.lastName}
               </Label>
               <Input
                 id="lastname"
@@ -562,7 +564,7 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="nationality" className="text-right">
-                Nationality
+                {t.runners.nationality}
               </Label>
               <Input
                 id="nationality"
@@ -570,19 +572,19 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
                 onChange={(e) => setEditForm({ ...editForm, nationality: e.target.value.toUpperCase() })}
                 className="col-span-3"
                 maxLength={3}
-                placeholder="3-letter code (e.g., USA, GER, CRO)"
+                placeholder={t.runners.nationalityPlaceholder}
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="gender" className="text-right">
-                Gender
+                {t.runners.gender}
               </Label>
               <Select
                 value={editForm.gender}
                 onValueChange={(value: 'M' | 'W') => setEditForm({ ...editForm, gender: value })}
               >
                 <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select gender" />
+                  <SelectValue placeholder={t.runners.selectGender} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="M">M</SelectItem>
@@ -592,7 +594,7 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="dns" className="text-right">
-                DNS
+                {t.runners.dns}
               </Label>
               <div className="col-span-3 flex items-center space-x-2">
                 <Checkbox
@@ -604,17 +606,17 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
                   htmlFor="dns"
                   className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >
-                  Did Not Start (exclude from lists and predictions)
+                  {t.runners.dnsDescription}
                 </label>
               </div>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={closeEditDialog} disabled={isSaving}>
-              Cancel
+              {t.runners.cancel}
             </Button>
             <Button onClick={saveEdit} disabled={isSaving}>
-              {isSaving ? 'Saving...' : 'Save changes'}
+              {isSaving ? t.runners.saving : t.runners.saveChanges}
             </Button>
           </DialogFooter>
         </DialogContent>

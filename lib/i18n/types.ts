@@ -56,6 +56,7 @@ export interface Translations {
     totalRunners: string
     name: string
     country: string
+    nation: string
     gender: string
     age: string
     personalBest: string
@@ -77,6 +78,83 @@ export interface Translations {
     rankGender: string
     eventType: string
     noPerformances: string
+    pbAllTime: string
+    pb20232025: string
+    yob: string
+    actions: string
+    edit: string
+    manualMatch: string
+    noPB: string
+    pb: string
+    yearOfBirth: string
+    noResults: string
+    showingRunners: string
+    editRunner: string
+    editDescription: string
+    firstName: string
+    lastName: string
+    nationalityPlaceholder: string
+    selectGender: string
+    dns: string
+    dnsDescription: string
+    cancel: string
+    saving: string
+    saveChanges: string
+    men: string
+    women: string
+    searchByName: string
+    allCountries: string
+    searchCountry: string
+    noCountryFound: string
+    loadingRunners: string
+    runBackendTools: string
+  }
+  runnerDetail: {
+    loadingProfile: string
+    error: string
+    runnerNotFound: string
+    backToRunners: string
+    edit: string
+    men: string
+    women: string
+    age: string
+    yob: string
+    duvProfile: string
+    personalBests: string
+    allTimePB: string
+    pb20232025: string
+    otherPBs: string
+    pb6h: string
+    pb12h: string
+    pb48h: string
+    allRaceHistory: string
+    race24hHistory: string
+    races: string
+    only24h: string
+    allRaces: string
+    noRaceHistory: string
+    date: string
+    event: string
+    type: string
+    result: string
+    rank: string
+    gender: string
+    unknown: string
+    editRunner: string
+    editDescription: string
+    firstName: string
+    lastName: string
+    nationality: string
+    nationalityPlaceholder: string
+    selectGender: string
+    dns: string
+    dnsDescription: string
+    unmatching: string
+    unmatch: string
+    cancel: string
+    saving: string
+    saveChanges: string
+    unmatchConfirm: string
   }
   teams: {
     title: string
@@ -87,6 +165,19 @@ export interface Translations {
     topThreeRunners: string
     teamTotal: string
     allRunners: string
+    men: string
+    women: string
+    allTime: string
+    last3Years: string
+    loadingPredictions: string
+    error: string
+    runBackendTools: string
+    noTeamData: string
+    total: string
+    runners: string
+    noPB: string
+    showLess: string
+    showAll: string
   }
   stats: {
     title: string

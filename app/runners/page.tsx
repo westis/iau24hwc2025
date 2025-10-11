@@ -12,11 +12,13 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Check, ChevronsUpDown } from 'lucide-react'
 import { getCountryCodeForFlag } from '@/lib/utils/country-codes'
 import { cn } from '@/lib/utils'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 import type { Runner } from '@/types/runner'
 
 function RunnersPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { t } = useLanguage()
   const [runners, setRunners] = useState<Runner[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -167,7 +169,7 @@ function RunnersPageContent() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-foreground mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading runners...</p>
+          <p className="text-muted-foreground">{t.runners.loadingRunners}</p>
         </div>
       </div>
     )
@@ -177,8 +179,8 @@ function RunnersPageContent() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <p className="text-destructive mb-4">Error: {error}</p>
-          <p className="text-muted-foreground">Run backend CLI tools to populate data</p>
+          <p className="text-destructive mb-4">{t.runners.error}: {error}</p>
+          <p className="text-muted-foreground">{t.runners.runBackendTools}</p>
         </div>
       </div>
     )
@@ -188,10 +190,7 @@ function RunnersPageContent() {
     <main className="min-h-screen py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold">Individual Runners</h1>
-          <p className="mt-2 text-muted-foreground">
-            IAU 24h World Championships 2025 - Albi, France
-          </p>
+          <h1 className="text-3xl font-bold">{t.runners.title}</h1>
         </div>
 
         {/* Filters - Responsive Layout */}
@@ -209,7 +208,7 @@ function RunnersPageContent() {
                 className={selectedGender === 'M' ? '' : 'hover:bg-accent'}
                 disabled={isPending}
               >
-                Men
+                {t.runners.men}
               </Button>
               <Button
                 variant={selectedGender === 'W' ? 'default' : 'ghost'}
@@ -221,7 +220,7 @@ function RunnersPageContent() {
                 className={selectedGender === 'W' ? '' : 'hover:bg-accent'}
                 disabled={isPending}
               >
-                Women
+                {t.runners.women}
               </Button>
             </div>
             <div className="inline-flex rounded-lg border border-input bg-background p-1" role="group">
@@ -247,7 +246,7 @@ function RunnersPageContent() {
                 className={selectedMetric === 'all-time' ? '' : 'hover:bg-accent'}
                 disabled={isPending}
               >
-                All Time
+                {t.runners.allTime}
               </Button>
             </div>
           </div>
@@ -255,7 +254,7 @@ function RunnersPageContent() {
           {/* Row 2: Search and Country filter */}
           <div className="flex flex-col sm:flex-row gap-4 lg:ml-auto">
             <Input
-              placeholder="Search by name..."
+              placeholder={t.runners.searchByName}
               value={searchQuery}
               onChange={(e) => {
                 const value = e.target.value
@@ -273,7 +272,7 @@ function RunnersPageContent() {
                   className="w-full sm:w-[200px] justify-between"
                 >
                   {countryFilter === 'all' ? (
-                    'All Countries'
+                    t.runners.allCountries
                   ) : (
                     <div className="flex items-center gap-2">
                       <ReactCountryFlag
@@ -292,9 +291,9 @@ function RunnersPageContent() {
               </PopoverTrigger>
               <PopoverContent className="w-[200px] p-0" align="start">
                 <Command>
-                  <CommandInput placeholder="Search country..." />
+                  <CommandInput placeholder={t.runners.searchCountry} />
                   <CommandList>
-                    <CommandEmpty>No country found.</CommandEmpty>
+                    <CommandEmpty>{t.runners.noCountryFound}</CommandEmpty>
                     <CommandGroup>
                       <CommandItem
                         value="all"
@@ -310,7 +309,7 @@ function RunnersPageContent() {
                             countryFilter === 'all' ? "opacity-100" : "opacity-0"
                           )}
                         />
-                        All Countries
+                        {t.runners.allCountries}
                       </CommandItem>
                       {uniqueCountries.map((country) => {
                         const twoLetterCode = getCountryCodeForFlag(country)
@@ -368,16 +367,20 @@ function RunnersPageContent() {
   )
 }
 
+function RunnersPageFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-foreground mx-auto mb-4"></div>
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    </div>
+  )
+}
+
 export default function RunnersPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-foreground mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    }>
+    <Suspense fallback={<RunnersPageFallback />}>
       <RunnersPageContent />
     </Suspense>
   )

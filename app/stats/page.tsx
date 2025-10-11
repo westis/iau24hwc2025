@@ -5,9 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ChoroplethMap } from '@/components/choropleth-map'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 import type { Runner, Gender } from '@/types/runner'
 
 export default function StatsPage() {
+  const { t } = useLanguage()
   const [runners, setRunners] = useState<Runner[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -166,7 +168,7 @@ export default function StatsPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-foreground mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading statistics...</p>
+          <p className="text-muted-foreground">{t.common.loading}</p>
         </div>
       </div>
     )
@@ -176,7 +178,7 @@ export default function StatsPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <p className="text-destructive mb-4">Error: {error}</p>
+          <p className="text-destructive mb-4">{t.common.error}: {error}</p>
         </div>
       </div>
     )
@@ -186,9 +188,9 @@ export default function StatsPage() {
     <main className="container mx-auto px-4 py-6 max-w-7xl">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold tracking-tight">Statistics</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t.stats.title}</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          IAU 24h WC 2025 - Field Analysis
+          {t.stats.subtitle}
         </p>
       </div>
 
@@ -201,7 +203,7 @@ export default function StatsPage() {
             onClick={() => setSelectedGender('M')}
             className={selectedGender === 'M' ? '' : 'hover:bg-accent'}
           >
-            Men
+            {t.common.men}
           </Button>
           <Button
             variant={selectedGender === 'W' ? 'default' : 'ghost'}
@@ -209,7 +211,7 @@ export default function StatsPage() {
             onClick={() => setSelectedGender('W')}
             className={selectedGender === 'W' ? '' : 'hover:bg-accent'}
           >
-            Women
+            {t.common.women}
           </Button>
         </div>
       </div>
@@ -218,7 +220,7 @@ export default function StatsPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Runners</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t.stats.totalRunners}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold">{summaryStats.totalRunners}</p>
@@ -227,24 +229,24 @@ export default function StatsPage() {
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Average Age</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t.stats.averageAge}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold">{summaryStats.avgAge}</p>
             <p className="text-xs text-muted-foreground mt-1">
-              Range: {summaryStats.minAge} - {summaryStats.maxAge}
+              {t.stats.range}: {summaryStats.minAge} - {summaryStats.maxAge}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Average PB (2023-25)</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t.stats.averagePB}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold">{summaryStats.avgPB} km</p>
             <p className="text-xs text-muted-foreground mt-1">
-              Range: {summaryStats.minPB} - {summaryStats.maxPB} km
+              {t.stats.range}: {summaryStats.minPB} - {summaryStats.maxPB} km
             </p>
           </CardContent>
         </Card>
@@ -253,17 +255,17 @@ export default function StatsPage() {
       {/* Tabs for different stats */}
       <Tabs defaultValue="age" className="w-full">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="age">Age Distribution</TabsTrigger>
-          <TabsTrigger value="pb">PB Distribution</TabsTrigger>
-          <TabsTrigger value="countries">Countries</TabsTrigger>
-          <TabsTrigger value="map">Map</TabsTrigger>
+          <TabsTrigger value="age">{t.stats.ageDistribution}</TabsTrigger>
+          <TabsTrigger value="pb">{t.stats.pbDistribution}</TabsTrigger>
+          <TabsTrigger value="countries">{t.stats.countries}</TabsTrigger>
+          <TabsTrigger value="map">{t.stats.map}</TabsTrigger>
         </TabsList>
 
         {/* Age Distribution Tab */}
         <TabsContent value="age">
           <Card>
             <CardHeader>
-              <CardTitle>Age Distribution - {selectedGender === 'M' ? 'Men' : 'Women'}</CardTitle>
+              <CardTitle>{t.stats.ageDistribution} - {selectedGender === 'M' ? t.common.men : t.common.women}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-end justify-between h-80 gap-0.5">
@@ -294,11 +296,11 @@ export default function StatsPage() {
         <TabsContent value="pb">
           <Card>
             <CardHeader>
-              <CardTitle>PB Distribution (2023-2025) - {selectedGender === 'M' ? 'Men' : 'Women'}</CardTitle>
+              <CardTitle>{t.stats.pbDistribution} - {selectedGender === 'M' ? t.common.men : t.common.women}</CardTitle>
             </CardHeader>
             <CardContent>
               {pbDistribution.length === 0 ? (
-                <p className="text-muted-foreground">No PB data available</p>
+                <p className="text-muted-foreground">{t.stats.noPBData}</p>
               ) : (
                 <div className="flex items-end justify-between h-80 gap-0.5 overflow-x-auto">
                   {pbDistribution.map((bucket) => (
@@ -329,7 +331,7 @@ export default function StatsPage() {
         <TabsContent value="countries">
           <Card>
             <CardHeader>
-              <CardTitle>Participating Countries ({countryParticipation.length}) - All Genders</CardTitle>
+              <CardTitle>{t.stats.participatingCountries} ({countryParticipation.length}) - {t.stats.allGenders}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -341,7 +343,7 @@ export default function StatsPage() {
                     <div className="flex items-center justify-between mb-2">
                       <span className="font-semibold text-lg">{country.country}</span>
                       <span className="text-sm font-medium text-muted-foreground">
-                        Total: {country.total}
+                        {t.stats.total}: {country.total}
                       </span>
                     </div>
                     <div className="flex gap-4 text-sm">
@@ -380,7 +382,7 @@ export default function StatsPage() {
         <TabsContent value="map">
           <Card>
             <CardHeader>
-              <CardTitle>World Map - Participating Countries ({countryParticipation.length})</CardTitle>
+              <CardTitle>{t.stats.map} - {t.stats.participatingCountries} ({countryParticipation.length})</CardTitle>
             </CardHeader>
             <CardContent>
               <ChoroplethMap countries={countryParticipation} />

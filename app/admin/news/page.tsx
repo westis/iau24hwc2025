@@ -5,9 +5,11 @@ import { useAuth } from '@/lib/auth/auth-context'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 import type { NewsItem, NewsItemCreate } from '@/types/news'
 
 export default function AdminNewsPage() {
+  const { t } = useLanguage()
   const { isAdmin } = useAuth()
   const router = useRouter()
   const [news, setNews] = useState<NewsItem[]>([])
@@ -74,7 +76,7 @@ export default function AdminNewsPage() {
   }
 
   async function handleDelete(id: number) {
-    if (!confirm('Are you sure you want to delete this news item?')) return
+    if (!confirm(t.news.confirmDelete)) return
 
     try {
       const response = await fetch(`/api/news/${id}`, {
@@ -108,19 +110,19 @@ export default function AdminNewsPage() {
   }
 
   if (!isAdmin) return null
-  if (loading) return <div className="p-8">Loading...</div>
+  if (loading) return <div className="p-8">{t.common.loading}</div>
 
   return (
     <main className="container mx-auto px-4 py-6 max-w-7xl">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Manage News</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t.news.manageNews}</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Create and manage news announcements
+            {t.news.manageSubtitle}
           </p>
         </div>
         <Button onClick={startCreate} disabled={creating || editing !== null}>
-          Create News
+          {t.news.createNews}
         </Button>
       </div>
 
@@ -128,26 +130,26 @@ export default function AdminNewsPage() {
       {(creating || editing) && (
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>{editing ? 'Edit News' : 'Create News'}</CardTitle>
+            <CardTitle>{editing ? t.news.editNews : t.news.createNews}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-2">Title</label>
+              <label className="block text-sm font-medium mb-2">{t.news.titleLabel}</label>
               <input
                 type="text"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 className="w-full px-3 py-2 border border-border rounded-md bg-background"
-                placeholder="Enter news title"
+                placeholder={t.news.titlePlaceholder}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Content</label>
+              <label className="block text-sm font-medium mb-2">{t.news.contentLabel}</label>
               <textarea
                 value={formData.content}
                 onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                 className="w-full px-3 py-2 border border-border rounded-md bg-background min-h-[200px]"
-                placeholder="Enter news content"
+                placeholder={t.news.contentPlaceholder}
               />
             </div>
             <div className="flex items-center gap-2">
@@ -159,7 +161,7 @@ export default function AdminNewsPage() {
                 className="w-4 h-4"
               />
               <label htmlFor="published" className="text-sm font-medium cursor-pointer">
-                Published (visible to public)
+                {t.news.published} ({t.news.publishedDesc})
               </label>
             </div>
             <div className="flex gap-2">
@@ -167,10 +169,10 @@ export default function AdminNewsPage() {
                 onClick={() => editing ? handleUpdate(editing.id) : handleCreate()}
                 disabled={!formData.title || !formData.content}
               >
-                {editing ? 'Update' : 'Create'}
+                {editing ? t.common.update : t.common.create}
               </Button>
               <Button onClick={cancelEdit} variant="outline">
-                Cancel
+                {t.common.cancel}
               </Button>
             </div>
           </CardContent>
@@ -182,7 +184,7 @@ export default function AdminNewsPage() {
         {news.length === 0 ? (
           <Card>
             <CardContent className="py-8 text-center text-muted-foreground">
-              No news items yet. Create one to get started.
+              {t.news.noNewsYet}
             </CardContent>
           </Card>
         ) : (
@@ -195,13 +197,13 @@ export default function AdminNewsPage() {
                       {item.title}
                       {!item.published && (
                         <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded">
-                          Draft
+                          {t.news.draft}
                         </span>
                       )}
                     </CardTitle>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Created: {new Date(item.created_at).toLocaleString()} |
-                      Updated: {new Date(item.updated_at).toLocaleString()}
+                      {t.news.created}: {new Date(item.created_at).toLocaleString()} |
+                      {t.news.updated}: {new Date(item.updated_at).toLocaleString()}
                     </p>
                   </div>
                   <div className="flex gap-2">
@@ -211,14 +213,14 @@ export default function AdminNewsPage() {
                       onClick={() => startEdit(item)}
                       disabled={creating || (editing !== null && editing.id !== item.id)}
                     >
-                      Edit
+                      {t.common.edit}
                     </Button>
                     <Button
                       size="sm"
                       variant="destructive"
                       onClick={() => handleDelete(item.id)}
                     >
-                      Delete
+                      {t.common.delete}
                     </Button>
                   </div>
                 </div>

@@ -11,6 +11,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react'
 import { getCountryCodeForFlag } from '@/lib/utils/country-codes'
 import { getCountryName } from '@/lib/utils/country-names'
 import { cn } from '@/lib/utils'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 
 interface TeamCardProps {
   rank: number
@@ -35,12 +36,13 @@ function getMedalEmoji(rank: number): string {
 
 export function TeamCard({ rank, team, gender, metric }: TeamCardProps) {
   const router = useRouter()
+  const { t } = useLanguage()
   const [isExpanded, setIsExpanded] = React.useState(false)
 
   const medal = getMedalEmoji(rank)
   const countryName = getCountryName(team.nationality)
   const twoLetterCode = getCountryCodeForFlag(team.nationality)
-  const metricLabel = metric === 'last-3-years' ? 'Last 3 Years' : 'All-Time'
+  const metricLabel = metric === 'last-3-years' ? t.teams.last3Years : t.teams.allTime
 
   return (
     <div className="rounded-lg border bg-card p-4 hover:shadow-sm transition-shadow">
@@ -51,7 +53,7 @@ export function TeamCard({ rank, team, gender, metric }: TeamCardProps) {
           <span className="text-sm font-medium text-muted-foreground">#{rank}</span>
         </div>
         <div className="text-right">
-          <div className="text-xs text-muted-foreground">Total</div>
+          <div className="text-xs text-muted-foreground">{t.teams.total}</div>
           <div className="text-lg font-semibold">{team.teamTotal.toFixed(3)} km</div>
         </div>
       </div>
@@ -70,7 +72,7 @@ export function TeamCard({ rank, team, gender, metric }: TeamCardProps) {
         <div>
           <h3 className="font-semibold">{countryName}</h3>
           <p className="text-xs text-muted-foreground">
-            {team.runners.length} runners • {metricLabel}
+            {team.runners.length} {t.teams.runners} • {metricLabel}
           </p>
         </div>
       </div>
@@ -138,7 +140,7 @@ export function TeamCard({ rank, team, gender, metric }: TeamCardProps) {
                     {pb.toFixed(3)} {pbYear && `(${pbYear})`}
                   </span>
                 ) : (
-                  <span className="text-muted-foreground text-xs italic">No PB</span>
+                  <span className="text-muted-foreground text-xs italic">{t.teams.noPB}</span>
                 )}
               </div>
             )
@@ -153,9 +155,9 @@ export function TeamCard({ rank, team, gender, metric }: TeamCardProps) {
           className="w-full mt-3 pt-3 border-t text-xs text-muted-foreground hover:text-foreground transition-colors"
         >
           {isExpanded ? (
-            <>Show less <ChevronUp className="inline h-3 w-3" /></>
+            <>{t.teams.showLess} <ChevronUp className="inline h-3 w-3" /></>
           ) : (
-            <>Show all {team.runners.length} <ChevronDown className="inline h-3 w-3" /></>
+            <>{t.teams.showAll} {team.runners.length} <ChevronDown className="inline h-3 w-3" /></>
           )}
         </button>
       )}

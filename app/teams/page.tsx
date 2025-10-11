@@ -4,12 +4,14 @@ import { useEffect, useState, useMemo, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { TeamCard } from '@/components/cards/team-card'
 import { Button } from '@/components/ui/button'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 import type { Team } from '@/types/team'
 import type { Runner, Gender } from '@/types/runner'
 
 function TeamsPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { t } = useLanguage()
   const [runners, setRunners] = useState<Runner[]>([])
   const [metric, setMetric] = useState<'all-time' | 'last-3-years'>(() => {
     const m = searchParams.get('metric')
@@ -133,7 +135,7 @@ function TeamsPageContent() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-foreground mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading team predictions...</p>
+          <p className="text-muted-foreground">{t.teams.loadingPredictions}</p>
         </div>
       </div>
     )
@@ -143,8 +145,8 @@ function TeamsPageContent() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <p className="text-destructive mb-4">Error: {error}</p>
-          <p className="text-muted-foreground">Run backend CLI tools to populate data</p>
+          <p className="text-destructive mb-4">{t.teams.error}: {error}</p>
+          <p className="text-muted-foreground">{t.teams.runBackendTools}</p>
         </div>
       </div>
     )
@@ -154,10 +156,7 @@ function TeamsPageContent() {
     <main className="container mx-auto px-4 py-6 max-w-7xl">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold tracking-tight">Team Predictions</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Top 3 runners per country • IAU 24h WC 2025
-        </p>
+        <h1 className="text-2xl font-bold tracking-tight">{t.teams.title}</h1>
       </div>
 
       {/* Controls */}
@@ -173,7 +172,7 @@ function TeamsPageContent() {
             }}
             className={gender === 'M' ? '' : 'hover:bg-accent'}
           >
-            Men
+            {t.teams.men}
           </Button>
           <Button
             variant={gender === 'W' ? 'default' : 'ghost'}
@@ -184,7 +183,7 @@ function TeamsPageContent() {
             }}
             className={gender === 'W' ? '' : 'hover:bg-accent'}
           >
-            Women
+            {t.teams.women}
           </Button>
         </div>
 
@@ -199,7 +198,7 @@ function TeamsPageContent() {
             }}
             className={metric === 'last-3-years' ? '' : 'hover:bg-accent'}
           >
-            Last 3 Years
+            {t.teams.last3Years}
           </Button>
           <Button
             variant={metric === 'all-time' ? 'default' : 'ghost'}
@@ -210,7 +209,7 @@ function TeamsPageContent() {
             }}
             className={metric === 'all-time' ? '' : 'hover:bg-accent'}
           >
-            All-Time
+            {t.teams.allTime}
           </Button>
         </div>
       </div>
@@ -218,10 +217,10 @@ function TeamsPageContent() {
       {/* Teams */}
       <div className="mb-8">
         <h2 className="text-lg font-semibold mb-3">
-          {gender === 'M' ? 'Men' : 'Women'} ({teams.length})
+          {gender === 'M' ? t.teams.men : t.teams.women} ({teams.length})
         </h2>
         {teams.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No team data available</p>
+          <p className="text-sm text-muted-foreground">{t.teams.noTeamData}</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {teams.map((team, index) => (
@@ -240,16 +239,20 @@ function TeamsPageContent() {
   )
 }
 
+function TeamsPageFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-foreground mx-auto mb-4"></div>
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    </div>
+  )
+}
+
 export default function TeamsPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-foreground mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    }>
+    <Suspense fallback={<TeamsPageFallback />}>
       <TeamsPageContent />
     </Suspense>
   )

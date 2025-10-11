@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth/auth-context'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -57,6 +58,7 @@ export default function RunnerProfilePage() {
   const params = useParams()
   const router = useRouter()
   const { isAdmin } = useAuth()
+  const { t } = useLanguage()
   const [runner, setRunner] = useState<RunnerProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -191,7 +193,7 @@ export default function RunnerProfilePage() {
   async function handleUnmatch() {
     if (!runner || !runner.duv_id) return
 
-    if (!confirm('Are you sure you want to unmatch this runner? This will remove the DUV ID and performance data.')) {
+    if (!confirm(t.runnerDetail.unmatchConfirm)) {
       return
     }
 
@@ -220,7 +222,7 @@ export default function RunnerProfilePage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-foreground mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading runner profile...</p>
+          <p className="text-muted-foreground">{t.runnerDetail.loadingProfile}</p>
         </div>
       </div>
     )
@@ -230,8 +232,8 @@ export default function RunnerProfilePage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <p className="text-destructive mb-4">Error: {error || 'Runner not found'}</p>
-          <Button onClick={() => router.push('/runners')}>Back to Runners</Button>
+          <p className="text-destructive mb-4">{t.runnerDetail.error}: {error || t.runnerDetail.runnerNotFound}</p>
+          <Button onClick={() => router.push('/runners')}>{t.runnerDetail.backToRunners}</Button>
         </div>
       </div>
     )
@@ -335,7 +337,7 @@ export default function RunnerProfilePage() {
           className="mb-4"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Runners
+          {t.runnerDetail.backToRunners}
         </Button>
 
         <div className="mb-6">
@@ -350,18 +352,18 @@ export default function RunnerProfilePage() {
                 onClick={openEditDialog}
               >
                 <Pencil className="h-4 w-4 mr-2" />
-                Edit
+                {t.runnerDetail.edit}
               </Button>
             )}
           </div>
           <div className="flex flex-wrap items-center gap-2 mt-2">
             <Badge variant="outline">{runner.nationality}</Badge>
-            <Badge variant="outline">{runner.gender === 'M' ? 'Men' : 'Women'}</Badge>
+            <Badge variant="outline">{runner.gender === 'M' ? t.runnerDetail.men : t.runnerDetail.women}</Badge>
             {(runner.age || runner.date_of_birth) && (
               <Badge variant="outline">
-                {runner.age && `Age ${runner.age}`}
+                {runner.age && `${t.runnerDetail.age} ${runner.age}`}
                 {runner.age && runner.date_of_birth && ' • '}
-                {runner.date_of_birth && `YOB ${new Date(runner.date_of_birth).getFullYear()}`}
+                {runner.date_of_birth && `${t.runnerDetail.yob} ${new Date(runner.date_of_birth).getFullYear()}`}
               </Badge>
             )}
             {runner.duv_id && (
@@ -371,7 +373,7 @@ export default function RunnerProfilePage() {
                 rel="noopener noreferrer"
                 className="text-xs text-muted-foreground hover:text-primary transition-colors ml-2"
               >
-                DUV Profile →
+                {t.runnerDetail.duvProfile}
               </a>
             )}
           </div>
@@ -380,12 +382,12 @@ export default function RunnerProfilePage() {
         <div className={`grid gap-6 ${hasOtherPBs ? 'md:grid-cols-2' : 'md:grid-cols-1 max-w-2xl'} mb-6`}>
           <Card>
             <CardHeader>
-              <CardTitle>Personal Bests</CardTitle>
+              <CardTitle>{t.runnerDetail.personalBests}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">All-Time PB</p>
+                  <p className="text-sm text-muted-foreground">{t.runnerDetail.allTimePB}</p>
                   <p className="text-2xl font-bold text-primary">
                     {runner.personal_best_all_time ? (
                       <>
@@ -398,7 +400,7 @@ export default function RunnerProfilePage() {
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">PB 2023-2025</p>
+                  <p className="text-sm text-muted-foreground">{t.runnerDetail.pb20232025}</p>
                   <p className="text-2xl font-bold text-primary">
                     {runner.personal_best_last_3_years ? (
                       <>
@@ -417,13 +419,13 @@ export default function RunnerProfilePage() {
           {hasOtherPBs && (
             <Card>
               <CardHeader>
-                <CardTitle>Other PBs</CardTitle>
+                <CardTitle>{t.runnerDetail.otherPBs}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {pb6h && (
                     <div>
-                      <p className="text-sm text-muted-foreground">6h PB</p>
+                      <p className="text-sm text-muted-foreground">{t.runnerDetail.pb6h}</p>
                       <p className="text-2xl font-bold text-primary">
                         {pb6h.distance.toFixed(3)} km
                         <span className="text-base text-muted-foreground ml-2">({pb6h.year})</span>
@@ -432,7 +434,7 @@ export default function RunnerProfilePage() {
                   )}
                   {pb12h && (
                     <div>
-                      <p className="text-sm text-muted-foreground">12h PB</p>
+                      <p className="text-sm text-muted-foreground">{t.runnerDetail.pb12h}</p>
                       <p className="text-2xl font-bold text-primary">
                         {pb12h.distance.toFixed(3)} km
                         <span className="text-base text-muted-foreground ml-2">({pb12h.year})</span>
@@ -441,7 +443,7 @@ export default function RunnerProfilePage() {
                   )}
                   {pb48h && (
                     <div>
-                      <p className="text-sm text-muted-foreground">48h PB</p>
+                      <p className="text-sm text-muted-foreground">{t.runnerDetail.pb48h}</p>
                       <p className="text-2xl font-bold text-primary">
                         {pb48h.distance.toFixed(3)} km
                         <span className="text-base text-muted-foreground ml-2">({pb48h.year})</span>
@@ -458,7 +460,7 @@ export default function RunnerProfilePage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>
-                {showAllRaces ? 'All Race History' : '24h Race History'} ({displayedPerformances.length} races)
+                {showAllRaces ? t.runnerDetail.allRaceHistory : t.runnerDetail.race24hHistory} ({displayedPerformances.length} {t.runnerDetail.races})
               </CardTitle>
               <div className="inline-flex rounded-lg border border-input bg-background p-1" role="group">
                 <Button
@@ -467,7 +469,7 @@ export default function RunnerProfilePage() {
                   onClick={() => setShowAllRaces(false)}
                   className={!showAllRaces ? '' : 'hover:bg-accent'}
                 >
-                  24h Only
+                  {t.runnerDetail.only24h}
                 </Button>
                 <Button
                   variant={showAllRaces ? 'default' : 'ghost'}
@@ -475,27 +477,27 @@ export default function RunnerProfilePage() {
                   onClick={() => setShowAllRaces(true)}
                   className={showAllRaces ? '' : 'hover:bg-accent'}
                 >
-                  All Races
+                  {t.runnerDetail.allRaces}
                 </Button>
               </div>
             </div>
           </CardHeader>
           <CardContent>
             {displayedPerformances.length === 0 ? (
-              <p className="text-muted-foreground">No race history available</p>
+              <p className="text-muted-foreground">{t.runnerDetail.noRaceHistory}</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b">
-                      <th className="text-left py-2 px-4">Date</th>
-                      <th className="text-left py-2 px-4">Event</th>
-                      {showAllRaces && <th className="text-left py-2 px-4">Type</th>}
-                      <th className="text-right py-2 px-4">Result</th>
+                      <th className="text-left py-2 px-4">{t.runnerDetail.date}</th>
+                      <th className="text-left py-2 px-4">{t.runnerDetail.event}</th>
+                      {showAllRaces && <th className="text-left py-2 px-4">{t.runnerDetail.type}</th>}
+                      <th className="text-right py-2 px-4">{t.runnerDetail.result}</th>
                       <th className="text-right py-2 px-4">
                         <div className="flex flex-col">
-                          <span>Rank</span>
-                          <span className="text-xs font-normal text-muted-foreground">(Gender)</span>
+                          <span>{t.runnerDetail.rank}</span>
+                          <span className="text-xs font-normal text-muted-foreground">({t.runnerDetail.gender})</span>
                         </div>
                       </th>
                     </tr>
@@ -512,7 +514,7 @@ export default function RunnerProfilePage() {
                           {showAllRaces && (
                             <td className="py-2 px-4 text-sm">
                               <Badge variant="outline" className="text-xs">
-                                {perf.event_type || 'Unknown'}
+                                {perf.event_type || t.runnerDetail.unknown}
                               </Badge>
                             </td>
                           )}
@@ -542,15 +544,15 @@ export default function RunnerProfilePage() {
         <Dialog open={isEditDialogOpen} onOpenChange={(open) => !open && closeEditDialog()}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Edit Runner</DialogTitle>
+              <DialogTitle>{t.runnerDetail.editRunner}</DialogTitle>
               <DialogDescription>
-                Make changes to runner information. Click save when you&apos;re done.
+                {t.runnerDetail.editDescription}
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="firstname" className="text-right">
-                  First Name
+                  {t.runnerDetail.firstName}
                 </Label>
                 <Input
                   id="firstname"
@@ -561,7 +563,7 @@ export default function RunnerProfilePage() {
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="lastname" className="text-right">
-                  Last Name
+                  {t.runnerDetail.lastName}
                 </Label>
                 <Input
                   id="lastname"
@@ -572,7 +574,7 @@ export default function RunnerProfilePage() {
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="nationality" className="text-right">
-                  Nationality
+                  {t.runnerDetail.nationality}
                 </Label>
                 <Input
                   id="nationality"
@@ -580,19 +582,19 @@ export default function RunnerProfilePage() {
                   onChange={(e) => setEditForm({ ...editForm, nationality: e.target.value.toUpperCase() })}
                   className="col-span-3"
                   maxLength={3}
-                  placeholder="3-letter code (e.g., USA, GER, CRO)"
+                  placeholder={t.runnerDetail.nationalityPlaceholder}
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="gender" className="text-right">
-                  Gender
+                  {t.runnerDetail.gender}
                 </Label>
                 <Select
                   value={editForm.gender}
                   onValueChange={(value: 'M' | 'W') => setEditForm({ ...editForm, gender: value })}
                 >
                   <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="Select gender" />
+                    <SelectValue placeholder={t.runnerDetail.selectGender} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="M">M</SelectItem>
@@ -602,7 +604,7 @@ export default function RunnerProfilePage() {
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="dns" className="text-right">
-                  DNS
+                  {t.runnerDetail.dns}
                 </Label>
                 <div className="col-span-3 flex items-center space-x-2">
                   <Checkbox
@@ -614,7 +616,7 @@ export default function RunnerProfilePage() {
                     htmlFor="dns"
                     className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                   >
-                    Did Not Start (hidden by default)
+                    {t.runnerDetail.dnsDescription}
                   </label>
                 </div>
               </div>
@@ -627,16 +629,16 @@ export default function RunnerProfilePage() {
                     onClick={handleUnmatch}
                     disabled={isSaving || isUnmatching}
                   >
-                    {isUnmatching ? 'Unmatching...' : 'Unmatch'}
+                    {isUnmatching ? t.runnerDetail.unmatching : t.runnerDetail.unmatch}
                   </Button>
                 )}
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" onClick={closeEditDialog} disabled={isSaving || isUnmatching}>
-                  Cancel
+                  {t.runnerDetail.cancel}
                 </Button>
                 <Button onClick={saveEdit} disabled={isSaving || isUnmatching}>
-                  {isSaving ? 'Saving...' : 'Save changes'}
+                  {isSaving ? t.runnerDetail.saving : t.runnerDetail.saveChanges}
                 </Button>
               </div>
             </DialogFooter>
