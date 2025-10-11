@@ -5,7 +5,7 @@ import { readFileSync, writeFileSync } from 'fs'
 import { join } from 'path'
 
 // DUV API configuration
-const DUV_BASE_URL = 'https://statistik.d-u-v.org'
+const DUV_JSON_API_BASE = 'https://statistik.d-u-v.org/json'
 
 interface DUVPersonalBest {
   PB: string
@@ -28,7 +28,7 @@ interface DUVRunnerProfile {
 }
 
 async function getRunnerProfile(personId: number): Promise<DUVRunnerProfile> {
-  const url = `${DUV_BASE_URL}/api/runner/${personId}`
+  const url = `${DUV_JSON_API_BASE}/mgetresultperson.php?runner=${personId}&plain=1`
   console.log(`  Fetching: ${url}`)
 
   const response = await fetch(url)
@@ -38,13 +38,25 @@ async function getRunnerProfile(personId: number): Promise<DUVRunnerProfile> {
 
   const data = await response.json()
 
+  // Parse YOB correctly from JSON endpoint
+  const personHeader = data.PersonHeader || {}
+  const yobStr = personHeader.YOB
+  let yob: number | null = null
+  if (yobStr && yobStr !== '0000' && yobStr !== '&nbsp;') {
+    try {
+      yob = parseInt(yobStr, 10)
+    } catch {
+      yob = null
+    }
+  }
+
   return {
     PersonID: personId,
-    Lastname: data.PersonHeader?.Lastname || '',
-    Firstname: data.PersonHeader?.Firstname || '',
-    YOB: data.PersonHeader?.YOB || null,
-    Gender: data.PersonHeader?.Gender || '',
-    Nationality: data.PersonHeader?.Nationality || '',
+    Lastname: personHeader.Lastname || '',
+    Firstname: personHeader.Firstname || '',
+    YOB: yob,
+    Gender: personHeader.Sex || '',
+    Nationality: personHeader.Nation || '',
     allPBs: data.AllPBs || [],
   }
 }
