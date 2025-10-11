@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { getCountryCodeForFlag } from '@/lib/utils/country-codes'
 import { getCountryName } from '@/lib/utils/country-names'
+import { cn } from '@/lib/utils'
 
 interface TeamCardProps {
   rank: number
@@ -83,12 +84,18 @@ export function TeamCard({ rank, team, gender, metric }: TeamCardProps) {
             return (
               <div
                 key={runner.entryId}
-                className="flex items-center justify-between text-sm cursor-pointer hover:bg-accent/50 rounded px-1 py-0.5 transition-colors"
+                className={cn(
+                  "flex items-center justify-between text-sm cursor-pointer hover:bg-accent/50 rounded px-1 py-0.5 transition-colors",
+                  runner.dns && "opacity-60"
+                )}
                 onClick={() => router.push(`/runners/${runner.entryId}`)}
               >
                 <div className="flex items-center gap-2">
                   <span className="text-muted-foreground w-4">{index + 1}.</span>
-                  <span className="truncate">{runner.firstname} {runner.lastname}</span>
+                  <span className="truncate">
+                    {runner.firstname} {runner.lastname}
+                    {runner.dns && <span className="text-xs text-muted-foreground ml-1">(DNS)</span>}
+                  </span>
                 </div>
                 {pb && (
                   <span className="text-muted-foreground text-xs">
@@ -107,17 +114,23 @@ export function TeamCard({ rank, team, gender, metric }: TeamCardProps) {
           {team.runners.map((runner, index) => {
             const pb = metric === 'all-time' ? runner.personalBestAllTime : runner.personalBestLast3Years
             const pbYear = metric === 'all-time' ? runner.personalBestAllTimeYear : runner.personalBestLast3YearsYear
-            const isTopThree = index < 3 && pb !== null && pb > 0
+            // Check if runner is in the actual top 3 (counting only non-DNS runners)
+            const isInTopThree = team.topThree.some(r => r.entryId === runner.entryId)
             return (
               <div
                 key={runner.entryId}
-                className={`flex items-center justify-between text-sm cursor-pointer hover:bg-accent/50 rounded px-1 py-0.5 transition-colors ${!isTopThree && 'opacity-50'}`}
+                className={cn(
+                  "flex items-center justify-between text-sm cursor-pointer hover:bg-accent/50 rounded px-1 py-0.5 transition-colors",
+                  !isInTopThree && !runner.dns && "opacity-50",
+                  runner.dns && "opacity-60"
+                )}
                 onClick={() => router.push(`/runners/${runner.entryId}`)}
               >
                 <div className="flex items-center gap-2">
                   <span className="text-muted-foreground w-4">{index + 1}.</span>
                   <span className="truncate">
                     {runner.firstname} {runner.lastname}
+                    {runner.dns && <span className="text-xs text-muted-foreground ml-1">(DNS)</span>}
                   </span>
                 </div>
                 {pb ? (

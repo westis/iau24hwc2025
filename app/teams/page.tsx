@@ -14,30 +14,40 @@ export default function TeamsPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // Load runners from localStorage
-    try {
-      setLoading(true)
-      const stored = localStorage.getItem('runners')
-      if (stored) {
-        const parsedRunners = JSON.parse(stored) as Runner[]
-        setRunners(parsedRunners)
-      } else {
-        setError('No runners found. Please upload an entry list.')
+    // Fetch runners from API (Supabase)
+    async function fetchRunners() {
+      try {
+        setLoading(true)
+
+        const response = await fetch('/api/runners')
+        if (!response.ok) {
+          throw new Error('Failed to fetch runners from API')
+        }
+
+        const data = await response.json()
+        const fetchedRunners = data.runners as Runner[]
+
+        // Store in localStorage as cache
+        localStorage.setItem('runners', JSON.stringify(fetchedRunners))
+
+        setRunners(fetchedRunners)
+      } catch (err) {
+        console.error('Error loading runners from API:', err)
+        setError(err instanceof Error ? err.message : 'Failed to load runners')
+      } finally {
+        setLoading(false)
       }
-    } catch (err) {
-      console.error('Error loading runners from localStorage:', err)
-      setError(err instanceof Error ? err.message : 'Failed to load runners')
-    } finally {
-      setLoading(false)
     }
+
+    fetchRunners()
   }, [])
 
   // Calculate teams client-side
   const teams = useMemo(() => {
-    // Filter runners for this gender and exclude DNS runners
-    const genderRunners = runners.filter(r => r.gender === gender && !r.dns)
+    // Filter runners for this gender (include DNS runners)
+    const genderRunners = runners.filter(r => r.gender === gender)
 
-    // Group ALL runners by nationality (including those without PBs)
+    // Group ALL runners by nationality (including DNS)
     const teamGroups = new Map<string, Runner[]>()
     genderRunners.forEach(runner => {
       const key = runner.nationality
@@ -49,13 +59,13 @@ export default function TeamsPage() {
 
     // Calculate team totals
     const allTeams: Team[] = Array.from(teamGroups.entries()).map(([nationality, allTeamRunners]) => {
-      // Separate runners with PBs from those without
+      // Separate runners with PBs from those without, and DNS runners
       const runnersWithPB = allTeamRunners.filter(r => {
         const pb = metric === 'all-time' ? r.personalBestAllTime : r.personalBestLast3Years
         return pb !== null && pb > 0
       })
 
-      // Sort runners with PBs by PB (descending)
+      // Sort runners with PBs by PB (descending) - includes DNS in natural position
       const sortedWithPB = runnersWithPB.sort((a, b) => {
         const aVal = metric === 'all-time' ? a.personalBestAllTime : a.personalBestLast3Years
         const bVal = metric === 'all-time' ? b.personalBestAllTime : b.personalBestLast3Years
@@ -72,14 +82,14 @@ export default function TeamsPage() {
         return aName.localeCompare(bName)
       })
 
-      // Combine: runners with PBs first, then runners without PBs
+      // Combine: runners with PBs first (DNS in natural PB position), then runners without PBs
       const allSorted = [...sortedWithPB, ...runnersWithoutPB]
 
-      // Take top 3 with PBs for team ranking
-      const topThree = sortedWithPB.slice(0, 3)
+      // Take top 3 NON-DNS runners with PBs for team ranking
+      const topThreeNonDNS = sortedWithPB.filter(r => !r.dns).slice(0, 3)
 
-      // Calculate team total (only from top 3 with PBs)
-      const teamTotal = topThree.reduce((sum, r) => {
+      // Calculate team total (only from top 3 non-DNS runners with PBs)
+      const teamTotal = topThreeNonDNS.reduce((sum, r) => {
         const pb = metric === 'all-time' ? r.personalBestAllTime : r.personalBestLast3Years
         return sum + (pb || 0)
       }, 0)
@@ -87,8 +97,8 @@ export default function TeamsPage() {
       return {
         nationality,
         gender,
-        runners: allSorted, // All runners for this nationality
-        topThree,
+        runners: allSorted, // All runners for this nationality (including DNS)
+        topThree: topThreeNonDNS,
         teamTotal,
       }
     })
