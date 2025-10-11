@@ -110,68 +110,73 @@ export function ChoroplethMap({ countries }: ChoroplethMapProps) {
       <div className="mb-4 flex items-center gap-4 justify-center text-sm">
         <span>Participants:</span>
         <div className="flex items-center gap-2">
-          <div className="h-4 w-8 bg-primary/20 rounded"></div>
-          <span>Low</span>
+          <div className="h-4 w-4 bg-blue-300 rounded-full border-2 border-blue-600"></div>
+          <span>1-3</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="h-4 w-8 bg-primary/60 rounded"></div>
-          <span>Medium</span>
+          <div className="h-6 w-6 bg-blue-400 rounded-full border-2 border-blue-700"></div>
+          <span>4-8</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="h-4 w-8 bg-primary rounded"></div>
-          <span>High</span>
+          <div className="h-8 w-8 bg-blue-500 rounded-full border-2 border-blue-800"></div>
+          <span>9+</span>
         </div>
       </div>
 
-      {/* SVG World Map */}
-      <div className="relative w-full overflow-x-auto">
-        <svg
-          viewBox="0 0 1000 600"
-          className="w-full h-auto border border-border rounded-lg"
-          style={{ minHeight: '400px', background: '#f0f9ff' }}
-        >
-          {/* Ocean background is set via style */}
+      {/* World Map with Overlay */}
+      <div className="relative w-full border border-border rounded-lg overflow-hidden bg-gray-100">
+        <div className="relative w-full" style={{ height: '600px' }}>
+          {/* Real world map as background image */}
+          <img
+            src="https://upload.wikimedia.org/wikipedia/commons/8/83/Equirectangular_projection_SW.jpg"
+            alt="World Map"
+            className="absolute inset-0 w-full h-full object-cover opacity-40"
+          />
 
-          {/* Draw all countries */}
-          {Object.entries(COUNTRY_POSITIONS).map(([code, pos]) => {
-            const countryData = getCountryData(code)
-            const hasData = !!countryData
-            const intensity = countryData ? getColorIntensity(countryData.total) : 0
+          {/* SVG overlay for country markers */}
+          <svg
+            viewBox="0 0 2000 1000"
+            className="w-full h-full absolute inset-0"
+          >
+            {/* Overlay country markers */}
+            {Object.entries(COUNTRY_POSITIONS).map(([code, pos]) => {
+              const countryData = getCountryData(code)
+              if (!countryData) return null
 
-            return (
-              <rect
-                key={code}
-                x={pos.x}
-                y={pos.y}
-                width={pos.width}
-                height={pos.height}
-                fill={hasData ? `hsl(var(--primary) / ${intensity}%)` : '#e5e7eb'}
-                stroke={hoveredCountry === code ? '#000' : '#94a3b8'}
-                strokeWidth={hoveredCountry === code ? 2 : 1}
-                className="transition-all cursor-pointer"
-                onMouseEnter={(e) => hasData && handleMouseEnter(code, e)}
-                onMouseLeave={handleMouseLeave}
-              />
-            )
-          })}
+              const size = countryData.total <= 3 ? 15 : countryData.total <= 8 ? 25 : 35
+              const color = countryData.total <= 3 ? '#93c5fd' : countryData.total <= 8 ? '#60a5fa' : '#3b82f6'
+              const borderColor = countryData.total <= 3 ? '#2563eb' : countryData.total <= 8 ? '#1d4ed8' : '#1e40af'
 
-          {/* Country labels */}
-          {Object.entries(COUNTRY_POSITIONS).map(([code, pos]) => (
-            <text
-              key={`label-${code}`}
-              x={pos.x + pos.width / 2}
-              y={pos.y + pos.height / 2}
-              textAnchor="middle"
-              dominantBaseline="middle"
-              fontSize="10"
-              fill={getCountryData(code) ? '#fff' : '#666'}
-              pointerEvents="none"
-              fontWeight="bold"
-            >
-              {code}
-            </text>
-          ))}
-        </svg>
+              return (
+                <g key={code}>
+                  <circle
+                    cx={pos.x + pos.width / 2}
+                    cy={pos.y + pos.height / 2}
+                    r={size}
+                    fill={color}
+                    stroke={hoveredCountry === code ? '#000' : borderColor}
+                    strokeWidth={hoveredCountry === code ? 3 : 2}
+                    className="transition-all cursor-pointer"
+                    onMouseEnter={(e) => handleMouseEnter(code, e)}
+                    onMouseLeave={handleMouseLeave}
+                  />
+                  <text
+                    x={pos.x + pos.width / 2}
+                    y={pos.y + pos.height / 2}
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    fontSize="10"
+                    fill="#fff"
+                    fontWeight="bold"
+                    pointerEvents="none"
+                  >
+                    {code}
+                  </text>
+                </g>
+              )
+            })}
+          </svg>
+        </div>
       </div>
 
       {/* Tooltip */}
