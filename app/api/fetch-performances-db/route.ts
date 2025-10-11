@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
 
         // Update runner in database
         console.log(`  Updating runner in DB with entry_id: ${runner.entryId}`)
-        updateRunner(runner.entryId, {
+        await updateRunner(runner.entryId, {
           personalBestAllTime: pbAllTime,
           personalBestLast3Years: pbLast3Years,
           dateOfBirth: profile.YOB ? `${profile.YOB}-01-01` : null,
@@ -127,20 +127,21 @@ export async function POST(request: NextRequest) {
 
         // Save performance history (all events, not just 24h)
         const db = getDatabase()
-        const runnerRow = db.prepare('SELECT id FROM runners WHERE entry_id = ?').get(runner.entryId) as any
+        const runnerResult = await db.query('SELECT id FROM runners WHERE entry_id = $1', [runner.entryId])
+        const runnerRow = runnerResult.rows[0]
 
         if (runnerRow) {
           console.log(`  Found runner in DB with id: ${runnerRow.id}`)
           // Clear existing performances
-          const deleteResult = db.prepare('DELETE FROM performances WHERE runner_id = ?').run(runnerRow.id)
-          console.log(`  Deleted ${deleteResult.changes} old performances`)
+          const deleteResult = await db.query('DELETE FROM performances WHERE runner_id = $1', [runnerRow.id])
+          console.log(`  Deleted ${deleteResult.rowCount} old performances`)
 
           // Insert all performances
           let insertedCount = 0
-          allResults.forEach(result => {
+          for (const result of allResults) {
             const distance = parseFloat(result.Performance.replace(/[^\d.]/g, ''))
             if (!isNaN(distance)) {
-              insertPerformance(runnerRow.id, {
+              await insertPerformance(runnerRow.id, {
                 eventId: result.EventID,
                 eventName: result.Event,
                 date: result.Startdate,
@@ -150,7 +151,7 @@ export async function POST(request: NextRequest) {
               })
               insertedCount++
             }
-          })
+          }
           console.log(`  ✓ Inserted ${insertedCount} performance records`)
         } else {
           console.error(`  ✗ WARNING: Could not find runner in DB with entry_id: ${runner.entryId}`)
@@ -186,7 +187,7 @@ export async function POST(request: NextRequest) {
 
     // Get fresh data from database and verify
     console.log('\nReading fresh data from database...')
-    const updatedRunners = getRunners()
+    const updatedRunners = await getRunners()
     console.log(`Found ${updatedRunners.length} runners in database`)
 
     // Verify the updates were saved
