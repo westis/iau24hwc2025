@@ -14,6 +14,8 @@ export default function Home() {
           fill
           className="object-cover object-[center_15%]"
           priority
+          sizes="100vw"
+          quality={90}
         />
         {/* Dark overlay from bottom for text readability - sharp edge */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/60 via-70% to-transparent" />
