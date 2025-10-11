@@ -168,6 +168,9 @@ export async function getRunners(): Promise<Runner[]> {
     age: row.age,
     allPBs: row.all_pbs || [],
     performanceHistory: performancesByRunner.get(row.id) || [],
+    stravaUrl: row.strava_url,
+    instagramUrl: row.instagram_url,
+    twitterUrl: row.twitter_url,
   }))
 }
 
@@ -215,6 +218,9 @@ async function rowToRunner(row: any): Promise<Runner> {
     age: row.age,
     allPBs: row.all_pbs || [],
     performanceHistory,
+    stravaUrl: row.strava_url,
+    instagramUrl: row.instagram_url,
+    twitterUrl: row.twitter_url,
   }
 }
 

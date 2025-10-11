@@ -10,7 +10,8 @@
     "type-check": "tsc --noEmit",
     "fetch-pbs": "tsx scripts/fetch-pbs.ts",
     "fetch-pbs:missing": "tsx scripts/fetch-pbs.ts missing",
-    "fetch-pbs:manual": "tsx scripts/fetch-pbs.ts manual"
+    "fetch-pbs:manual": "tsx scripts/fetch-pbs.ts manual",
+    "find-strava": "tsx scripts/find-strava-profiles.ts"
   },
   "dependencies": {
     "@radix-ui/react-checkbox": "^1.3.3",

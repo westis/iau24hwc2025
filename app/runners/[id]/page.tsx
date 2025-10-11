@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
-import { ArrowLeft, Pencil } from 'lucide-react'
+import { ArrowLeft, Pencil, Instagram, Twitter } from 'lucide-react'
 
 interface Performance {
   id: number
@@ -50,6 +50,9 @@ interface RunnerProfile {
   allPBs?: Array<{
     [distance: string]: DUVPersonalBest
   }>
+  stravaUrl?: string | null
+  instagramUrl?: string | null
+  twitterUrl?: string | null
 }
 
 export default function RunnerProfilePage() {
@@ -117,7 +120,10 @@ export default function RunnerProfilePage() {
             distance: p.distance,
             rank: p.rank,
             event_type: p.eventType,
-          }))
+          })),
+          stravaUrl: foundRunner.stravaUrl,
+          instagramUrl: foundRunner.instagramUrl,
+          twitterUrl: foundRunner.twitterUrl,
         }
 
         console.log('Runner loaded:', {
@@ -392,6 +398,49 @@ export default function RunnerProfilePage() {
               </a>
             )}
           </div>
+          {/* Social Media Links */}
+          {(runner.stravaUrl || runner.instagramUrl || runner.twitterUrl) && (
+            <div className="flex items-center gap-3 mt-3">
+              {runner.stravaUrl && (
+                <a
+                  href={runner.stravaUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-sm text-muted-foreground hover:text-[#FC4C02] transition-colors"
+                  title="Strava Profile"
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 384 512" fill="currentColor">
+                    <path d="M158.4 0L7 292h89.2l62.2-116.1L220.1 292h88.5zm150.2 292l-43.9 88.2-44.6-88.2h-67.6l112.2 220 111.5-220z"/>
+                  </svg>
+                  Strava
+                </a>
+              )}
+              {runner.instagramUrl && (
+                <a
+                  href={runner.instagramUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-sm text-muted-foreground hover:text-[#E4405F] transition-colors"
+                  title="Instagram Profile"
+                >
+                  <Instagram className="w-4 h-4" />
+                  Instagram
+                </a>
+              )}
+              {runner.twitterUrl && (
+                <a
+                  href={runner.twitterUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-sm text-muted-foreground hover:text-[#1DA1F2] transition-colors"
+                  title="Twitter/X Profile"
+                >
+                  <Twitter className="w-4 h-4" />
+                  Twitter
+                </a>
+              )}
+            </div>
+          )}
         </div>
 
         <div className={`grid gap-6 ${hasOtherPBs ? 'md:grid-cols-2' : 'md:grid-cols-1 max-w-2xl'} mb-6`}>

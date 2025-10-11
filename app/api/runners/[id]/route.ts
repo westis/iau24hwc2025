@@ -61,7 +61,10 @@ export async function GET(
         distance: perf.distance,
         rank: perf.rank,
         eventType: perf.event_type,
-      }))
+      })),
+      stravaUrl: runner.strava_url,
+      instagramUrl: runner.instagram_url,
+      twitterUrl: runner.twitter_url,
     }
 
     return NextResponse.json({
