@@ -33,6 +33,7 @@ function transformDBRunner(row: any): Runner {
     dateOfBirth: row.date_of_birth,
     age: row.age ?? undefined,
     performanceHistory: row.performanceHistory || [],
+    allPBs: row.all_pbs || [],
   }
 }
 

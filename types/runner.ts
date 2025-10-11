@@ -2,6 +2,14 @@
 export type Gender = 'M' | 'W'
 export type MatchStatus = 'unmatched' | 'auto-matched' | 'manually-matched' | 'no-match'
 
+export interface DUVPersonalBest {
+  PB: string
+  [year: string]: string | {
+    Perf: string
+    RankIntNat?: string
+  }
+}
+
 export interface Runner {
   // Database ID
   id: number
@@ -26,6 +34,9 @@ export interface Runner {
   dateOfBirth: string | null                   // ISO date
   age?: number                                 // Calculated
   performanceHistory?: Performance[]
+  allPBs?: Array<{                             // All distance PBs (6h, 12h, 24h, 48h, etc.)
+    [distance: string]: DUVPersonalBest
+  }>
 }
 
 export interface Performance {

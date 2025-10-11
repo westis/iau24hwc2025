@@ -179,6 +179,9 @@ async function main() {
         runners[index].date_of_birth = profile.YOB ? `${profile.YOB}-01-01` : null
         runners[index].age = age
 
+        // Save entire AllPBs array for displaying all distances (6h, 12h, 48h, etc.)
+        runners[index].all_pbs = profile.allPBs || []
+
         console.log(`  ✓ All-time: ${pbAllTime ? pbAllTime.toFixed(3) : 'N/A'} (${pbAllTimeYear || 'N/A'}) | Last 3Y: ${pbLast3Years ? pbLast3Years.toFixed(3) : 'N/A'} (${pbLast3YearsYear || 'N/A'})`)
         successCount++
       }
