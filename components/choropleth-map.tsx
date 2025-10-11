@@ -13,67 +13,74 @@ interface ChoroplethMapProps {
   countries: CountryData[]
 }
 
-// Simplified world map with approximate country positions
-// Using rectangles positioned geographically for simplicity
-const COUNTRY_POSITIONS: { [key: string]: { x: number; y: number; width: number; height: number } } = {
+// Country positions based on latitude/longitude coordinates
+// For equirectangular projection: x = (lon + 180) * (2000/360), y = (90 - lat) * (1000/180)
+const COUNTRY_COORDS: { [key: string]: { lat: number; lon: number } } = {
   // North America
-  'USA': { x: 150, y: 180, width: 100, height: 80 },
-  'CAN': { x: 120, y: 80, width: 180, height: 100 },
-  'MEX': { x: 140, y: 260, width: 70, height: 50 },
+  'USA': { lat: 38, lon: -97 },
+  'CAN': { lat: 56, lon: -106 },
+  'MEX': { lat: 23, lon: -102 },
 
   // South America
-  'ARG': { x: 240, y: 450, width: 50, height: 80 },
-  'BRA': { x: 260, y: 340, width: 100, height: 110 },
-  'URU': { x: 270, y: 440, width: 30, height: 30 },
-  'VEN': { x: 230, y: 300, width: 50, height: 40 },
+  'ARG': { lat: -38, lon: -63 },
+  'BRA': { lat: -14, lon: -51 },
+  'URU': { lat: -33, lon: -56 },
+  'VEN': { lat: 6, lon: -66 },
 
   // Europe
-  'GBR': { x: 470, y: 140, width: 35, height: 45 },
-  'IRL': { x: 445, y: 150, width: 25, height: 35 },
-  'FRA': { x: 495, y: 180, width: 45, height: 50 },
-  'ESP': { x: 470, y: 220, width: 60, height: 45 },
-  'POR': { x: 450, y: 230, width: 25, height: 40 },
-  'BEL': { x: 505, y: 165, width: 20, height: 20 },
-  'NED': { x: 510, y: 150, width: 25, height: 25 },
-  'GER': { x: 530, y: 155, width: 45, height: 50 },
-  'SUI': { x: 525, y: 195, width: 25, height: 25 },
-  'AUT': { x: 550, y: 190, width: 35, height: 25 },
-  'ITA': { x: 540, y: 210, width: 35, height: 60 },
-  'DEN': { x: 530, y: 130, width: 30, height: 25 },
-  'NOR': { x: 535, y: 80, width: 35, height: 60 },
-  'SWE': { x: 550, y: 90, width: 35, height: 70 },
-  'FIN': { x: 575, y: 85, width: 40, height: 60 },
-  'POL': { x: 560, y: 155, width: 40, height: 40 },
-  'CZE': { x: 550, y: 175, width: 30, height: 25 },
-  'SVK': { x: 560, y: 190, width: 30, height: 20 },
-  'HUN': { x: 565, y: 200, width: 35, height: 25 },
-  'ROU': { x: 590, y: 195, width: 40, height: 35 },
-  'SLO': { x: 550, y: 205, width: 25, height: 20 },
-  'CRO': { x: 550, y: 215, width: 30, height: 30 },
-  'SRB': { x: 570, y: 220, width: 25, height: 30 },
-  'GRE': { x: 570, y: 235, width: 35, height: 35 },
-  'EST': { x: 585, y: 120, width: 30, height: 20 },
-  'LAT': { x: 585, y: 135, width: 30, height: 20 },
-  'LTU': { x: 580, y: 145, width: 35, height: 20 },
-  'UKR': { x: 600, y: 165, width: 60, height: 45 },
-  'AZE': { x: 680, y: 215, width: 40, height: 30 },
-  'AND': { x: 490, y: 215, width: 8, height: 8 },
+  'GBR': { lat: 55, lon: -3 },
+  'IRL': { lat: 53, lon: -8 },
+  'FRA': { lat: 46, lon: 2 },
+  'ESP': { lat: 40, lon: -3 },
+  'POR': { lat: 39, lon: -8 },
+  'BEL': { lat: 50, lon: 4 },
+  'NED': { lat: 52, lon: 5 },
+  'GER': { lat: 51, lon: 10 },
+  'SUI': { lat: 47, lon: 8 },
+  'AUT': { lat: 47, lon: 14 },
+  'ITA': { lat: 43, lon: 12 },
+  'DEN': { lat: 56, lon: 9 },
+  'NOR': { lat: 60, lon: 8 },
+  'SWE': { lat: 60, lon: 18 },
+  'FIN': { lat: 61, lon: 25 },
+  'POL': { lat: 52, lon: 19 },
+  'CZE': { lat: 49, lon: 15 },
+  'SVK': { lat: 48, lon: 19 },
+  'HUN': { lat: 47, lon: 19 },
+  'ROU': { lat: 46, lon: 25 },
+  'SLO': { lat: 46, lon: 14 },
+  'CRO': { lat: 45, lon: 15 },
+  'SRB': { lat: 44, lon: 21 },
+  'GRE': { lat: 39, lon: 22 },
+  'EST': { lat: 58, lon: 25 },
+  'LAT': { lat: 56, lon: 24 },
+  'LTU': { lat: 55, lon: 24 },
+  'UKR': { lat: 48, lon: 31 },
+  'AZE': { lat: 40, lon: 47 },
+  'AND': { lat: 42, lon: 1 },
 
   // Asia
-  'JPN': { x: 880, y: 200, width: 45, height: 70 },
-  'TPE': { x: 815, y: 280, width: 25, height: 20 },
-  'IND': { x: 720, y: 270, width: 70, height: 80 },
-  'MGL': { x: 750, y: 180, width: 80, height: 50 },
-  'JOR': { x: 650, y: 240, width: 25, height: 25 },
+  'JPN': { lat: 36, lon: 138 },
+  'TPE': { lat: 24, lon: 121 },
+  'IND': { lat: 20, lon: 77 },
+  'MGL': { lat: 46, lon: 105 },
+  'JOR': { lat: 31, lon: 36 },
 
   // Africa
-  'ALG': { x: 490, y: 250, width: 80, height: 70 },
-  'RSA': { x: 560, y: 450, width: 50, height: 60 },
-  'SLE': { x: 455, y: 310, width: 20, height: 20 },
+  'ALG': { lat: 28, lon: 1 },
+  'RSA': { lat: -30, lon: 22 },
+  'SLE': { lat: 8, lon: -11 },
 
   // Oceania
-  'AUS': { x: 820, y: 430, width: 100, height: 80 },
-  'NZL': { x: 920, y: 490, width: 35, height: 50 },
+  'AUS': { lat: -25, lon: 133 },
+  'NZL': { lat: -40, lon: 174 },
+}
+
+// Convert lat/lon to SVG coordinates
+function latLonToXY(lat: number, lon: number): { x: number; y: number } {
+  const x = (lon + 180) * (2000 / 360)
+  const y = (90 - lat) * (1000 / 180)
+  return { x, y }
 }
 
 export function ChoroplethMap({ countries }: ChoroplethMapProps) {
@@ -139,10 +146,11 @@ export function ChoroplethMap({ countries }: ChoroplethMapProps) {
             className="w-full h-full absolute inset-0"
           >
             {/* Overlay country markers */}
-            {Object.entries(COUNTRY_POSITIONS).map(([code, pos]) => {
+            {Object.entries(COUNTRY_COORDS).map(([code, coords]) => {
               const countryData = getCountryData(code)
               if (!countryData) return null
 
+              const { x, y } = latLonToXY(coords.lat, coords.lon)
               const size = countryData.total <= 3 ? 15 : countryData.total <= 8 ? 25 : 35
               const color = countryData.total <= 3 ? '#93c5fd' : countryData.total <= 8 ? '#60a5fa' : '#3b82f6'
               const borderColor = countryData.total <= 3 ? '#2563eb' : countryData.total <= 8 ? '#1d4ed8' : '#1e40af'
@@ -150,8 +158,8 @@ export function ChoroplethMap({ countries }: ChoroplethMapProps) {
               return (
                 <g key={code}>
                   <circle
-                    cx={pos.x + pos.width / 2}
-                    cy={pos.y + pos.height / 2}
+                    cx={x}
+                    cy={y}
                     r={size}
                     fill={color}
                     stroke={hoveredCountry === code ? '#000' : borderColor}
@@ -161,8 +169,8 @@ export function ChoroplethMap({ countries }: ChoroplethMapProps) {
                     onMouseLeave={handleMouseLeave}
                   />
                   <text
-                    x={pos.x + pos.width / 2}
-                    y={pos.y + pos.height / 2}
+                    x={x}
+                    y={y}
                     textAnchor="middle"
                     dominantBaseline="middle"
                     fontSize="10"
