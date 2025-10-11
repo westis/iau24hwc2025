@@ -273,6 +273,13 @@ export default function RunnerProfilePage() {
     return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
   }
 
+  // Decode HTML entities in event names
+  const decodeHTML = (html: string): string => {
+    const txt = document.createElement('textarea')
+    txt.innerHTML = html
+    return txt.value
+  }
+
   // Extract PBs from allPBs data (from DUV)
   const getPBFromAllPBs = (distanceKey: string): { distance: number; year: number } | null => {
     if (!runner.allPBs || runner.allPBs.length === 0) return null
@@ -487,7 +494,7 @@ export default function RunnerProfilePage() {
                           <td className="py-2 px-4 text-sm">
                             {perf.event_date ? new Date(perf.event_date).toLocaleDateString() : 'N/A'}
                           </td>
-                          <td className="py-2 px-4 text-sm">{perf.event_name}</td>
+                          <td className="py-2 px-4 text-sm">{decodeHTML(perf.event_name)}</td>
                           {showAllRaces && (
                             <td className="py-2 px-4 text-sm">
                               <Badge variant="outline" className="text-xs">
