@@ -215,29 +215,27 @@ export function ChoroplethMap({ countries }: ChoroplethMapProps) {
         style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
       >
         <div className="relative w-full" style={{ height: '600px' }}>
-          {/* Real world map as background image */}
-          <img
-            src="https://upload.wikimedia.org/wikipedia/commons/8/83/Equirectangular_projection_SW.jpg"
-            alt="World Map"
-            className="absolute inset-0 w-full h-full object-cover opacity-40 pointer-events-none"
+          {/* Wrapper for both map and markers with synchronized transform */}
+          <div
+            className="absolute inset-0 w-full h-full"
             style={{
               transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
               transformOrigin: '0 0',
             }}
-          />
-
-          {/* SVG overlay for country markers */}
-          <svg
-            viewBox="0 0 2000 1000"
-            className="w-full h-full absolute inset-0 pointer-events-none"
           >
-            <g
-              style={{
-                transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-                transformOrigin: '0 0',
-              }}
-              className="pointer-events-auto"
+            {/* Real world map as background image */}
+            <img
+              src="https://upload.wikimedia.org/wikipedia/commons/8/83/Equirectangular_projection_SW.jpg"
+              alt="World Map"
+              className="absolute inset-0 w-full h-full object-cover opacity-40 pointer-events-none"
+            />
+
+            {/* SVG overlay for country markers */}
+            <svg
+              viewBox="0 0 2000 1000"
+              className="w-full h-full absolute inset-0 pointer-events-none"
             >
+              <g className="pointer-events-auto">
             {/* Overlay country markers */}
             {Object.entries(COUNTRY_COORDS).map(([code, coords]) => {
               const countryData = getCountryData(code)
@@ -276,8 +274,9 @@ export function ChoroplethMap({ countries }: ChoroplethMapProps) {
                 </g>
               )
             })}
-            </g>
-          </svg>
+              </g>
+            </svg>
+          </div>
         </div>
       </div>
 
