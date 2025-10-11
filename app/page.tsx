@@ -7,43 +7,44 @@ export default function Home() {
   return (
     <main className="min-h-screen">
       {/* Hero Section with Banner */}
-      <div className="relative w-full h-[300px] md:h-[400px]">
+      <div className="relative w-full h-[200px] md:h-[280px]">
         <Image
           src="https://www.albi24h.fr/wp-content/uploads/2025/04/ALBI24H2025-EN.jpg"
           alt="IAU 24h World Championships 2025 - Albi, France"
           fill
-          className="object-cover"
+          className="object-cover object-[center_bottom]"
           priority
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/70" />
+        {/* Dark overlay from bottom for text readability - sharp edge */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/60 via-70% to-transparent" />
 
-        {/* Hero Content */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-white px-4">
-          <h1 className="text-3xl md:text-5xl font-bold text-center mb-3 drop-shadow-lg">
+        {/* Hero Content - Positioned at very bottom */}
+        <div className="absolute bottom-0 left-0 right-0 flex flex-col items-center text-white px-4 pb-4 md:pb-6">
+          <h1 className="text-2xl md:text-4xl font-bold text-center mb-2 drop-shadow-2xl">
             IAU 24h World Championships 2025
           </h1>
-          <p className="text-lg md:text-2xl text-center mb-6 drop-shadow-md">
-            Albi, France • October 17-19, 2025
+          <p className="text-base md:text-xl text-center mb-4 drop-shadow-lg">
+            Albi, France • October 18-19, 2025
           </p>
 
           {/* Official Links */}
-          <div className="flex flex-wrap justify-center gap-4 text-sm">
+          <div className="flex flex-wrap justify-center gap-3 text-xs md:text-sm">
             <a
               href="https://iau-ultramarathon.org/2025-iau-24h-world-championships/"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-white/90 hover:text-white transition-colors underline"
+              className="inline-flex items-center gap-1.5 text-white/90 hover:text-white transition-colors underline"
             >
-              Official IAU Page <ExternalLink className="h-4 w-4" />
+              Official IAU Page <ExternalLink className="h-3 w-3 md:h-4 md:w-4" />
             </a>
             <span className="text-white/50">•</span>
             <a
               href="https://www.albi24h.fr/"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-white/90 hover:text-white transition-colors underline"
+              className="inline-flex items-center gap-1.5 text-white/90 hover:text-white transition-colors underline"
             >
-              Organizer Website <ExternalLink className="h-4 w-4" />
+              Organizer Website <ExternalLink className="h-3 w-3 md:h-4 md:w-4" />
             </a>
           </div>
         </div>

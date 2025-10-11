@@ -3,8 +3,15 @@
 import * as React from 'react'
 import { useEffect, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
+import ReactCountryFlag from 'react-country-flag'
 import { RunnerTable } from '@/components/tables/runner-table'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
+import { Check, ChevronsUpDown } from 'lucide-react'
+import { getCountryCodeForFlag } from '@/lib/utils/country-codes'
+import { cn } from '@/lib/utils'
 import type { Runner } from '@/types/runner'
 
 export default function RunnersPage() {
@@ -14,7 +21,16 @@ export default function RunnersPage() {
   const [error, setError] = useState<string | null>(null)
   const [selectedGender, setSelectedGender] = useState<'M' | 'W'>('M')
   const [selectedMetric, setSelectedMetric] = useState<'last-3-years' | 'all-time'>('last-3-years')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [countryFilter, setCountryFilter] = useState<string>('all')
+  const [countryComboboxOpen, setCountryComboboxOpen] = useState(false)
   const [isPending, startTransition] = React.useTransition()
+
+  // Get unique countries from runners
+  const uniqueCountries = useMemo(() => {
+    const countries = Array.from(new Set(runners.map(r => r.nationality))).sort()
+    return countries
+  }, [runners])
 
   useEffect(() => {
     // Fetch runners from API (Supabase)
@@ -71,6 +87,20 @@ export default function RunnersPage() {
     // Filter by gender
     let filtered = runners.filter(runner => runner.gender === selectedGender)
 
+    // Filter by country
+    if (countryFilter !== 'all') {
+      filtered = filtered.filter(runner => runner.nationality === countryFilter)
+    }
+
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase()
+      filtered = filtered.filter(runner => {
+        const name = `${runner.firstname} ${runner.lastname}`.toLowerCase()
+        return name.includes(query)
+      })
+    }
+
     // Separate matched (with DUV ID) and unmatched runners
     const matched = filtered.filter(r => r.duvId !== null)
     const unmatched = filtered.filter(r => r.duvId === null)
@@ -103,7 +133,7 @@ export default function RunnersPage() {
 
     // Combine: ranked matched first (with DNS in natural position), then unmatched
     return [...rankedMatched, ...sortedUnmatched]
-  }, [runners, selectedGender, selectedMetric])
+  }, [runners, selectedGender, selectedMetric, countryFilter, searchQuery])
 
   if (loading) {
     return (
@@ -137,47 +167,143 @@ export default function RunnersPage() {
           </p>
         </div>
 
-        {/* Gender Toggle */}
-        <div className="mb-6 flex items-center gap-4">
-          <div className="inline-flex rounded-lg border border-input bg-background p-1" role="group">
-            <Button
-              variant={selectedGender === 'M' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => startTransition(() => setSelectedGender('M'))}
-              className={selectedGender === 'M' ? '' : 'hover:bg-accent'}
-              disabled={isPending}
-            >
-              Men
-            </Button>
-            <Button
-              variant={selectedGender === 'W' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => startTransition(() => setSelectedGender('W'))}
-              className={selectedGender === 'W' ? '' : 'hover:bg-accent'}
-              disabled={isPending}
-            >
-              Women
-            </Button>
+        {/* Filters - Responsive Layout */}
+        <div className="mb-6 flex flex-col lg:flex-row gap-4">
+          {/* Row 1: Gender and Metric toggles */}
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="inline-flex rounded-lg border border-input bg-background p-1" role="group">
+              <Button
+                variant={selectedGender === 'M' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => startTransition(() => setSelectedGender('M'))}
+                className={selectedGender === 'M' ? '' : 'hover:bg-accent'}
+                disabled={isPending}
+              >
+                Men
+              </Button>
+              <Button
+                variant={selectedGender === 'W' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => startTransition(() => setSelectedGender('W'))}
+                className={selectedGender === 'W' ? '' : 'hover:bg-accent'}
+                disabled={isPending}
+              >
+                Women
+              </Button>
+            </div>
+            <div className="inline-flex rounded-lg border border-input bg-background p-1" role="group">
+              <Button
+                variant={selectedMetric === 'last-3-years' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => startTransition(() => setSelectedMetric('last-3-years'))}
+                className={selectedMetric === 'last-3-years' ? '' : 'hover:bg-accent'}
+                disabled={isPending}
+              >
+                2023-2025
+              </Button>
+              <Button
+                variant={selectedMetric === 'all-time' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => startTransition(() => setSelectedMetric('all-time'))}
+                className={selectedMetric === 'all-time' ? '' : 'hover:bg-accent'}
+                disabled={isPending}
+              >
+                All Time
+              </Button>
+            </div>
           </div>
-          <div className="inline-flex rounded-lg border border-input bg-background p-1 ml-auto" role="group">
-            <Button
-              variant={selectedMetric === 'last-3-years' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => startTransition(() => setSelectedMetric('last-3-years'))}
-              className={selectedMetric === 'last-3-years' ? '' : 'hover:bg-accent'}
-              disabled={isPending}
-            >
-              2023-2025
-            </Button>
-            <Button
-              variant={selectedMetric === 'all-time' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => startTransition(() => setSelectedMetric('all-time'))}
-              className={selectedMetric === 'all-time' ? '' : 'hover:bg-accent'}
-              disabled={isPending}
-            >
-              All Time
-            </Button>
+
+          {/* Row 2: Search and Country filter */}
+          <div className="flex flex-col sm:flex-row gap-4 lg:ml-auto">
+            <Input
+              placeholder="Search by name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full sm:w-[200px]"
+            />
+            <Popover open={countryComboboxOpen} onOpenChange={setCountryComboboxOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={countryComboboxOpen}
+                  className="w-full sm:w-[200px] justify-between"
+                >
+                  {countryFilter === 'all' ? (
+                    'All Countries'
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <ReactCountryFlag
+                        countryCode={getCountryCodeForFlag(countryFilter)}
+                        svg
+                        style={{
+                          width: '1.5em',
+                          height: '1em',
+                        }}
+                      />
+                      <span>{countryFilter}</span>
+                    </div>
+                  )}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[200px] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Search country..." />
+                  <CommandList>
+                    <CommandEmpty>No country found.</CommandEmpty>
+                    <CommandGroup>
+                      <CommandItem
+                        value="all"
+                        onSelect={() => {
+                          setCountryFilter('all')
+                          setCountryComboboxOpen(false)
+                        }}
+                      >
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            countryFilter === 'all' ? "opacity-100" : "opacity-0"
+                          )}
+                        />
+                        All Countries
+                      </CommandItem>
+                      {uniqueCountries.map((country) => {
+                        const twoLetterCode = getCountryCodeForFlag(country)
+                        return (
+                          <CommandItem
+                            key={country}
+                            value={country}
+                            onSelect={(currentValue) => {
+                              setCountryFilter(currentValue.toUpperCase())
+                              setCountryComboboxOpen(false)
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                countryFilter === country ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            <div className="flex items-center gap-2">
+                              <ReactCountryFlag
+                                countryCode={twoLetterCode}
+                                svg
+                                style={{
+                                  width: '1.5em',
+                                  height: '1em',
+                                }}
+                              />
+                              <span>{country}</span>
+                            </div>
+                          </CommandItem>
+                        )
+                      })}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
 
