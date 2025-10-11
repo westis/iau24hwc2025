@@ -58,7 +58,7 @@ export async function PATCH(
     const db = getDatabase()
 
     // Validate input
-    const allowedFields = ['firstname', 'lastname', 'nationality', 'gender']
+    const allowedFields = ['firstname', 'lastname', 'nationality', 'gender', 'dns']
     const updates: string[] = []
     const values: any[] = []
 
