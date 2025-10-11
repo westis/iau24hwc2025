@@ -20,6 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
 import { ArrowUpDown, Pencil, Check, ChevronsUpDown, ChevronDown, ChevronUp } from 'lucide-react'
@@ -49,7 +50,8 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
     firstname: '',
     lastname: '',
     nationality: '',
-    gender: '' as 'M' | 'W' | ''
+    gender: '' as 'M' | 'W' | '',
+    dns: false
   })
   const [isSaving, setIsSaving] = React.useState(false)
   const [expandedRows, setExpandedRows] = React.useState<Set<number>>(new Set())
@@ -82,14 +84,15 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
       firstname: runner.firstname,
       lastname: runner.lastname,
       nationality: runner.nationality,
-      gender: runner.gender
+      gender: runner.gender,
+      dns: runner.dns || false
     })
   }
 
   // Handle closing edit dialog
   function closeEditDialog() {
     setEditingRunner(null)
-    setEditForm({ firstname: '', lastname: '', nationality: '', gender: '' })
+    setEditForm({ firstname: '', lastname: '', nationality: '', gender: '', dns: false })
   }
 
   // Handle saving edits
@@ -689,6 +692,24 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
                   <SelectItem value="W">W</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="dns" className="text-right">
+                DNS
+              </Label>
+              <div className="col-span-3 flex items-center space-x-2">
+                <Checkbox
+                  id="dns"
+                  checked={editForm.dns}
+                  onCheckedChange={(checked) => setEditForm({ ...editForm, dns: checked as boolean })}
+                />
+                <label
+                  htmlFor="dns"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Did Not Start (exclude from lists and predictions)
+                </label>
+              </div>
             </div>
           </div>
           <DialogFooter>

@@ -34,8 +34,8 @@ export default function TeamsPage() {
 
   // Calculate teams client-side
   const teams = useMemo(() => {
-    // Filter runners for this gender
-    const genderRunners = runners.filter(r => r.gender === gender)
+    // Filter runners for this gender and exclude DNS runners
+    const genderRunners = runners.filter(r => r.gender === gender && !r.dns)
 
     // Group ALL runners by nationality (including those without PBs)
     const teamGroups = new Map<string, Runner[]>()

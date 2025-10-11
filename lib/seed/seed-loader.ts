@@ -71,6 +71,7 @@ function transformDBRunner(row: any): Runner {
     lastname: row.lastname,
     nationality: row.nationality,
     gender: row.gender as Gender,
+    dns: row.dns ?? false,
     duvId: row.duv_id,
     matchStatus: row.match_status as MatchStatus,
     matchConfidence: row.match_confidence ?? undefined,

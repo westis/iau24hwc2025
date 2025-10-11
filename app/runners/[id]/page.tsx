@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Checkbox } from '@/components/ui/checkbox'
 import { ArrowLeft, Pencil } from 'lucide-react'
 
 interface Performance {
@@ -36,6 +37,7 @@ interface RunnerProfile {
   lastname: string
   nationality: string
   gender: string
+  dns?: boolean
   duv_id: number | null
   personal_best_all_time: number | null
   personal_best_all_time_year?: number
@@ -63,7 +65,8 @@ export default function RunnerProfilePage() {
     firstname: '',
     lastname: '',
     nationality: '',
-    gender: '' as 'M' | 'W' | ''
+    gender: '' as 'M' | 'W' | '',
+    dns: false
   })
   const [isSaving, setIsSaving] = useState(false)
   const [isUnmatching, setIsUnmatching] = useState(false)
@@ -97,6 +100,7 @@ export default function RunnerProfilePage() {
           lastname: foundRunner.lastname,
           nationality: foundRunner.nationality,
           gender: foundRunner.gender,
+          dns: foundRunner.dns || false,
           duv_id: foundRunner.duvId,
           personal_best_all_time: foundRunner.personalBestAllTime,
           personal_best_all_time_year: foundRunner.personalBestAllTimeYear,
@@ -143,7 +147,8 @@ export default function RunnerProfilePage() {
         firstname: runner.firstname,
         lastname: runner.lastname,
         nationality: runner.nationality,
-        gender: runner.gender as 'M' | 'W'
+        gender: runner.gender as 'M' | 'W',
+        dns: runner.dns || false
       })
       setIsEditDialogOpen(true)
     }
@@ -151,7 +156,7 @@ export default function RunnerProfilePage() {
 
   function closeEditDialog() {
     setIsEditDialogOpen(false)
-    setEditForm({ firstname: '', lastname: '', nationality: '', gender: '' })
+    setEditForm({ firstname: '', lastname: '', nationality: '', gender: '', dns: false })
   }
 
   async function saveEdit() {
@@ -585,6 +590,24 @@ export default function RunnerProfilePage() {
                     <SelectItem value="W">W</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="dns" className="text-right">
+                  DNS
+                </Label>
+                <div className="col-span-3 flex items-center space-x-2">
+                  <Checkbox
+                    id="dns"
+                    checked={editForm.dns}
+                    onCheckedChange={(checked) => setEditForm({ ...editForm, dns: checked as boolean })}
+                  />
+                  <label
+                    htmlFor="dns"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Did Not Start (hidden by default)
+                  </label>
+                </div>
               </div>
             </div>
             <DialogFooter className="flex-col sm:flex-row gap-2">

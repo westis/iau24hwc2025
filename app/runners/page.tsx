@@ -5,6 +5,8 @@ import { useEffect, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { RunnerTable } from '@/components/tables/runner-table'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
 import type { Runner } from '@/types/runner'
 
 export default function RunnersPage() {
@@ -14,6 +16,7 @@ export default function RunnersPage() {
   const [error, setError] = useState<string | null>(null)
   const [selectedGender, setSelectedGender] = useState<'M' | 'W'>('M')
   const [selectedMetric, setSelectedMetric] = useState<'last-3-years' | 'all-time'>('last-3-years')
+  const [showDNS, setShowDNS] = useState(false)
   const [isPending, startTransition] = React.useTransition()
 
   useEffect(() => {
@@ -58,8 +61,13 @@ export default function RunnersPage() {
         : runner.personalBestAllTime || 0
     }
 
-    // Filter by gender
-    const filtered = runners.filter(runner => runner.gender === selectedGender)
+    // Filter by gender and DNS status
+    let filtered = runners.filter(runner => runner.gender === selectedGender)
+
+    // Filter out DNS runners if showDNS is false
+    if (!showDNS) {
+      filtered = filtered.filter(runner => !runner.dns)
+    }
 
     // Separate matched (with DUV ID) and unmatched runners
     const matched = filtered.filter(r => r.duvId !== null)
@@ -87,7 +95,7 @@ export default function RunnersPage() {
 
     // Combine: matched with rankings first, then unmatched without rankings
     return [...rankedMatched, ...sortedUnmatched]
-  }, [runners, selectedGender, selectedMetric])
+  }, [runners, selectedGender, selectedMetric, showDNS])
 
   if (loading) {
     return (
@@ -142,6 +150,16 @@ export default function RunnersPage() {
             >
               Women
             </Button>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="show-dns"
+              checked={showDNS}
+              onCheckedChange={(checked) => setShowDNS(checked as boolean)}
+            />
+            <Label htmlFor="show-dns" className="text-sm font-medium cursor-pointer">
+              Show DNS runners
+            </Label>
           </div>
           <div className="inline-flex rounded-lg border border-input bg-background p-1 ml-auto" role="group">
             <Button

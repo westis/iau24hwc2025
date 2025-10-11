@@ -21,6 +21,9 @@ export interface Runner {
   nationality: string                // ISO 3166-1 alpha-3 (e.g., "USA", "GER")
   gender: Gender
 
+  // Participation status
+  dns?: boolean                      // Did Not Start - true if runner won't participate
+
   // From DUV matching
   duvId: number | null               // DUV PersonID
   matchStatus: MatchStatus
