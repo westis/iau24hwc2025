@@ -18,25 +18,27 @@ export async function GET(
     const db = getDatabase()
 
     // Get runner details
-    const runner = db.prepare(`
-      SELECT * FROM runners WHERE id = ?
-    `).get(runnerId)
+    const runnerResult = await db.query(`
+      SELECT * FROM runners WHERE id = $1
+    `, [runnerId])
+
+    const runner = runnerResult.rows[0]
 
     if (!runner) {
       return NextResponse.json({ error: 'Runner not found' }, { status: 404 })
     }
 
     // Get performances for this runner
-    const performances = db.prepare(`
+    const performancesResult = await db.query(`
       SELECT * FROM performances
-      WHERE runner_id = ?
+      WHERE runner_id = $1
       ORDER BY event_date DESC
-    `).all(runnerId)
+    `, [runnerId])
 
     return NextResponse.json({
       runner: {
         ...runner,
-        performances
+        performances: performancesResult.rows
       }
     })
   } catch (error) {
@@ -61,10 +63,11 @@ export async function PATCH(
     const allowedFields = ['firstname', 'lastname', 'nationality', 'gender', 'dns']
     const updates: string[] = []
     const values: any[] = []
+    let paramIndex = 1
 
     for (const field of allowedFields) {
       if (body[field] !== undefined) {
-        updates.push(`${field} = ?`)
+        updates.push(`${field} = $${paramIndex++}`)
         values.push(body[field])
       }
     }
@@ -80,15 +83,13 @@ export async function PATCH(
     values.push(id)
 
     // Update runner
-    const stmt = db.prepare(`
+    const result = await db.query(`
       UPDATE runners
       SET ${updates.join(', ')}
-      WHERE id = ?
-    `)
+      WHERE id = $${paramIndex}
+    `, values)
 
-    const result = stmt.run(...values)
-
-    if (result.changes === 0) {
+    if (result.rowCount === 0) {
       return NextResponse.json(
         { error: 'Runner not found' },
         { status: 404 }
@@ -96,13 +97,13 @@ export async function PATCH(
     }
 
     // Return updated runner
-    const runner = db.prepare(`
-      SELECT * FROM runners WHERE id = ?
-    `).get(id)
+    const runnerResult = await db.query(`
+      SELECT * FROM runners WHERE id = $1
+    `, [id])
 
     return NextResponse.json({
       success: true,
-      runner
+      runner: runnerResult.rows[0]
     })
   } catch (error) {
     console.error('Error updating runner:', error)

@@ -7,20 +7,23 @@ export async function GET() {
   try {
     const db = getDatabase()
 
-    const rows = db.prepare('SELECT * FROM runners ORDER BY entry_id').all()
+    const result = await db.query('SELECT * FROM runners ORDER BY entry_id')
 
-    const runners = rows.map((row: any) => ({
+    const runners = result.rows.map((row: any) => ({
       id: row.id,
       entryId: row.entry_id,
       firstname: row.firstname,
       lastname: row.lastname,
       nationality: row.nationality,
       gender: row.gender,
+      dns: row.dns || false,
       duvId: row.duv_id,
       matchStatus: row.match_status,
       matchConfidence: row.match_confidence,
       personalBestAllTime: row.personal_best_all_time,
-      personalBestLast2Years: row.personal_best_last_2_years,
+      personalBestAllTimeYear: row.personal_best_all_time_year,
+      personalBestLast3Years: row.personal_best_last_2_years,
+      personalBestLast3YearsYear: row.personal_best_last_2_years_year,
       dateOfBirth: row.date_of_birth,
       age: row.age,
     }))

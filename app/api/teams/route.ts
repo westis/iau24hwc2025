@@ -10,10 +10,10 @@ export async function GET(request: NextRequest) {
     const gender = (searchParams.get('gender') || 'M') as Gender
 
     // Calculate and save team rankings
-    calculateAndSaveTeams(metric)
+    await calculateAndSaveTeams(metric)
 
     // Get teams
-    const teams = getTeams(metric, gender)
+    const teams = await getTeams(metric, gender)
 
     return NextResponse.json({
       teams,

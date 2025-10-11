@@ -1,58 +1,50 @@
-// lib/db/database.ts - SQLite database utilities
-import Database from 'better-sqlite3'
-import { readFileSync } from 'fs'
-import { join } from 'path'
+// lib/db/database.ts - PostgreSQL/Supabase database utilities
+import { Pool } from 'pg'
 import type { Runner, Performance, MatchStatus, Gender } from '@/types/runner'
 import type { DUVSearchResult } from '@/types/match'
 import type { Team } from '@/types/team'
 
-const DB_PATH = join(process.cwd(), 'data', 'iau24hwc.db')
+// PostgreSQL connection pool
+let pool: Pool | null = null
 
-// Initialize database with schema
-export function initDatabase(): Database.Database {
-  console.log('Initializing database at:', DB_PATH)
-  const db = new Database(DB_PATH)
+export function getDatabase(): Pool {
+  if (!pool) {
+    if (!process.env.DATABASE_URL) {
+      throw new Error('DATABASE_URL environment variable is not set')
+    }
 
-  // Enable WAL mode for better concurrency
-  db.pragma('journal_mode = WAL')
-  console.log('Database journal mode:', db.pragma('journal_mode', { simple: true }))
+    pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: {
+        rejectUnauthorized: false, // Required for Supabase
+      },
+    })
 
-  const schema = readFileSync(join(process.cwd(), 'lib/db/schema.sql'), 'utf-8')
-  db.exec(schema)
-
-  console.log('Database initialized successfully')
-  return db
-}
-
-// Singleton database instance
-let dbInstance: Database.Database | null = null
-
-export function getDatabase(): Database.Database {
-  if (!dbInstance) {
-    dbInstance = initDatabase()
+    console.log('PostgreSQL connection pool initialized')
   }
-  return dbInstance
+
+  return pool
 }
 
 // Runner CRUD operations
-export function insertRunner(runner: Omit<Runner, 'performanceHistory'>): number {
+export async function insertRunner(runner: Omit<Runner, 'performanceHistory'>): Promise<number> {
   const db = getDatabase()
-  const stmt = db.prepare(`
+  const result = await db.query(`
     INSERT INTO runners (
-      entry_id, firstname, lastname, nationality, gender,
+      entry_id, firstname, lastname, nationality, gender, dns,
       duv_id, match_status, match_confidence,
       personal_best_all_time, personal_best_all_time_year,
       personal_best_last_2_years, personal_best_last_2_years_year,
       date_of_birth, age
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `)
-
-  const result = stmt.run(
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+    RETURNING id
+  `, [
     runner.entryId,
     runner.firstname,
     runner.lastname,
     runner.nationality,
     runner.gender,
+    runner.dns || false,
     runner.duvId,
     runner.matchStatus,
     runner.matchConfidence,
@@ -62,50 +54,51 @@ export function insertRunner(runner: Omit<Runner, 'performanceHistory'>): number
     runner.personalBestLast3YearsYear,
     runner.dateOfBirth,
     runner.age
-  )
+  ])
 
-  return result.lastInsertRowid as number
+  return result.rows[0].id
 }
 
-export function updateRunner(entryId: string, updates: Partial<Runner>): void {
+export async function updateRunner(entryId: string, updates: Partial<Runner>): Promise<void> {
   const db = getDatabase()
   const fields: string[] = []
   const values: any[] = []
+  let paramIndex = 1
 
   if (updates.duvId !== undefined) {
-    fields.push('duv_id = ?')
+    fields.push(`duv_id = $${paramIndex++}`)
     values.push(updates.duvId)
   }
   if (updates.matchStatus !== undefined) {
-    fields.push('match_status = ?')
+    fields.push(`match_status = $${paramIndex++}`)
     values.push(updates.matchStatus)
   }
   if (updates.matchConfidence !== undefined) {
-    fields.push('match_confidence = ?')
+    fields.push(`match_confidence = $${paramIndex++}`)
     values.push(updates.matchConfidence)
   }
   if (updates.personalBestAllTime !== undefined) {
-    fields.push('personal_best_all_time = ?')
+    fields.push(`personal_best_all_time = $${paramIndex++}`)
     values.push(updates.personalBestAllTime)
   }
   if (updates.personalBestAllTimeYear !== undefined) {
-    fields.push('personal_best_all_time_year = ?')
+    fields.push(`personal_best_all_time_year = $${paramIndex++}`)
     values.push(updates.personalBestAllTimeYear)
   }
   if (updates.personalBestLast3Years !== undefined) {
-    fields.push('personal_best_last_2_years = ?')
+    fields.push(`personal_best_last_2_years = $${paramIndex++}`)
     values.push(updates.personalBestLast3Years)
   }
   if (updates.personalBestLast3YearsYear !== undefined) {
-    fields.push('personal_best_last_2_years_year = ?')
+    fields.push(`personal_best_last_2_years_year = $${paramIndex++}`)
     values.push(updates.personalBestLast3YearsYear)
   }
   if (updates.dateOfBirth !== undefined) {
-    fields.push('date_of_birth = ?')
+    fields.push(`date_of_birth = $${paramIndex++}`)
     values.push(updates.dateOfBirth)
   }
   if (updates.age !== undefined) {
-    fields.push('age = ?')
+    fields.push(`age = $${paramIndex++}`)
     values.push(updates.age)
   }
 
@@ -115,39 +108,31 @@ export function updateRunner(entryId: string, updates: Partial<Runner>): void {
   }
 
   values.push(entryId)
-  const stmt = db.prepare(`
-    UPDATE runners SET ${fields.join(', ')} WHERE entry_id = ?
-  `)
+  const result = await db.query(`
+    UPDATE runners SET ${fields.join(', ')} WHERE entry_id = $${paramIndex}
+  `, values)
 
-  console.log(`updateRunner: Executing UPDATE for entry_id ${entryId} with fields:`, fields)
-  const result = stmt.run(...values)
-  console.log(`updateRunner: Updated ${result.changes} rows`)
+  console.log(`updateRunner: Updated ${result.rowCount} rows`)
 
-  if (result.changes === 0) {
+  if (result.rowCount === 0) {
     console.error(`updateRunner: WARNING - No rows updated for entry_id ${entryId}`)
-    // Try to find the runner to see if it exists
-    const checkStmt = db.prepare('SELECT id, entry_id FROM runners WHERE entry_id = ?')
-    const runner = checkStmt.get(entryId)
-    console.error(`updateRunner: Runner lookup result:`, runner)
   }
 }
 
-export function getRunners(): Runner[] {
+export async function getRunners(): Promise<Runner[]> {
   const db = getDatabase()
-  const stmt = db.prepare(`
+  const result = await db.query(`
     SELECT * FROM runners ORDER BY entry_id
   `)
 
-  const rows = stmt.all() as any[]
-  return rows.map(rowToRunner)
+  return result.rows.map(rowToRunner)
 }
 
-export function getRunnerByEntryId(entryId: string): Runner | null {
+export async function getRunnerByEntryId(entryId: string): Promise<Runner | null> {
   const db = getDatabase()
-  const stmt = db.prepare('SELECT * FROM runners WHERE entry_id = ?')
-  const row = stmt.get(entryId) as any
+  const result = await db.query('SELECT * FROM runners WHERE entry_id = $1', [entryId])
 
-  return row ? rowToRunner(row) : null
+  return result.rows[0] ? rowToRunner(result.rows[0]) : null
 }
 
 function rowToRunner(row: any): Runner {
@@ -158,6 +143,7 @@ function rowToRunner(row: any): Runner {
     lastname: row.lastname,
     nationality: row.nationality,
     gender: row.gender as Gender,
+    dns: row.dns || false,
     duvId: row.duv_id,
     matchStatus: row.match_status as MatchStatus,
     matchConfidence: row.match_confidence,
@@ -171,17 +157,16 @@ function rowToRunner(row: any): Runner {
 }
 
 // Performance operations
-export function insertPerformance(runnerId: number, perf: Performance): void {
+export async function insertPerformance(runnerId: number, perf: Performance): Promise<void> {
   const db = getDatabase()
-  const stmt = db.prepare(`
-    INSERT INTO performances (
-      runner_id, event_id, event_name, event_date,
-      distance, rank, event_type
-    ) VALUES (?, ?, ?, ?, ?, ?, ?)
-  `)
 
   try {
-    const result = stmt.run(
+    await db.query(`
+      INSERT INTO performances (
+        runner_id, event_id, event_name, event_date,
+        distance, rank, event_type
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+    `, [
       runnerId,
       perf.eventId,
       perf.eventName,
@@ -189,22 +174,20 @@ export function insertPerformance(runnerId: number, perf: Performance): void {
       perf.distance,
       perf.rank,
       perf.eventType
-    )
-    // Detailed logging removed for performance - only log errors
+    ])
   } catch (error) {
     console.error(`insertPerformance: Failed to insert performance for runner_id ${runnerId}:`, error)
     throw error
   }
 }
 
-export function getPerformances(runnerId: number): Performance[] {
+export async function getPerformances(runnerId: number): Promise<Performance[]> {
   const db = getDatabase()
-  const stmt = db.prepare(`
-    SELECT * FROM performances WHERE runner_id = ? ORDER BY event_date DESC
-  `)
+  const result = await db.query(`
+    SELECT * FROM performances WHERE runner_id = $1 ORDER BY event_date DESC
+  `, [runnerId])
 
-  const rows = stmt.all(runnerId) as any[]
-  return rows.map(row => ({
+  return result.rows.map(row => ({
     eventId: row.event_id,
     eventName: row.event_name,
     date: row.event_date,
@@ -215,21 +198,19 @@ export function getPerformances(runnerId: number): Performance[] {
 }
 
 // Match candidates operations
-export function insertMatchCandidates(runnerId: number, candidates: DUVSearchResult[]): void {
+export async function insertMatchCandidates(runnerId: number, candidates: DUVSearchResult[]): Promise<void> {
   const db = getDatabase()
 
   // Clear existing candidates
-  db.prepare('DELETE FROM match_candidates WHERE runner_id = ?').run(runnerId)
-
-  const stmt = db.prepare(`
-    INSERT INTO match_candidates (
-      runner_id, duv_person_id, lastname, firstname,
-      year_of_birth, nation, sex, personal_best, confidence
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `)
+  await db.query('DELETE FROM match_candidates WHERE runner_id = $1', [runnerId])
 
   for (const candidate of candidates) {
-    stmt.run(
+    await db.query(`
+      INSERT INTO match_candidates (
+        runner_id, duv_person_id, lastname, firstname,
+        year_of_birth, nation, sex, personal_best, confidence
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    `, [
       runnerId,
       candidate.PersonID,
       candidate.Lastname,
@@ -239,18 +220,17 @@ export function insertMatchCandidates(runnerId: number, candidates: DUVSearchRes
       candidate.Sex,
       candidate.PersonalBest,
       candidate.confidence
-    )
+    ])
   }
 }
 
-export function getMatchCandidates(runnerId: number): DUVSearchResult[] {
+export async function getMatchCandidates(runnerId: number): Promise<DUVSearchResult[]> {
   const db = getDatabase()
-  const stmt = db.prepare(`
-    SELECT * FROM match_candidates WHERE runner_id = ? ORDER BY confidence DESC
-  `)
+  const result = await db.query(`
+    SELECT * FROM match_candidates WHERE runner_id = $1 ORDER BY confidence DESC
+  `, [runnerId])
 
-  const rows = stmt.all(runnerId) as any[]
-  return rows.map(row => ({
+  return result.rows.map(row => ({
     PersonID: row.duv_person_id,
     Lastname: row.lastname,
     Firstname: row.firstname,
@@ -263,9 +243,9 @@ export function getMatchCandidates(runnerId: number): DUVSearchResult[] {
 }
 
 // Team operations
-export function calculateAndSaveTeams(metric: 'all-time' | 'last-3-years'): void {
+export async function calculateAndSaveTeams(metric: 'all-time' | 'last-3-years'): Promise<void> {
   const db = getDatabase()
-  const runners = getRunners()
+  const runners = await getRunners()
 
   // Group by nationality + gender
   const teams = new Map<string, Runner[]>()
@@ -307,56 +287,53 @@ export function calculateAndSaveTeams(metric: 'all-time' | 'last-3-years'): void
   teamData.sort((a, b) => b.teamTotal - a.teamTotal)
 
   // Clear existing teams for this metric
-  db.prepare('DELETE FROM teams WHERE metric = ?').run(metric)
+  await db.query('DELETE FROM teams WHERE metric = $1', [metric])
 
   // Insert new team rankings
-  const stmt = db.prepare(`
-    INSERT INTO teams (
-      nationality, gender, metric, team_total, rank,
-      runner1_id, runner2_id, runner3_id
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `)
-
-  teamData.forEach((team, index) => {
+  for (const [index, team] of teamData.entries()) {
     // Get runner IDs
-    const getIdStmt = db.prepare('SELECT id FROM runners WHERE entry_id = ?')
-    const runner1Id = team.topThree[0] ? getIdStmt.get(team.topThree[0].entryId) as any : null
-    const runner2Id = team.topThree[1] ? getIdStmt.get(team.topThree[1].entryId) as any : null
-    const runner3Id = team.topThree[2] ? getIdStmt.get(team.topThree[2].entryId) as any : null
+    const runner1Id = team.topThree[0] ? (await db.query('SELECT id FROM runners WHERE entry_id = $1', [team.topThree[0].entryId])).rows[0]?.id : null
+    const runner2Id = team.topThree[1] ? (await db.query('SELECT id FROM runners WHERE entry_id = $1', [team.topThree[1].entryId])).rows[0]?.id : null
+    const runner3Id = team.topThree[2] ? (await db.query('SELECT id FROM runners WHERE entry_id = $1', [team.topThree[2].entryId])).rows[0]?.id : null
 
-    stmt.run(
+    await db.query(`
+      INSERT INTO teams (
+        nationality, gender, metric, team_total, rank,
+        runner1_id, runner2_id, runner3_id
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    `, [
       team.nationality,
       team.gender,
       metric,
       team.teamTotal,
       index + 1,
-      runner1Id?.id || null,
-      runner2Id?.id || null,
-      runner3Id?.id || null
-    )
-  })
+      runner1Id,
+      runner2Id,
+      runner3Id
+    ])
+  }
 }
 
-export function getTeams(metric: 'all-time' | 'last-3-years', gender: Gender): Team[] {
+export async function getTeams(metric: 'all-time' | 'last-3-years', gender: Gender): Promise<Team[]> {
   const db = getDatabase()
-  const stmt = db.prepare(`
+  const result = await db.query(`
     SELECT * FROM teams
-    WHERE metric = ? AND gender = ?
+    WHERE metric = $1 AND gender = $2
     ORDER BY rank
-  `)
+  `, [metric, gender])
 
-  const rows = stmt.all(metric, gender) as any[]
+  const teams: Team[] = []
 
-  return rows.map(row => {
+  for (const row of result.rows) {
     const nationality = row.nationality
     const genderVal = row.gender as Gender
 
-    // Get all runners for this team and sort them by PB (same as calculateAndSaveTeams)
-    const runnersStmt = db.prepare(`
-      SELECT * FROM runners WHERE nationality = ? AND gender = ?
-    `)
-    const runnerRows = runnersStmt.all(nationality, genderVal) as any[]
-    const runners = runnerRows.map(rowToRunner).sort((a, b) => {
+    // Get all runners for this team and sort them by PB
+    const runnersResult = await db.query(`
+      SELECT * FROM runners WHERE nationality = $1 AND gender = $2
+    `, [nationality, genderVal])
+
+    const runners = runnersResult.rows.map(rowToRunner).sort((a, b) => {
       const aVal = metric === 'all-time' ? a.personalBestAllTime : a.personalBestLast3Years
       const bVal = metric === 'all-time' ? b.personalBestAllTime : b.personalBestLast3Years
       return (bVal || 0) - (aVal || 0)
@@ -365,32 +342,34 @@ export function getTeams(metric: 'all-time' | 'last-3-years', gender: Gender): T
     // Get top 3 runners
     const topThree: Runner[] = []
     if (row.runner1_id) {
-      const r1 = db.prepare('SELECT * FROM runners WHERE id = ?').get(row.runner1_id) as any
-      if (r1) topThree.push(rowToRunner(r1))
+      const r1Result = await db.query('SELECT * FROM runners WHERE id = $1', [row.runner1_id])
+      if (r1Result.rows[0]) topThree.push(rowToRunner(r1Result.rows[0]))
     }
     if (row.runner2_id) {
-      const r2 = db.prepare('SELECT * FROM runners WHERE id = ?').get(row.runner2_id) as any
-      if (r2) topThree.push(rowToRunner(r2))
+      const r2Result = await db.query('SELECT * FROM runners WHERE id = $1', [row.runner2_id])
+      if (r2Result.rows[0]) topThree.push(rowToRunner(r2Result.rows[0]))
     }
     if (row.runner3_id) {
-      const r3 = db.prepare('SELECT * FROM runners WHERE id = ?').get(row.runner3_id) as any
-      if (r3) topThree.push(rowToRunner(r3))
+      const r3Result = await db.query('SELECT * FROM runners WHERE id = $1', [row.runner3_id])
+      if (r3Result.rows[0]) topThree.push(rowToRunner(r3Result.rows[0]))
     }
 
-    return {
+    teams.push({
       nationality,
       gender: genderVal,
       runners,
       topThree,
       teamTotal: row.team_total,
-    }
-  })
+    })
+  }
+
+  return teams
 }
 
 // Utility: Clear all data
-export function clearAllData(): void {
+export async function clearAllData(): Promise<void> {
   const db = getDatabase()
-  db.exec(`
+  await db.query(`
     DELETE FROM match_candidates;
     DELETE FROM performances;
     DELETE FROM teams;
