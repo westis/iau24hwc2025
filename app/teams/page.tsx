@@ -48,8 +48,7 @@ function TeamsPageContent() {
         const data = await response.json()
         const fetchedRunners = data.runners as Runner[]
 
-        // Store in localStorage as cache
-        localStorage.setItem('runners', JSON.stringify(fetchedRunners))
+        // NOTE: localStorage caching removed - data too large and exceeds quota
 
         setRunners(fetchedRunners)
       } catch (err) {

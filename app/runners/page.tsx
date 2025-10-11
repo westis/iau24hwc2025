@@ -89,8 +89,7 @@ function RunnersPageContent() {
         const withoutDuv = fetchedRunners.filter((r: Runner) => r.duvId === null).length
         console.log(`With DUV ID: ${withDuv}, Without DUV ID: ${withoutDuv}`)
 
-        // Store in localStorage as cache
-        localStorage.setItem('runners', JSON.stringify(fetchedRunners))
+        // NOTE: localStorage caching removed - data too large and exceeds quota
 
         setRunners(fetchedRunners)
       } catch (err) {

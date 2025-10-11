@@ -114,8 +114,8 @@ export async function loadSeedData(): Promise<boolean> {
     const runners = data.runners.map(transformDBRunner)
     console.log(`Seed data: Loaded ${runners.length} runners from seed-data.json`)
 
-    // Save to localStorage
-    localStorage.setItem('runners', JSON.stringify(runners))
+    // NOTE: localStorage caching removed - data is too large and exceeds quota
+    // Data is now fetched directly from API instead
     localStorage.setItem('seed_data_version', String(SEED_DATA_VERSION))
 
     console.log(`Seed data stats:`)
@@ -149,9 +149,8 @@ export function loadSeedDataSync(): boolean {
     console.log('Seed data: Loading from seed-data.json (sync)...')
     const data = seedData as SeedData
 
-    // Transform and save runners
+    // Transform runners (localStorage caching removed - data too large)
     const runners = data.runners.map(transformDBRunner)
-    localStorage.setItem('runners', JSON.stringify(runners))
     localStorage.setItem('seed_data_version', String(SEED_DATA_VERSION))
 
     console.log(`Seed data: Loaded ${runners.length} runners (version ${SEED_DATA_VERSION})`)
