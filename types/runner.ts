@@ -40,17 +40,6 @@ export interface Runner {
   allPBs?: Array<{                             // All distance PBs (6h, 12h, 24h, 48h, etc.)
     [distance: string]: DUVPersonalBest
   }>
-
-  // Social media links
-  stravaUrl?: string | null
-  instagramUrl?: string | null
-  twitterUrl?: string | null
-
-  // Strava data
-  stravaAthleteId?: number | null
-  stravaPhotoUrl?: string | null
-  stravaData?: any | null
-  stravaLastFetched?: string | null
 }
 
 export interface Performance {

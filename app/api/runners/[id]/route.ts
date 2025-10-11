@@ -61,14 +61,7 @@ export async function GET(
         distance: perf.distance,
         rank: perf.rank,
         eventType: perf.event_type,
-      })),
-      stravaUrl: runner.strava_url,
-      instagramUrl: runner.instagram_url,
-      twitterUrl: runner.twitter_url,
-      stravaAthleteId: runner.strava_athlete_id,
-      stravaPhotoUrl: runner.strava_photo_url,
-      stravaData: runner.strava_data,
-      stravaLastFetched: runner.strava_last_fetched,
+      }))
     }
 
     return NextResponse.json({
