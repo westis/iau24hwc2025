@@ -35,11 +35,37 @@ export async function GET(
       ORDER BY event_date DESC
     `, [runnerId])
 
+    // Transform to camelCase to match frontend expectations
+    const transformedRunner = {
+      id: runner.id,
+      entryId: runner.entry_id,
+      firstname: runner.firstname,
+      lastname: runner.lastname,
+      nationality: runner.nationality,
+      gender: runner.gender,
+      dns: runner.dns || false,
+      duvId: runner.duv_id,
+      matchStatus: runner.match_status,
+      matchConfidence: runner.match_confidence,
+      personalBestAllTime: runner.personal_best_all_time,
+      personalBestAllTimeYear: runner.personal_best_all_time_year,
+      personalBestLast3Years: runner.personal_best_last_2_years,
+      personalBestLast3YearsYear: runner.personal_best_last_2_years_year,
+      dateOfBirth: runner.date_of_birth,
+      age: runner.age,
+      allPBs: runner.all_pbs || [],
+      performanceHistory: performancesResult.rows.map((perf: any) => ({
+        eventId: perf.event_id,
+        eventName: perf.event_name,
+        date: perf.event_date,
+        distance: perf.distance,
+        rank: perf.rank,
+        eventType: perf.event_type,
+      }))
+    }
+
     return NextResponse.json({
-      runner: {
-        ...runner,
-        performances: performancesResult.rows
-      }
+      runner: transformedRunner
     })
   } catch (error) {
     console.error('Error fetching runner profile:', error)
