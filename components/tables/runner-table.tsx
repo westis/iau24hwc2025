@@ -5,10 +5,8 @@ import {
   useReactTable,
   getCoreRowModel,
   getSortedRowModel,
-  getFilteredRowModel,
   type ColumnDef,
   type SortingState,
-  type ColumnFiltersState,
   flexRender,
 } from '@tanstack/react-table'
 import ReactCountryFlag from 'react-country-flag'
@@ -21,9 +19,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
-import { ArrowUpDown, Pencil, Check, ChevronsUpDown, ChevronDown, ChevronUp } from 'lucide-react'
+import { ArrowUpDown, Pencil, ChevronDown, ChevronUp } from 'lucide-react'
 import { getCountryCodeForFlag } from '@/lib/utils/country-codes'
 import { getCountryName } from '@/lib/utils/country-names'
 import { cn } from '@/lib/utils'
@@ -38,13 +34,10 @@ interface RunnerTableProps {
 export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: RunnerTableProps) {
   const { isAdmin } = useAuth()
   const [sorting, setSorting] = React.useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = React.useState<Record<string, boolean>>({
     personalBestAllTime: metric === 'all-time',
     personalBestLast3Years: metric === 'last-3-years',
   })
-  const [searchQuery, setSearchQuery] = React.useState('')
-  const [countryComboboxOpen, setCountryComboboxOpen] = React.useState(false)
   const [editingRunner, setEditingRunner] = React.useState<Runner | null>(null)
   const [editForm, setEditForm] = React.useState({
     firstname: '',
@@ -56,9 +49,6 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
   const [isSaving, setIsSaving] = React.useState(false)
   const [expandedRows, setExpandedRows] = React.useState<Set<number>>(new Set())
 
-  // Debounced search
-  const debouncedSearchQuery = useDebounce(searchQuery, 300)
-
   // Update column visibility when metric changes
   React.useEffect(() => {
     setColumnVisibility({
@@ -66,16 +56,6 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
       personalBestLast3Years: metric === 'last-3-years',
     })
   }, [metric])
-
-  React.useEffect(() => {
-    setColumnFilters((prev) => {
-      const filtered = prev.filter((f) => f.id !== 'name')
-      if (debouncedSearchQuery) {
-        return [...filtered, { id: 'name', value: debouncedSearchQuery }]
-      }
-      return filtered
-    })
-  }, [debouncedSearchQuery])
 
   // Handle opening edit dialog
   function openEditDialog(runner: Runner) {
@@ -344,122 +324,16 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
     onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     state: {
       sorting,
-      columnFilters,
       columnVisibility,
     },
   })
 
-  const nationalityFilter = (columnFilters.find((f) => f.id === 'nationality')?.value as string) || 'all'
-
-  // Get unique countries from runners
-  const uniqueCountries = React.useMemo(() => {
-    const countries = Array.from(new Set(runners.map(r => r.nationality))).sort()
-    return countries
-  }, [runners])
-
   return (
     <div className="w-full space-y-4">
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <Input
-          placeholder="Search by name..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="max-w-sm"
-        />
-        <Popover open={countryComboboxOpen} onOpenChange={setCountryComboboxOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              role="combobox"
-              aria-expanded={countryComboboxOpen}
-              className="w-full sm:w-[250px] justify-between"
-            >
-              {nationalityFilter === 'all' ? (
-                'All Countries'
-              ) : (
-                <div className="flex items-center gap-2">
-                  <ReactCountryFlag
-                    countryCode={getCountryCodeForFlag(nationalityFilter)}
-                    svg
-                    style={{
-                      width: '1.5em',
-                      height: '1em',
-                    }}
-                  />
-                  <span>{nationalityFilter}</span>
-                </div>
-              )}
-              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-[250px] p-0" align="start">
-            <Command>
-              <CommandInput placeholder="Search country..." />
-              <CommandList>
-                <CommandEmpty>No country found.</CommandEmpty>
-                <CommandGroup>
-                  <CommandItem
-                    value="all"
-                    onSelect={() => {
-                      setColumnFilters((prev) => prev.filter((f) => f.id !== 'nationality'))
-                      setCountryComboboxOpen(false)
-                    }}
-                  >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        nationalityFilter === 'all' ? "opacity-100" : "opacity-0"
-                      )}
-                    />
-                    All Countries
-                  </CommandItem>
-                  {uniqueCountries.map((country) => {
-                    const twoLetterCode = getCountryCodeForFlag(country)
-                    return (
-                      <CommandItem
-                        key={country}
-                        value={country}
-                        onSelect={(currentValue) => {
-                          setColumnFilters((prev) => {
-                            const filtered = prev.filter((f) => f.id !== 'nationality')
-                            return [...filtered, { id: 'nationality', value: currentValue.toUpperCase() }]
-                          })
-                          setCountryComboboxOpen(false)
-                        }}
-                      >
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            nationalityFilter === country ? "opacity-100" : "opacity-0"
-                          )}
-                        />
-                        <div className="flex items-center gap-2">
-                          <ReactCountryFlag
-                            countryCode={twoLetterCode}
-                            svg
-                            style={{
-                              width: '1.5em',
-                              height: '1em',
-                            }}
-                          />
-                          <span>{country}</span>
-                        </div>
-                      </CommandItem>
-                    )
-                  })}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
-      </div>
 
       {/* Mobile Card View */}
       <div className="md:hidden grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -747,21 +621,4 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
       </Dialog>
     </div>
   )
-}
-
-// Custom debounce hook
-function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = React.useState<T>(value)
-
-  React.useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value)
-    }, delay)
-
-    return () => {
-      clearTimeout(handler)
-    }
-  }, [value, delay])
-
-  return debouncedValue
 }
