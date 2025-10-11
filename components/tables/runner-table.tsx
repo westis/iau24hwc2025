@@ -38,6 +38,10 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
   const { isAdmin } = useAuth()
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
+  const [columnVisibility, setColumnVisibility] = React.useState<Record<string, boolean>>({
+    personalBestAllTime: metric === 'all-time',
+    personalBestLast3Years: metric === 'last-3-years',
+  })
   const [searchQuery, setSearchQuery] = React.useState('')
   const [countryComboboxOpen, setCountryComboboxOpen] = React.useState(false)
   const [editingRunner, setEditingRunner] = React.useState<Runner | null>(null)
@@ -52,6 +56,14 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
 
   // Debounced search
   const debouncedSearchQuery = useDebounce(searchQuery, 300)
+
+  // Update column visibility when metric changes
+  React.useEffect(() => {
+    setColumnVisibility({
+      personalBestAllTime: metric === 'all-time',
+      personalBestLast3Years: metric === 'last-3-years',
+    })
+  }, [metric])
 
   React.useEffect(() => {
     setColumnFilters((prev) => {
@@ -199,10 +211,9 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
           return row.getValue(id) === value
         },
       },
-      // Show only ONE PB column based on selected metric
-      ...(metric === 'all-time' ? [{
-        accessorKey: 'personalBestAllTime' as const,
-        header: ({ column }: any) => {
+      {
+        accessorKey: 'personalBestAllTime',
+        header: ({ column }) => {
           return (
             <Button
               variant="ghost"
@@ -214,7 +225,7 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
             </Button>
           )
         },
-        cell: ({ row }: any) => {
+        cell: ({ row }) => {
           const pb = row.getValue('personalBestAllTime') as number | null
           const pbYear = row.original.personalBestAllTimeYear
           return (
@@ -227,9 +238,10 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
             </div>
           )
         },
-      }] : [{
-        accessorKey: 'personalBestLast3Years' as const,
-        header: ({ column }: any) => {
+      },
+      {
+        accessorKey: 'personalBestLast3Years',
+        header: ({ column }) => {
           return (
             <Button
               variant="ghost"
@@ -241,7 +253,7 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
             </Button>
           )
         },
-        cell: ({ row }: any) => {
+        cell: ({ row }) => {
           const pb = row.getValue('personalBestLast3Years') as number | null
           const pbYear = row.original.personalBestLast3YearsYear
           return (
@@ -254,7 +266,7 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
             </div>
           )
         },
-      }]),
+      },
       {
         accessorKey: 'age',
         header: ({ column }) => {
@@ -317,7 +329,7 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
         },
       }] : []),
     ],
-    [onManualMatch, isAdmin, metric]
+    [onManualMatch, isAdmin]
   )
 
   const table = useReactTable({
@@ -328,9 +340,11 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
     getFilteredRowModel: getFilteredRowModel(),
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
+    onColumnVisibilityChange: setColumnVisibility,
     state: {
       sorting,
       columnFilters,
+      columnVisibility,
     },
   })
 
