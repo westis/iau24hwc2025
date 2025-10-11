@@ -1,5 +1,6 @@
 'use client'
 
+import * as React from 'react'
 import { useEffect, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { RunnerTable } from '@/components/tables/runner-table'
@@ -13,6 +14,7 @@ export default function RunnersPage() {
   const [error, setError] = useState<string | null>(null)
   const [selectedGender, setSelectedGender] = useState<'M' | 'W'>('M')
   const [selectedMetric, setSelectedMetric] = useState<'last-3-years' | 'all-time'>('last-3-years')
+  const [isPending, startTransition] = React.useTransition()
 
   useEffect(() => {
     // Load runners from localStorage
@@ -125,16 +127,18 @@ export default function RunnersPage() {
             <Button
               variant={selectedGender === 'M' ? 'default' : 'ghost'}
               size="sm"
-              onClick={() => setSelectedGender('M')}
+              onClick={() => startTransition(() => setSelectedGender('M'))}
               className={selectedGender === 'M' ? '' : 'hover:bg-accent'}
+              disabled={isPending}
             >
               Men
             </Button>
             <Button
               variant={selectedGender === 'W' ? 'default' : 'ghost'}
               size="sm"
-              onClick={() => setSelectedGender('W')}
+              onClick={() => startTransition(() => setSelectedGender('W'))}
               className={selectedGender === 'W' ? '' : 'hover:bg-accent'}
+              disabled={isPending}
             >
               Women
             </Button>
@@ -143,16 +147,18 @@ export default function RunnersPage() {
             <Button
               variant={selectedMetric === 'last-3-years' ? 'default' : 'ghost'}
               size="sm"
-              onClick={() => setSelectedMetric('last-3-years')}
+              onClick={() => startTransition(() => setSelectedMetric('last-3-years'))}
               className={selectedMetric === 'last-3-years' ? '' : 'hover:bg-accent'}
+              disabled={isPending}
             >
               2023-2025
             </Button>
             <Button
               variant={selectedMetric === 'all-time' ? 'default' : 'ghost'}
               size="sm"
-              onClick={() => setSelectedMetric('all-time')}
+              onClick={() => startTransition(() => setSelectedMetric('all-time'))}
               className={selectedMetric === 'all-time' ? '' : 'hover:bg-accent'}
+              disabled={isPending}
             >
               All Time
             </Button>
