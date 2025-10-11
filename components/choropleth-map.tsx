@@ -1,6 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
+import MarkerClusterGroup from 'react-leaflet-cluster'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 
 interface CountryData {
   country: string
@@ -14,7 +18,6 @@ interface ChoroplethMapProps {
 }
 
 // Country positions based on latitude/longitude coordinates
-// For equirectangular projection: x = (lon + 180) * (2000/360), y = (90 - lat) * (1000/180)
 const COUNTRY_COORDS: { [key: string]: { lat: number; lon: number } } = {
   // North America
   'USA': { lat: 38, lon: -97 },
@@ -76,82 +79,80 @@ const COUNTRY_COORDS: { [key: string]: { lat: number; lon: number } } = {
   'NZL': { lat: -40, lon: 174 },
 }
 
-// Convert lat/lon to SVG coordinates
-function latLonToXY(lat: number, lon: number): { x: number; y: number } {
-  const x = (lon + 180) * (2000 / 360)
-  const y = (90 - lat) * (1000 / 180)
-  return { x, y }
+// Create custom marker icon based on participant count
+const createCustomIcon = (total: number, code: string) => {
+  const size = total <= 3 ? 30 : total <= 8 ? 40 : 50
+  const color = total <= 3 ? '#93c5fd' : total <= 8 ? '#60a5fa' : '#3b82f6'
+  const borderColor = total <= 3 ? '#2563eb' : total <= 8 ? '#1d4ed8' : '#1e40af'
+
+  return L.divIcon({
+    html: `
+      <div style="
+        width: ${size}px;
+        height: ${size}px;
+        background-color: ${color};
+        border: 2px solid ${borderColor};
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: ${size > 40 ? '12px' : '10px'};
+        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+      ">
+        ${code}
+      </div>
+    `,
+    className: '',
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+    popupAnchor: [0, -size / 2],
+  })
+}
+
+// Custom cluster icon that shows total participants
+const createClusterCustomIcon = (cluster: any) => {
+  const count = cluster.getChildCount()
+  const size = count < 10 ? 40 : count < 50 ? 50 : 60
+
+  return L.divIcon({
+    html: `
+      <div style="
+        width: ${size}px;
+        height: ${size}px;
+        background-color: #f59e0b;
+        border: 3px solid #d97706;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: ${size > 50 ? '16px' : '14px'};
+        box-shadow: 0 3px 8px rgba(0,0,0,0.4);
+      ">
+        ${count}
+      </div>
+    `,
+    className: '',
+    iconSize: [size, size],
+  })
 }
 
 export function ChoroplethMap({ countries }: ChoroplethMapProps) {
-  const [hoveredCountry, setHoveredCountry] = useState<string | null>(null)
-  const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 })
-  const [zoom, setZoom] = useState(1)
-  const [pan, setPan] = useState({ x: 0, y: 0 })
-  const [isDragging, setIsDragging] = useState(false)
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+  const [mounted, setMounted] = useState(false)
 
-  // Get max participants for color scaling
-  const maxParticipants = Math.max(...countries.map(c => c.total))
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
-  // Get color intensity based on participant count
-  const getColorIntensity = (total: number) => {
-    const intensity = (total / maxParticipants) * 100
-    return intensity
-  }
-
-  // Get country data by code
-  const getCountryData = (code: string) => {
-    return countries.find(c => c.country === code)
-  }
-
-  const handleMouseEnter = (code: string, event: React.MouseEvent<SVGRectElement>) => {
-    const rect = event.currentTarget.getBoundingClientRect()
-    setHoveredCountry(code)
-    setTooltipPos({ x: rect.left + rect.width / 2, y: rect.top })
-  }
-
-  const handleMouseLeave = () => {
-    setHoveredCountry(null)
-  }
-
-  // Zoom handlers
-  const handleZoomIn = () => {
-    setZoom(prev => Math.min(prev * 1.5, 5))
-  }
-
-  const handleZoomOut = () => {
-    setZoom(prev => Math.max(prev / 1.5, 0.5))
-  }
-
-  const handleReset = () => {
-    setZoom(1)
-    setPan({ x: 0, y: 0 })
-  }
-
-  const handleWheel = (e: React.WheelEvent) => {
-    e.preventDefault()
-    const delta = e.deltaY > 0 ? 0.9 : 1.1
-    setZoom(prev => Math.min(Math.max(prev * delta, 0.5), 5))
-  }
-
-  // Pan handlers
-  const handleMouseDown = (e: React.MouseEvent) => {
-    setIsDragging(true)
-    setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y })
-  }
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (isDragging) {
-      setPan({
-        x: e.clientX - dragStart.x,
-        y: e.clientY - dragStart.y,
-      })
-    }
-  }
-
-  const handleMouseUp = () => {
-    setIsDragging(false)
+  if (!mounted) {
+    return (
+      <div className="w-full h-[600px] bg-gray-100 rounded-lg flex items-center justify-center">
+        <p className="text-muted-foreground">Loading map...</p>
+      </div>
+    )
   }
 
   return (
@@ -171,135 +172,65 @@ export function ChoroplethMap({ countries }: ChoroplethMapProps) {
           <div className="h-8 w-8 bg-blue-500 rounded-full border-2 border-blue-800"></div>
           <span>9+</span>
         </div>
+        <div className="flex items-center gap-2 ml-4">
+          <div className="h-8 w-8 bg-orange-500 rounded-full border-3 border-orange-600 flex items-center justify-center text-white text-xs font-bold">
+            #
+          </div>
+          <span>Cluster</span>
+        </div>
       </div>
 
-      {/* Zoom Controls */}
-      <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
-        <button
-          onClick={handleZoomIn}
-          className="bg-background border border-border rounded-md p-2 hover:bg-accent transition-colors shadow-md"
-          title="Zoom in"
+      {/* Map */}
+      <div className="w-full h-[600px] rounded-lg overflow-hidden border border-border">
+        <MapContainer
+          center={[30, 0]}
+          zoom={2}
+          style={{ height: '100%', width: '100%' }}
+          scrollWheelZoom={true}
+          maxBounds={[[-90, -180], [90, 180]]}
+          maxBoundsViscosity={1.0}
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-        </button>
-        <button
-          onClick={handleZoomOut}
-          className="bg-background border border-border rounded-md p-2 hover:bg-accent transition-colors shadow-md"
-          title="Zoom out"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
-          </svg>
-        </button>
-        <button
-          onClick={handleReset}
-          className="bg-background border border-border rounded-md p-2 hover:bg-accent transition-colors shadow-md"
-          title="Reset view"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-        </button>
-      </div>
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            noWrap={false}
+          />
 
-      {/* World Map with Overlay */}
-      <div
-        className="relative w-full border border-border rounded-lg overflow-hidden bg-gray-100"
-        onWheel={handleWheel}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-        style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
-      >
-        <div className="relative w-full" style={{ height: '600px' }}>
-          {/* Wrapper for both map and markers with synchronized transform */}
-          <div
-            className="absolute inset-0 w-full h-full"
-            style={{
-              transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-              transformOrigin: '0 0',
-            }}
+          <MarkerClusterGroup
+            iconCreateFunction={createClusterCustomIcon}
+            maxClusterRadius={50}
+            spiderfyOnMaxZoom={true}
+            showCoverageOnHover={false}
+            zoomToBoundsOnClick={true}
           >
-            {/* Real world map as background image */}
-            <img
-              src="https://upload.wikimedia.org/wikipedia/commons/8/83/Equirectangular_projection_SW.jpg"
-              alt="World Map"
-              className="absolute inset-0 w-full h-full object-cover opacity-40 pointer-events-none"
-            />
-
-            {/* SVG overlay for country markers */}
-            <svg
-              viewBox="0 0 2000 1000"
-              className="w-full h-full absolute inset-0 pointer-events-none"
-            >
-              <g className="pointer-events-auto">
-            {/* Overlay country markers */}
-            {Object.entries(COUNTRY_COORDS).map(([code, coords]) => {
-              const countryData = getCountryData(code)
-              if (!countryData) return null
-
-              const { x, y } = latLonToXY(coords.lat, coords.lon)
-              const size = countryData.total <= 3 ? 15 : countryData.total <= 8 ? 25 : 35
-              const color = countryData.total <= 3 ? '#93c5fd' : countryData.total <= 8 ? '#60a5fa' : '#3b82f6'
-              const borderColor = countryData.total <= 3 ? '#2563eb' : countryData.total <= 8 ? '#1d4ed8' : '#1e40af'
+            {countries.map((countryData) => {
+              const coords = COUNTRY_COORDS[countryData.country]
+              if (!coords) return null
 
               return (
-                <g key={code}>
-                  <circle
-                    cx={x}
-                    cy={y}
-                    r={size}
-                    fill={color}
-                    stroke={hoveredCountry === code ? '#000' : borderColor}
-                    strokeWidth={hoveredCountry === code ? 3 : 2}
-                    className="transition-all cursor-pointer"
-                    onMouseEnter={(e) => handleMouseEnter(code, e)}
-                    onMouseLeave={handleMouseLeave}
-                  />
-                  <text
-                    x={x}
-                    y={y}
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    fontSize="10"
-                    fill="#fff"
-                    fontWeight="bold"
-                    pointerEvents="none"
-                  >
-                    {code}
-                  </text>
-                </g>
+                <Marker
+                  key={countryData.country}
+                  position={[coords.lat, coords.lon]}
+                  icon={createCustomIcon(countryData.total, countryData.country)}
+                >
+                  <Popup>
+                    <div className="p-2">
+                      <div className="font-semibold text-lg mb-1">{countryData.country}</div>
+                      <div className="text-sm">
+                        <div className="font-medium">Total: {countryData.total}</div>
+                        <div className="flex gap-3 mt-1">
+                          <span className="text-blue-600">♂ {countryData.men}</span>
+                          <span className="text-pink-600">♀ {countryData.women}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </Popup>
+                </Marker>
               )
             })}
-              </g>
-            </svg>
-          </div>
-        </div>
+          </MarkerClusterGroup>
+        </MapContainer>
       </div>
-
-      {/* Tooltip */}
-      {hoveredCountry && getCountryData(hoveredCountry) && (
-        <div
-          className="fixed z-50 bg-popover text-popover-foreground px-3 py-2 rounded-md shadow-lg border text-sm pointer-events-none"
-          style={{
-            left: `${tooltipPos.x}px`,
-            top: `${tooltipPos.y - 60}px`,
-            transform: 'translateX(-50%)',
-          }}
-        >
-          <div className="font-semibold">{hoveredCountry}</div>
-          <div className="text-xs">
-            Total: {getCountryData(hoveredCountry)?.total}
-          </div>
-          <div className="text-xs flex gap-2">
-            <span className="text-blue-500">♂ {getCountryData(hoveredCountry)?.men}</span>
-            <span className="text-pink-500">♀ {getCountryData(hoveredCountry)?.women}</span>
-          </div>
-        </div>
-      )}
 
       {/* Country list below map */}
       <div className="mt-6 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2 text-xs">
@@ -309,8 +240,6 @@ export function ChoroplethMap({ countries }: ChoroplethMapProps) {
             <div
               key={country.country}
               className="flex items-center justify-between p-2 rounded border border-border hover:bg-accent transition-colors"
-              onMouseEnter={() => setHoveredCountry(country.country)}
-              onMouseLeave={() => setHoveredCountry(null)}
             >
               <span className="font-medium">{country.country}</span>
               <span className="text-muted-foreground">{country.total}</span>
