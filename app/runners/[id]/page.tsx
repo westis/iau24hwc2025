@@ -53,6 +53,10 @@ interface RunnerProfile {
   stravaUrl?: string | null
   instagramUrl?: string | null
   twitterUrl?: string | null
+  stravaAthleteId?: number | null
+  stravaPhotoUrl?: string | null
+  stravaData?: any | null
+  stravaLastFetched?: string | null
 }
 
 export default function RunnerProfilePage() {
@@ -73,6 +77,9 @@ export default function RunnerProfilePage() {
   })
   const [isSaving, setIsSaving] = useState(false)
   const [isUnmatching, setIsUnmatching] = useState(false)
+  const [stravaUrl, setStravaUrl] = useState('')
+  const [isFetchingStrava, setIsFetchingStrava] = useState(false)
+  const [stravaError, setStravaError] = useState<string | null>(null)
 
   useEffect(() => {
     function loadRunner() {
@@ -124,6 +131,10 @@ export default function RunnerProfilePage() {
           stravaUrl: foundRunner.stravaUrl,
           instagramUrl: foundRunner.instagramUrl,
           twitterUrl: foundRunner.twitterUrl,
+          stravaAthleteId: foundRunner.stravaAthleteId,
+          stravaPhotoUrl: foundRunner.stravaPhotoUrl,
+          stravaData: foundRunner.stravaData,
+          stravaLastFetched: foundRunner.stravaLastFetched,
         }
 
         console.log('Runner loaded:', {
@@ -235,6 +246,37 @@ export default function RunnerProfilePage() {
       alert(err instanceof Error ? err.message : 'Failed to unmatch runner')
     } finally {
       setIsUnmatching(false)
+    }
+  }
+
+  async function handleFetchStrava() {
+    if (!runner || !stravaUrl.trim()) return
+
+    setIsFetchingStrava(true)
+    setStravaError(null)
+
+    try {
+      const response = await fetch(`/api/runners/${runner.id}/strava`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stravaUrl: stravaUrl.trim() })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch Strava data')
+      }
+
+      console.log('✓ Strava data fetched:', data)
+
+      // Reload the page to show updated data
+      window.location.reload()
+    } catch (err) {
+      console.error('Error fetching Strava data:', err)
+      setStravaError(err instanceof Error ? err.message : 'Failed to fetch Strava data')
+    } finally {
+      setIsFetchingStrava(false)
     }
   }
 
@@ -442,6 +484,95 @@ export default function RunnerProfilePage() {
             </div>
           )}
         </div>
+
+        {/* Strava Data Section (Admin Only) */}
+        {isAdmin && !runner.stravaAthleteId && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Add Strava Profile</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Paste Strava URL (e.g., https://www.strava.com/athletes/12345)"
+                  value={stravaUrl}
+                  onChange={(e) => setStravaUrl(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleFetchStrava()}
+                />
+                <Button
+                  onClick={handleFetchStrava}
+                  disabled={isFetchingStrava || !stravaUrl.trim()}
+                >
+                  {isFetchingStrava ? 'Fetching...' : 'Fetch Data'}
+                </Button>
+              </div>
+              {stravaError && (
+                <p className="text-sm text-destructive mt-2">{stravaError}</p>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Strava Training Data (when available) */}
+        {runner.stravaData && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Strava Training Data (Last 12 Weeks)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Last 4 Weeks</p>
+                  <p className="text-xl font-bold">
+                    {runner.stravaData.metrics?.last4Weeks?.distance?.toFixed(0) || 0} km
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {runner.stravaData.metrics?.last4Weeks?.count || 0} runs
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Last 8 Weeks</p>
+                  <p className="text-xl font-bold">
+                    {runner.stravaData.metrics?.last8Weeks?.distance?.toFixed(0) || 0} km
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {runner.stravaData.metrics?.last8Weeks?.count || 0} runs
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Last 12 Weeks</p>
+                  <p className="text-xl font-bold">
+                    {runner.stravaData.metrics?.last12Weeks?.distance?.toFixed(0) || 0} km
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {runner.stravaData.metrics?.last12Weeks?.count || 0} runs
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Longest Run</p>
+                  <p className="text-xl font-bold">
+                    {runner.stravaData.metrics?.longestRun?.toFixed(1) || 0} km
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Biggest Week</p>
+                  <p className="text-xl font-bold">
+                    {runner.stravaData.metrics?.biggestWeek?.toFixed(0) || 0} km
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Elevation</p>
+                  <p className="text-xl font-bold">
+                    {runner.stravaData.metrics?.last12Weeks?.elevation?.toFixed(0) || 0} m
+                  </p>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-4">
+                Last fetched: {runner.stravaLastFetched ? new Date(runner.stravaLastFetched).toLocaleString() : 'N/A'}
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         <div className={`grid gap-6 ${hasOtherPBs ? 'md:grid-cols-2' : 'md:grid-cols-1 max-w-2xl'} mb-6`}>
           <Card>

@@ -45,6 +45,12 @@ export interface Runner {
   stravaUrl?: string | null
   instagramUrl?: string | null
   twitterUrl?: string | null
+
+  // Strava data
+  stravaAthleteId?: number | null
+  stravaPhotoUrl?: string | null
+  stravaData?: any | null
+  stravaLastFetched?: string | null
 }
 
 export interface Performance {

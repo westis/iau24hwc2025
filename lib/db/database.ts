@@ -171,6 +171,10 @@ export async function getRunners(): Promise<Runner[]> {
     stravaUrl: row.strava_url,
     instagramUrl: row.instagram_url,
     twitterUrl: row.twitter_url,
+    stravaAthleteId: row.strava_athlete_id,
+    stravaPhotoUrl: row.strava_photo_url,
+    stravaData: row.strava_data,
+    stravaLastFetched: row.strava_last_fetched,
   }))
 }
 
@@ -221,6 +225,10 @@ async function rowToRunner(row: any): Promise<Runner> {
     stravaUrl: row.strava_url,
     instagramUrl: row.instagram_url,
     twitterUrl: row.twitter_url,
+    stravaAthleteId: row.strava_athlete_id,
+    stravaPhotoUrl: row.strava_photo_url,
+    stravaData: row.strava_data,
+    stravaLastFetched: row.strava_last_fetched,
   }
 }
 
