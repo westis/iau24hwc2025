@@ -1,12 +1,25 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
+import dynamic from 'next/dynamic'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { ChoroplethMap } from '@/components/choropleth-map'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import type { Runner, Gender } from '@/types/runner'
+
+// Dynamic import to avoid SSR issues with react-leaflet
+const ChoroplethMap = dynamic(
+  () => import('@/components/choropleth-map').then(mod => mod.ChoroplethMap),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-[600px] bg-gray-100 rounded-lg flex items-center justify-center">
+        <p className="text-muted-foreground">Loading map...</p>
+      </div>
+    )
+  }
+)
 
 export default function StatsPage() {
   const { t } = useLanguage()
