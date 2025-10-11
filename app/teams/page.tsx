@@ -144,7 +144,7 @@ function TeamsPageContent() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <p className="text-destructive mb-4">{t.teams.error}: {error}</p>
+          <p className="text-destructive mb-4">{t.common.error}: {error}</p>
           <p className="text-muted-foreground">{t.teams.runBackendTools}</p>
         </div>
       </div>
