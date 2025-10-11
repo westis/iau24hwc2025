@@ -20,36 +20,46 @@ export default function RunnersPage() {
   const [isPending, startTransition] = React.useTransition()
 
   useEffect(() => {
-    // Load runners from localStorage
-    try {
-      setLoading(true)
-      const stored = localStorage.getItem('runners')
-      if (stored) {
-        const parsedRunners = JSON.parse(stored) as Runner[]
-        console.log('Loaded runners from localStorage:', parsedRunners.length)
+    // Fetch runners from API (Supabase)
+    async function fetchRunners() {
+      try {
+        setLoading(true)
+
+        const response = await fetch('/api/runners')
+        if (!response.ok) {
+          throw new Error('Failed to fetch runners from API')
+        }
+
+        const data = await response.json()
+        const fetchedRunners = data.runners as Runner[]
+
+        console.log('Fetched runners from API:', fetchedRunners.length)
 
         // Debug: Count runners by status
-        const byStatus = parsedRunners.reduce((acc: any, r: Runner) => {
+        const byStatus = fetchedRunners.reduce((acc: any, r: Runner) => {
           acc[r.matchStatus] = (acc[r.matchStatus] || 0) + 1
           return acc
         }, {})
         console.log('Runners by match status:', byStatus)
 
         // Debug: Count runners with/without DUV ID
-        const withDuv = parsedRunners.filter((r: Runner) => r.duvId !== null).length
-        const withoutDuv = parsedRunners.filter((r: Runner) => r.duvId === null).length
+        const withDuv = fetchedRunners.filter((r: Runner) => r.duvId !== null).length
+        const withoutDuv = fetchedRunners.filter((r: Runner) => r.duvId === null).length
         console.log(`With DUV ID: ${withDuv}, Without DUV ID: ${withoutDuv}`)
 
-        setRunners(parsedRunners)
-      } else {
-        setError('No runners found. Please upload an entry list.')
+        // Store in localStorage as cache
+        localStorage.setItem('runners', JSON.stringify(fetchedRunners))
+
+        setRunners(fetchedRunners)
+      } catch (err) {
+        console.error('Error loading runners from API:', err)
+        setError(err instanceof Error ? err.message : 'Failed to load runners')
+      } finally {
+        setLoading(false)
       }
-    } catch (err) {
-      console.error('Error loading runners from localStorage:', err)
-      setError(err instanceof Error ? err.message : 'Failed to load runners')
-    } finally {
-      setLoading(false)
     }
+
+    fetchRunners()
   }, [])
 
   // Filter, sort, and add rankings
