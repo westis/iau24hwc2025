@@ -8,27 +8,28 @@ export async function POST() {
     const db = getDatabase()
 
     // Find all runners with match_status but no duv_id
-    const runnersWithoutDuvId = db.prepare(`
+    const runnersResult = await db.query(`
       SELECT id, firstname, lastname, match_status
       FROM runners
       WHERE duv_id IS NULL
       AND match_status != 'unmatched'
-    `).all()
+    `)
+    const runnersWithoutDuvId = runnersResult.rows
 
     console.log('Found runners without DUV ID:', runnersWithoutDuvId)
 
     // Unmatch them all
-    const result = db.prepare(`
+    const result = await db.query(`
       UPDATE runners
       SET match_status = 'unmatched',
           match_confidence = NULL
       WHERE duv_id IS NULL
       AND match_status != 'unmatched'
-    `).run()
+    `)
 
     return NextResponse.json({
       success: true,
-      count: result.changes,
+      count: result.rowCount,
       runners: runnersWithoutDuvId,
     })
   } catch (error) {

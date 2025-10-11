@@ -38,7 +38,7 @@ async function migrate() {
 
     // Migrate runners
     console.log('👥 Migrating runners...')
-    const runners = sqlite.prepare('SELECT * FROM runners').all()
+    const runners = sqlite.prepare('SELECT * FROM runners').all() as any[]
     console.log(`   Found ${runners.length} runners in SQLite`)
 
     for (const runner of runners) {
@@ -76,7 +76,7 @@ async function migrate() {
 
     // Migrate performances
     console.log('🏃 Migrating performances...')
-    const performances = sqlite.prepare('SELECT * FROM performances').all()
+    const performances = sqlite.prepare('SELECT * FROM performances').all() as any[]
     console.log(`   Found ${performances.length} performances in SQLite`)
 
     for (const perf of performances) {
@@ -102,7 +102,7 @@ async function migrate() {
 
     // Migrate match candidates
     console.log('🔍 Migrating match candidates...')
-    const candidates = sqlite.prepare('SELECT * FROM match_candidates').all()
+    const candidates = sqlite.prepare('SELECT * FROM match_candidates').all() as any[]
     console.log(`   Found ${candidates.length} match candidates in SQLite`)
 
     for (const candidate of candidates) {
@@ -130,7 +130,7 @@ async function migrate() {
 
     // Migrate teams
     console.log('🏆 Migrating teams...')
-    const teams = sqlite.prepare('SELECT * FROM teams').all()
+    const teams = sqlite.prepare('SELECT * FROM teams').all() as any[]
     console.log(`   Found ${teams.length} teams in SQLite`)
 
     for (const team of teams) {

@@ -8,7 +8,7 @@ export async function GET() {
     const db = getDatabase()
 
     // Get all runners without DUV ID (exclude ones marked as 'no-match')
-    const runners = db.prepare(`
+    const runnersResult = await db.query(`
       SELECT
         r.id,
         r.entry_id,
@@ -21,11 +21,12 @@ export async function GET() {
       WHERE r.duv_id IS NULL
       AND r.match_status != 'no-match'
       ORDER BY r.lastname, r.firstname
-    `).all()
+    `)
+    const runners = runnersResult.rows
 
     // For each runner, get their match candidates
-    const runnersWithCandidates = runners.map((runner: any) => {
-      const candidates = db.prepare(`
+    const runnersWithCandidates = await Promise.all(runners.map(async (runner: any) => {
+      const candidatesResult = await db.query(`
         SELECT
           id,
           duv_person_id,
@@ -37,15 +38,15 @@ export async function GET() {
           personal_best,
           confidence
         FROM match_candidates
-        WHERE runner_id = ?
+        WHERE runner_id = $1
         ORDER BY confidence DESC
-      `).all(runner.id)
+      `, [runner.id])
 
       return {
         ...runner,
-        candidates
+        candidates: candidatesResult.rows
       }
-    })
+    }))
 
     return NextResponse.json({
       runners: runnersWithCandidates,

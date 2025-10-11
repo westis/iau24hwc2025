@@ -12,7 +12,8 @@ export async function GET(
     const db = getDatabase()
 
     // Get the runner from database
-    const runner = db.prepare('SELECT * FROM runners WHERE id = ?').get(id) as any
+    const runnerResult = await db.query('SELECT * FROM runners WHERE id = $1', [id])
+    const runner = runnerResult.rows[0] as any
 
     if (!runner) {
       return NextResponse.json({ error: 'Runner not found' }, { status: 404 })
@@ -52,7 +53,8 @@ export async function GET(
     console.log('='.repeat(60) + '\n')
 
     // Get updated runner
-    const updatedRunner = db.prepare('SELECT * FROM runners WHERE id = ?').get(id) as any
+    const updatedResult = await db.query('SELECT * FROM runners WHERE id = $1', [id])
+    const updatedRunner = updatedResult.rows[0] as any
 
     return NextResponse.json({
       success: true,

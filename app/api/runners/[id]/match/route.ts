@@ -42,17 +42,15 @@ export async function POST(
     const db = getDatabase()
 
     // Update runner with manual match
-    const stmt = db.prepare(`
+    const updateResult = await db.query(`
       UPDATE runners
-      SET duv_id = ?,
+      SET duv_id = $1,
           match_status = 'manually-matched',
-          match_confidence = ?
-      WHERE id = ?
-    `)
+          match_confidence = $2
+      WHERE id = $3
+    `, [duvId, confidence, id])
 
-    const result = stmt.run(duvId, confidence, id)
-
-    if (result.changes === 0) {
+    if (updateResult.rowCount === 0) {
       return NextResponse.json(
         { error: 'Runner not found' },
         { status: 404 }
@@ -60,9 +58,10 @@ export async function POST(
     }
 
     // Return updated runner
-    const runner = db.prepare(`
-      SELECT * FROM runners WHERE id = ?
-    `).get(id)
+    const runnerResult = await db.query(`
+      SELECT * FROM runners WHERE id = $1
+    `, [id])
+    const runner = runnerResult.rows[0]
 
     return NextResponse.json({
       success: true,
@@ -86,17 +85,15 @@ export async function DELETE(
     const db = getDatabase()
 
     // Clear the match
-    const stmt = db.prepare(`
+    const result = await db.query(`
       UPDATE runners
       SET duv_id = NULL,
           match_status = 'unmatched',
           match_confidence = NULL
-      WHERE id = ?
-    `)
+      WHERE id = $1
+    `, [id])
 
-    const result = stmt.run(id)
-
-    if (result.changes === 0) {
+    if (result.rowCount === 0) {
       return NextResponse.json(
         { error: 'Runner not found' },
         { status: 404 }

@@ -12,17 +12,15 @@ export async function POST(
     const db = getDatabase()
 
     // Mark runner as no-match (not found in DUV)
-    const stmt = db.prepare(`
+    const result = await db.query(`
       UPDATE runners
       SET duv_id = NULL,
           match_status = 'no-match',
           match_confidence = NULL
-      WHERE id = ?
-    `)
+      WHERE id = $1
+    `, [id])
 
-    const result = stmt.run(id)
-
-    if (result.changes === 0) {
+    if (result.rowCount === 0) {
       return NextResponse.json(
         { error: 'Runner not found' },
         { status: 404 }
@@ -30,9 +28,10 @@ export async function POST(
     }
 
     // Return updated runner
-    const runner = db.prepare(`
-      SELECT * FROM runners WHERE id = ?
-    `).get(id)
+    const runnerResult = await db.query(`
+      SELECT * FROM runners WHERE id = $1
+    `, [id])
+    const runner = runnerResult.rows[0]
 
     return NextResponse.json({
       success: true,

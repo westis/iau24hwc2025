@@ -29,7 +29,7 @@ sql += '-- Generated from SQLite database\n\n'
 try {
   // Export runners
   console.log('👥 Exporting runners...')
-  const runners = db.prepare('SELECT * FROM runners').all()
+  const runners = db.prepare('SELECT * FROM runners').all() as any[]
   console.log(`   Found ${runners.length} runners`)
 
   if (runners.length > 0) {
@@ -42,7 +42,7 @@ try {
 
   // Export performances
   console.log('🏃 Exporting performances...')
-  const performances = db.prepare('SELECT * FROM performances').all()
+  const performances = db.prepare('SELECT * FROM performances').all() as any[]
   console.log(`   Found ${performances.length} performances`)
 
   if (performances.length > 0) {
@@ -55,7 +55,7 @@ try {
 
   // Export match_candidates
   console.log('🔍 Exporting match candidates...')
-  const candidates = db.prepare('SELECT * FROM match_candidates').all()
+  const candidates = db.prepare('SELECT * FROM match_candidates').all() as any[]
   console.log(`   Found ${candidates.length} match candidates`)
 
   if (candidates.length > 0) {
@@ -68,7 +68,7 @@ try {
 
   // Export teams
   console.log('🏆 Exporting teams...')
-  const teams = db.prepare('SELECT * FROM teams').all()
+  const teams = db.prepare('SELECT * FROM teams').all() as any[]
   console.log(`   Found ${teams.length} teams`)
 
   if (teams.length > 0) {

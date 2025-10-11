@@ -8,7 +8,8 @@ export async function GET() {
     const db = getDatabase()
 
     // Get a runner to test with
-    const runner = db.prepare('SELECT * FROM runners LIMIT 1').get() as any
+    const runnerResult = await db.query('SELECT * FROM runners LIMIT 1')
+    const runner = runnerResult.rows[0] as any
 
     if (!runner) {
       return NextResponse.json({ error: 'No runners found in database' }, { status: 404 })
@@ -20,18 +21,17 @@ export async function GET() {
     const testAge = 99
     console.log(`Test: Attempting to set age to ${testAge} for entry_id ${runner.entry_id}`)
 
-    const updateStmt = db.prepare('UPDATE runners SET age = ? WHERE entry_id = ?')
-    const updateResult = updateStmt.run(testAge, runner.entry_id)
+    const updateResult = await db.query('UPDATE runners SET age = $1 WHERE entry_id = $2', [testAge, runner.entry_id])
 
-    console.log(`Test: Update result - changes: ${updateResult.changes}`)
+    console.log(`Test: Update result - changes: ${updateResult.rowCount}`)
 
     // Read it back
-    const verifyRunner = db.prepare('SELECT age FROM runners WHERE entry_id = ?').get(runner.entry_id) as any
+    const verifyResult = await db.query('SELECT age FROM runners WHERE entry_id = $1', [runner.entry_id])
+    const verifyRunner = verifyResult.rows[0] as any
     console.log(`Test: Verified age after update:`, verifyRunner.age)
 
     // Reset it
-    const resetStmt = db.prepare('UPDATE runners SET age = ? WHERE entry_id = ?')
-    resetStmt.run(runner.age, runner.entry_id)
+    await db.query('UPDATE runners SET age = $1 WHERE entry_id = $2', [runner.age, runner.entry_id])
 
     return NextResponse.json({
       success: true,
@@ -39,7 +39,7 @@ export async function GET() {
       originalAge: runner.age,
       testAge: testAge,
       verifiedAge: verifyRunner.age,
-      updateChanges: updateResult.changes
+      updateChanges: updateResult.rowCount
     })
   } catch (error) {
     console.error('Database write test error:', error)
