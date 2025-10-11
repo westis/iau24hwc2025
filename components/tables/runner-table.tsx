@@ -476,47 +476,57 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
             const alternatePBYear = metric === 'last-3-years' ? runner.personalBestAllTimeYear : runner.personalBestLast3YearsYear
             const alternateLabel = metric === 'last-3-years' ? 'All-Time' : '2023-2025'
 
+            const rank = (runner as any).rank
+
             return (
               <div key={row.id} className="border rounded-lg overflow-hidden">
                 {/* Collapsed View - Always Visible */}
                 <div
-                  className="p-3 cursor-pointer hover:bg-accent/50"
+                  className="p-3 cursor-pointer hover:bg-accent/50 flex gap-3"
                   onClick={() => onRowClick(runner.id)}
                 >
-                  <div className="flex items-start justify-between gap-2 mb-1">
-                    <div className="font-medium text-sm">{runner.firstname} {runner.lastname}</div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        toggleRow(runner.id)
-                      }}
-                      className="p-1 hover:bg-accent rounded-md flex-shrink-0"
-                    >
-                      {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                    </button>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground flex-wrap">
-                    <ReactCountryFlag
-                      countryCode={twoLetterCode}
-                      svg
-                      style={{
-                        width: '1.2em',
-                        height: '0.8em',
-                      }}
-                      title={countryName}
-                    />
-                    <span>{threeLetterCode}</span>
-                    <span>•</span>
-                    <span>{runner.gender}</span>
-                    <span>•</span>
-                    <span className="font-medium text-foreground">
-                      {selectedPB ? (
-                        <>
-                          {selectedPB.toFixed(3)}km
-                          {selectedPBYear && <span className="text-muted-foreground ml-0.5">({selectedPBYear})</span>}
-                        </>
-                      ) : 'No PB'}
-                    </span>
+                  {/* Rank - spans both rows */}
+                  {rank && (
+                    <div className="flex items-center justify-center min-w-[40px] font-bold text-2xl text-primary">
+                      {rank}
+                    </div>
+                  )}
+
+                  {/* Main content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2 mb-1">
+                      <div className="font-medium text-sm">{runner.firstname} {runner.lastname}</div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          toggleRow(runner.id)
+                        }}
+                        className="p-1 hover:bg-accent rounded-md flex-shrink-0"
+                      >
+                        {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground flex-wrap">
+                      <ReactCountryFlag
+                        countryCode={twoLetterCode}
+                        svg
+                        style={{
+                          width: '1.2em',
+                          height: '0.8em',
+                        }}
+                        title={countryName}
+                      />
+                      <span>{threeLetterCode}</span>
+                      <span>•</span>
+                      <span className="font-medium text-foreground">
+                        {selectedPB ? (
+                          <>
+                            {selectedPB.toFixed(3)}km
+                            {selectedPBYear && <span className="text-muted-foreground ml-0.5">({selectedPBYear})</span>}
+                          </>
+                        ) : 'No PB'}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
