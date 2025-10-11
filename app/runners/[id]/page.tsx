@@ -174,6 +174,27 @@ export default function RunnerProfilePage() {
         throw new Error('Failed to update runner')
       }
 
+      const data = await response.json()
+
+      // Update localStorage with new data
+      const stored = localStorage.getItem('runners')
+      if (stored) {
+        const runners = JSON.parse(stored)
+        const index = runners.findIndex((r: any) => r.id === runner.id)
+        if (index !== -1) {
+          // Update the runner in localStorage
+          runners[index] = {
+            ...runners[index],
+            firstname: data.runner.firstname,
+            lastname: data.runner.lastname,
+            nationality: data.runner.nationality,
+            gender: data.runner.gender,
+            dns: data.runner.dns || false
+          }
+          localStorage.setItem('runners', JSON.stringify(runners))
+        }
+      }
+
       // Reload the page to show updated data
       window.location.reload()
     } catch (err) {
