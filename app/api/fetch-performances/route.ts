@@ -54,6 +54,7 @@ export async function POST(request: NextRequest) {
           date: result.Startdate,
           distance: parseFloat(result.Performance) || 0,
           rank: result.Rank || 0,
+          rankGender: result.RankGender,
           eventType: '24h',
         }))
 

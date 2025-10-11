@@ -47,6 +47,7 @@ export interface Performance {
   eventName: string
   date: string              // ISO date
   distance: number          // km for 24h races
-  rank: number
+  rank: number              // Overall ranking
+  rankGender?: number       // Gender-specific ranking (M/W)
   eventType: string         // "24h", "100km", etc.
 }

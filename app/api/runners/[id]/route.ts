@@ -60,6 +60,7 @@ export async function GET(
         date: perf.event_date,
         distance: perf.distance,
         rank: perf.rank,
+        rankGender: perf.rank_gender,
         eventType: perf.event_type,
       }))
     }

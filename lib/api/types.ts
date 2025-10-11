@@ -34,7 +34,8 @@ export interface DUVRunnerProfile {
     Startdate: string              // ISO date
     Length: string                 // "24h", "100km"
     Performance: string            // Distance or time
-    Rank: number
+    Rank: number                   // Overall ranking
+    RankGender?: number            // Gender-specific ranking (M/W)
   }>
   allPBs?: Array<{                  // Pre-calculated PBs from DUV
     [distance: string]: DUVPersonalBest

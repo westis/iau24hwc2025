@@ -19,6 +19,7 @@ interface Performance {
   event_date: string
   distance: number
   rank: number | null
+  rank_gender?: number | null
   event_type: string
 }
 
@@ -116,6 +117,7 @@ export default function RunnerProfilePage() {
             event_date: p.date,
             distance: p.distance,
             rank: p.rank,
+            rank_gender: p.rankGender,
             event_type: p.eventType,
           }))
         }
@@ -490,7 +492,12 @@ export default function RunnerProfilePage() {
                       <th className="text-left py-2 px-4">Event</th>
                       {showAllRaces && <th className="text-left py-2 px-4">Type</th>}
                       <th className="text-right py-2 px-4">Result</th>
-                      <th className="text-right py-2 px-4">Rank</th>
+                      <th className="text-right py-2 px-4">
+                        <div className="flex flex-col">
+                          <span>Rank</span>
+                          <span className="text-xs font-normal text-muted-foreground">(Gender)</span>
+                        </div>
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -519,7 +526,7 @@ export default function RunnerProfilePage() {
                             )}
                           </td>
                           <td className="py-2 px-4 text-sm text-right">
-                            {perf.rank || '-'}
+                            {perf.rank_gender || perf.rank || '-'}
                           </td>
                         </tr>
                       )

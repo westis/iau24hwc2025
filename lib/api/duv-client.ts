@@ -221,6 +221,7 @@ export const getRunnerProfile = limiter.wrap(
         Length: string
         Performance: string
         Rank: number
+        RankGender?: number
       }> = []
 
       for (const yearData of allPerfs) {
@@ -255,13 +256,35 @@ export const getRunnerProfile = limiter.wrap(
             }
           }
 
+          // Parse RankMW (gender-specific ranking)
+          const rankGender = perf.RankMW ? parseInt(perf.RankMW, 10) : undefined
+
+          // Parse performance value
+          // For time-based events (24h, 6h, etc.): Performance is distance in km (e.g., "234.567")
+          // For distance-based events (50km, 100km, etc.): Performance is time (e.g., "10:08:00 h")
+          let performanceValue = perfText
+
+          // Check if it's a time format (contains ":")
+          if (perfText.includes(':')) {
+            // Parse time string like "10:08:00 h" and convert to total seconds
+            const timeMatch = perfText.match(/(\d+):(\d+):(\d+)/)
+            if (timeMatch) {
+              const hours = parseInt(timeMatch[1], 10)
+              const minutes = parseInt(timeMatch[2], 10)
+              const seconds = parseInt(timeMatch[3], 10)
+              const totalSeconds = hours * 3600 + minutes * 60 + seconds
+              performanceValue = totalSeconds.toString()
+            }
+          }
+
           results.push({
             EventID: perf.EvtID || 0,
             Event: perf.EvtName || '',
             Startdate: eventDate,
             Length: evtDist.trim(),
-            Performance: perfText,
+            Performance: performanceValue,
             Rank: perf.RankOverall || 0,
+            RankGender: rankGender,
           })
         }
       }

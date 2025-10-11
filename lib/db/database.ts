@@ -144,6 +144,7 @@ export async function getRunners(): Promise<Runner[]> {
       date: perf.event_date,
       distance: perf.distance,
       rank: perf.rank,
+      rankGender: perf.rank_gender,
       eventType: perf.event_type,
     })
   }
@@ -193,6 +194,7 @@ async function rowToRunner(row: any): Promise<Runner> {
     date: perf.event_date,
     distance: perf.distance,
     rank: perf.rank,
+    rankGender: perf.rank_gender,
     eventType: perf.event_type,
   }))
 
@@ -226,8 +228,8 @@ export async function insertPerformance(runnerId: number, perf: Performance): Pr
     await db.query(`
       INSERT INTO performances (
         runner_id, event_id, event_name, event_date,
-        distance, rank, event_type
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+        distance, rank, rank_gender, event_type
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     `, [
       runnerId,
       perf.eventId,
@@ -235,6 +237,7 @@ export async function insertPerformance(runnerId: number, perf: Performance): Pr
       perf.date,
       perf.distance,
       perf.rank,
+      perf.rankGender,
       perf.eventType
     ])
   } catch (error) {
@@ -255,6 +258,7 @@ export async function getPerformances(runnerId: number): Promise<Performance[]> 
     date: row.event_date,
     distance: row.distance,
     rank: row.rank,
+    rankGender: row.rank_gender,
     eventType: row.event_type,
   }))
 }
