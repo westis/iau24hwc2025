@@ -21,6 +21,14 @@ interface Performance {
   event_type: string
 }
 
+interface DUVPersonalBest {
+  PB: string
+  [year: string]: string | {
+    Perf: string
+    RankIntNat?: string
+  }
+}
+
 interface RunnerProfile {
   id: number
   entry_id: string
@@ -37,6 +45,9 @@ interface RunnerProfile {
   age: number | null
   match_status: string
   performances: Performance[]
+  allPBs?: Array<{
+    [distance: string]: DUVPersonalBest
+  }>
 }
 
 export default function RunnerProfilePage() {
@@ -94,6 +105,7 @@ export default function RunnerProfilePage() {
           date_of_birth: foundRunner.dateOfBirth,
           age: foundRunner.age,
           match_status: foundRunner.matchStatus,
+          allPBs: foundRunner.allPBs || [],
           performances: (foundRunner.performanceHistory || []).map((p: any) => ({
             id: p.eventId,
             event_name: p.eventName,
@@ -261,26 +273,41 @@ export default function RunnerProfilePage() {
     return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
   }
 
-  // Calculate PBs for other distances from performance history
-  const calculatePBForEventType = (eventType: string): { distance: number; year: number } | null => {
-    const performances = filteredPerformances.filter(p =>
-      p.event_type.toLowerCase().includes(eventType.toLowerCase())
-    )
-    if (performances.length === 0) return null
+  // Extract PBs from allPBs data (from DUV)
+  const getPBFromAllPBs = (distanceKey: string): { distance: number; year: number } | null => {
+    if (!runner.allPBs || runner.allPBs.length === 0) return null
 
-    const best = performances.reduce((best, p) =>
-      p.distance > best.distance ? p : best
-    , performances[0])
+    const pbData = runner.allPBs.find(pb => pb[distanceKey])
+    if (!pbData || !pbData[distanceKey]) return null
+
+    const distancePB = pbData[distanceKey]
+    const pbValue = parseFloat(distancePB.PB)
+    if (isNaN(pbValue)) return null
+
+    // Find the year when PB was set
+    const yearKeys = Object.keys(distancePB).filter(k => k !== 'PB' && !isNaN(parseInt(k)))
+    let pbYear: number | undefined
+
+    for (const year of yearKeys) {
+      const yearData = distancePB[year]
+      if (typeof yearData === 'object' && yearData.Perf) {
+        const perfValue = parseFloat(yearData.Perf)
+        if (!isNaN(perfValue) && Math.abs(perfValue - pbValue) < 0.01) {
+          pbYear = parseInt(year)
+          break
+        }
+      }
+    }
 
     return {
-      distance: best.distance,
-      year: new Date(best.event_date).getFullYear()
+      distance: pbValue,
+      year: pbYear || parseInt(yearKeys[yearKeys.length - 1]) || new Date().getFullYear()
     }
   }
 
-  const pb6h = calculatePBForEventType('6h')
-  const pb12h = calculatePBForEventType('12h')
-  const pb48h = calculatePBForEventType('48h')
+  const pb6h = getPBFromAllPBs('6h')
+  const pb12h = getPBFromAllPBs('12h')
+  const pb48h = getPBFromAllPBs('48h')
   const hasOtherPBs = pb6h || pb12h || pb48h
 
   return (
