@@ -1,9 +1,33 @@
+'use client'
+
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
-import { ExternalLink, Users, Trophy } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { ExternalLink, Users, Trophy, Newspaper } from 'lucide-react'
+import type { NewsItem } from '@/types/news'
 
 export default function Home() {
+  const [news, setNews] = useState<NewsItem[]>([])
+  const [loadingNews, setLoadingNews] = useState(true)
+
+  useEffect(() => {
+    async function fetchNews() {
+      try {
+        const response = await fetch('/api/news')
+        const data = await response.json()
+        // Get only the 3 most recent news items
+        setNews(data.news.slice(0, 3))
+      } catch (error) {
+        console.error('Failed to fetch news:', error)
+      } finally {
+        setLoadingNews(false)
+      }
+    }
+
+    fetchNews()
+  }, [])
   return (
     <main className="min-h-screen">
       {/* Hero Section with Banner */}
@@ -54,6 +78,43 @@ export default function Home() {
 
       {/* Main Content */}
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Latest News Section */}
+        {!loadingNews && news.length > 0 && (
+          <div className="mb-12">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2">
+                <Newspaper className="w-6 h-6 text-primary" />
+                <h2 className="text-2xl font-bold">Latest News</h2>
+              </div>
+              <Link href="/news">
+                <Button variant="outline" size="sm">
+                  View All News
+                </Button>
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {news.map((item) => (
+                <Card key={item.id} className="hover:shadow-md transition-shadow">
+                  <CardHeader>
+                    <CardTitle className="text-base line-clamp-2">{item.title}</CardTitle>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(item.created_at).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                      })}
+                    </p>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground line-clamp-3">
+                      {item.content}
+                    </p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Individual Runners Card */}
           <Link href="/runners" className="group">

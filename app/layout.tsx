@@ -4,6 +4,7 @@ import { Navbar } from '@/components/navigation/navbar'
 import { ThemeProvider } from '@/components/theme-provider'
 import { SeedDataLoader } from '@/components/seed-data-loader'
 import { AuthProvider } from '@/lib/auth/auth-context'
+import { LanguageProvider } from '@/lib/i18n/LanguageContext'
 
 export const metadata: Metadata = {
   title: 'IAU 24h World Championships 2025',
@@ -24,11 +25,13 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <AuthProvider>
-            <SeedDataLoader />
-            <Navbar />
-            {children}
-          </AuthProvider>
+          <LanguageProvider>
+            <AuthProvider>
+              <SeedDataLoader />
+              <Navbar />
+              {children}
+            </AuthProvider>
+          </LanguageProvider>
         </ThemeProvider>
       </body>
     </html>

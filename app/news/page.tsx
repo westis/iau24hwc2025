@@ -1,0 +1,98 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import type { NewsItem } from '@/types/news'
+
+export default function NewsPage() {
+  const [news, setNews] = useState<NewsItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function fetchNews() {
+      try {
+        const response = await fetch('/api/news')
+        if (!response.ok) {
+          throw new Error('Failed to fetch news')
+        }
+        const data = await response.json()
+        setNews(data.news)
+      } catch (err) {
+        console.error('Error loading news:', err)
+        setError(err instanceof Error ? err.message : 'Failed to load news')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchNews()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-foreground mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading news...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-destructive mb-4">Error: {error}</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <main className="container mx-auto px-4 py-6 max-w-4xl">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold tracking-tight">News & Announcements</h1>
+        <p className="text-muted-foreground mt-2">
+          Latest updates about the IAU 24h World Championships 2025
+        </p>
+      </div>
+
+      {/* News Items */}
+      <div className="space-y-6">
+        {news.length === 0 ? (
+          <Card>
+            <CardContent className="py-12 text-center text-muted-foreground">
+              <p>No news available at the moment.</p>
+              <p className="text-sm mt-2">Check back later for updates!</p>
+            </CardContent>
+          </Card>
+        ) : (
+          news.map((item) => (
+            <Card key={item.id} className="hover:shadow-md transition-shadow">
+              <CardHeader>
+                <CardTitle className="text-xl">{item.title}</CardTitle>
+                <p className="text-xs text-muted-foreground">
+                  {new Date(item.created_at).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                  {item.content}
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
+      </div>
+    </main>
+  )
+}

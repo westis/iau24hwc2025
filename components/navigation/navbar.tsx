@@ -3,24 +3,29 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/lib/auth/auth-context'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { Menu, X } from 'lucide-react'
 import { useState } from 'react'
 
 export function Navbar() {
   const pathname = usePathname()
   const { isAdmin, logout } = useAuth()
+  const { t } = useLanguage()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const publicNavItems = [
-    { href: '/', label: 'Home' },
-    { href: '/runners', label: 'Runners' },
-    { href: '/teams', label: 'Teams' },
-    { href: '/stats', label: 'Stats' },
+    { href: '/', label: t.common.home },
+    { href: '/news', label: t.common.news },
+    { href: '/runners', label: t.common.runners },
+    { href: '/teams', label: t.common.teams },
+    { href: '/stats', label: t.common.stats },
   ]
 
   const adminNavItems = [
-    { href: '/match', label: 'Match', adminOnly: true },
+    { href: '/match', label: t.common.match, adminOnly: true },
+    { href: '/admin/news', label: t.common.manageNews, adminOnly: true },
   ]
 
   const navItems = isAdmin ? [...publicNavItems, ...adminNavItems] : publicNavItems
@@ -49,19 +54,21 @@ export function Navbar() {
                 {item.label}
               </Link>
             ))}
+            <LanguageSwitcher />
             <ThemeToggle />
             {isAdmin && (
               <button
                 onClick={logout}
                 className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
-                Logout
+                {t.common.logout}
               </button>
             )}
           </div>
 
           {/* Mobile Menu Button */}
           <div className="flex items-center gap-2 md:hidden">
+            <LanguageSwitcher />
             <ThemeToggle />
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -98,7 +105,7 @@ export function Navbar() {
                   }}
                   className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors text-left"
                 >
-                  Logout
+                  {t.common.logout}
                 </button>
               )}
             </div>

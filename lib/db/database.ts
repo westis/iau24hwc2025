@@ -3,6 +3,7 @@ import { Pool } from 'pg'
 import type { Runner, Performance, MatchStatus, Gender } from '@/types/runner'
 import type { DUVSearchResult } from '@/types/match'
 import type { Team } from '@/types/team'
+import type { NewsItem, NewsItemCreate, NewsItemUpdate } from '@/types/news'
 
 // PostgreSQL connection pool
 let pool: Pool | null = null
@@ -441,4 +442,107 @@ export async function clearAllData(): Promise<void> {
     DELETE FROM teams;
     DELETE FROM runners;
   `)
+}
+
+// News operations
+export async function getNews(publishedOnly: boolean = false): Promise<NewsItem[]> {
+  const db = getDatabase()
+  const query = publishedOnly
+    ? 'SELECT * FROM news WHERE published = true ORDER BY created_at DESC'
+    : 'SELECT * FROM news ORDER BY created_at DESC'
+
+  const result = await db.query(query)
+
+  return result.rows.map(row => ({
+    id: row.id,
+    title: row.title,
+    content: row.content,
+    published: row.published,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  }))
+}
+
+export async function getNewsById(id: number): Promise<NewsItem | null> {
+  const db = getDatabase()
+  const result = await db.query('SELECT * FROM news WHERE id = $1', [id])
+
+  if (result.rows.length === 0) return null
+
+  const row = result.rows[0]
+  return {
+    id: row.id,
+    title: row.title,
+    content: row.content,
+    published: row.published,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  }
+}
+
+export async function createNews(news: NewsItemCreate): Promise<NewsItem> {
+  const db = getDatabase()
+  const result = await db.query(`
+    INSERT INTO news (title, content, published)
+    VALUES ($1, $2, $3)
+    RETURNING *
+  `, [news.title, news.content, news.published || false])
+
+  const row = result.rows[0]
+  return {
+    id: row.id,
+    title: row.title,
+    content: row.content,
+    published: row.published,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  }
+}
+
+export async function updateNews(id: number, updates: NewsItemUpdate): Promise<NewsItem | null> {
+  const db = getDatabase()
+  const fields: string[] = []
+  const values: any[] = []
+  let paramIndex = 1
+
+  if (updates.title !== undefined) {
+    fields.push(`title = $${paramIndex++}`)
+    values.push(updates.title)
+  }
+  if (updates.content !== undefined) {
+    fields.push(`content = $${paramIndex++}`)
+    values.push(updates.content)
+  }
+  if (updates.published !== undefined) {
+    fields.push(`published = $${paramIndex++}`)
+    values.push(updates.published)
+  }
+
+  if (fields.length === 0) return await getNewsById(id)
+
+  fields.push(`updated_at = CURRENT_TIMESTAMP`)
+  values.push(id)
+
+  const result = await db.query(`
+    UPDATE news SET ${fields.join(', ')} WHERE id = $${paramIndex}
+    RETURNING *
+  `, values)
+
+  if (result.rows.length === 0) return null
+
+  const row = result.rows[0]
+  return {
+    id: row.id,
+    title: row.title,
+    content: row.content,
+    published: row.published,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  }
+}
+
+export async function deleteNews(id: number): Promise<boolean> {
+  const db = getDatabase()
+  const result = await db.query('DELETE FROM news WHERE id = $1', [id])
+  return result.rowCount !== null && result.rowCount > 0
 }
