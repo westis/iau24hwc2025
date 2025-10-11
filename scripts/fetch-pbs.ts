@@ -140,14 +140,13 @@ async function main() {
               }
             }
 
-            // Calculate Last 3 Years PB (since Oct 2022)
-            const threeYearsAgo = new Date('2022-10-18')
+            // Calculate Last 3 Years PB (2023-2025 full years)
             let best3Years: number | null = null
             let best3YearsYear: number | null = null
 
             for (const year of yearKeys) {
               const yearInt = parseInt(year)
-              if (yearInt >= threeYearsAgo.getFullYear()) {
+              if (yearInt >= 2023 && yearInt <= 2025) {
                 const yearData = pb24hData[year]
                 if (typeof yearData === 'object' && yearData.Perf) {
                   const perfValue = parseFloat(yearData.Perf)

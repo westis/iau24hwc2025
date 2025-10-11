@@ -146,7 +146,7 @@ export default function RunnersPage() {
               onClick={() => setSelectedMetric('last-3-years')}
               className={selectedMetric === 'last-3-years' ? '' : 'hover:bg-accent'}
             >
-              Last 3 Years
+              2023-2025
             </Button>
             <Button
               variant={selectedMetric === 'all-time' ? 'default' : 'ghost'}

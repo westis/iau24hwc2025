@@ -36,7 +36,7 @@ npm run fetch-pbs:manual
 3. For each runner:
    - Fetches their DUV profile
    - Extracts 24h PBs from `AllPBs` array
-   - Calculates all-time PB and last-3-years PB
+   - Calculates all-time PB and 2023-2025 PB
    - Updates the runner in seed data
 4. Increments version number
 5. Saves updated `seed-data.json`
@@ -109,6 +109,6 @@ npm install
 
 - Uses DUV `/api/runner/{id}` endpoint
 - Extracts from `AllPBs[]['24h']` array (more reliable than calculating from results)
-- Updates both all-time and last-3-years PBs
-- Last 3 years = since October 18, 2022 (3 years before race)
+- Updates both all-time and 2023-2025 PBs
+- 2023-2025 = full years only (cleaner than partial year cutoffs)
 - Saves to `data/seed-data.json` with incremented version

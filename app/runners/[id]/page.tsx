@@ -382,7 +382,7 @@ export default function RunnerProfilePage() {
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Last 3 Years PB (since Oct 2022)</p>
+                  <p className="text-sm text-muted-foreground">PB 2023-2025</p>
                   <p className="text-2xl font-bold text-primary">
                     {runner.personal_best_last_3_years ? (
                       <>

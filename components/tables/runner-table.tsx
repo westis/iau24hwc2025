@@ -199,9 +199,10 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
           return row.getValue(id) === value
         },
       },
-      {
-        accessorKey: 'personalBestAllTime',
-        header: ({ column }) => {
+      // Show only ONE PB column based on selected metric
+      ...(metric === 'all-time' ? [{
+        accessorKey: 'personalBestAllTime' as const,
+        header: ({ column }: any) => {
           return (
             <Button
               variant="ghost"
@@ -213,7 +214,7 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
             </Button>
           )
         },
-        cell: ({ row }) => {
+        cell: ({ row }: any) => {
           const pb = row.getValue('personalBestAllTime') as number | null
           const pbYear = row.original.personalBestAllTimeYear
           return (
@@ -226,22 +227,21 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
             </div>
           )
         },
-      },
-      {
-        accessorKey: 'personalBestLast3Years',
-        header: ({ column }) => {
+      }] : [{
+        accessorKey: 'personalBestLast3Years' as const,
+        header: ({ column }: any) => {
           return (
             <Button
               variant="ghost"
               onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
               className="h-8 px-2"
             >
-              PB Last 3Y
+              PB 2023-2025
               <ArrowUpDown className="ml-2 h-4 w-4" />
             </Button>
           )
         },
-        cell: ({ row }) => {
+        cell: ({ row }: any) => {
           const pb = row.getValue('personalBestLast3Years') as number | null
           const pbYear = row.original.personalBestLast3YearsYear
           return (
@@ -254,7 +254,7 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
             </div>
           )
         },
-      },
+      }]),
       {
         accessorKey: 'age',
         header: ({ column }) => {
@@ -317,7 +317,7 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
         },
       }] : []),
     ],
-    [onManualMatch, isAdmin]
+    [onManualMatch, isAdmin, metric]
   )
 
   const table = useReactTable({
@@ -453,11 +453,11 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
             // Get selected and alternate PB values
             const selectedPB = metric === 'last-3-years' ? runner.personalBestLast3Years : runner.personalBestAllTime
             const selectedPBYear = metric === 'last-3-years' ? runner.personalBestLast3YearsYear : runner.personalBestAllTimeYear
-            const selectedLabel = metric === 'last-3-years' ? 'Last 3Y' : 'All-Time'
+            const selectedLabel = metric === 'last-3-years' ? '2023-2025' : 'All-Time'
 
             const alternatePB = metric === 'last-3-years' ? runner.personalBestAllTime : runner.personalBestLast3Years
             const alternatePBYear = metric === 'last-3-years' ? runner.personalBestAllTimeYear : runner.personalBestLast3YearsYear
-            const alternateLabel = metric === 'last-3-years' ? 'All-Time' : 'Last 3Y'
+            const alternateLabel = metric === 'last-3-years' ? 'All-Time' : '2023-2025'
 
             return (
               <div key={row.id} className="border rounded-lg overflow-hidden">
