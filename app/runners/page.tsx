@@ -5,8 +5,6 @@ import { useEffect, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { RunnerTable } from '@/components/tables/runner-table'
 import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Label } from '@/components/ui/label'
 import type { Runner } from '@/types/runner'
 
 export default function RunnersPage() {
@@ -16,7 +14,6 @@ export default function RunnersPage() {
   const [error, setError] = useState<string | null>(null)
   const [selectedGender, setSelectedGender] = useState<'M' | 'W'>('M')
   const [selectedMetric, setSelectedMetric] = useState<'last-3-years' | 'all-time'>('last-3-years')
-  const [showDNS, setShowDNS] = useState(false)
   const [isPending, startTransition] = React.useTransition()
 
   useEffect(() => {
@@ -71,17 +68,16 @@ export default function RunnersPage() {
         : runner.personalBestAllTime || 0
     }
 
-    // Filter by gender and DNS status
+    // Filter by gender
     let filtered = runners.filter(runner => runner.gender === selectedGender)
 
-    // Filter out DNS runners if showDNS is false
-    if (!showDNS) {
-      filtered = filtered.filter(runner => !runner.dns)
-    }
+    // Separate DNS and non-DNS runners
+    const dnsRunners = filtered.filter(r => r.dns)
+    const activeRunners = filtered.filter(r => !r.dns)
 
-    // Separate matched (with DUV ID) and unmatched runners
-    const matched = filtered.filter(r => r.duvId !== null)
-    const unmatched = filtered.filter(r => r.duvId === null)
+    // Separate matched (with DUV ID) and unmatched active runners
+    const matched = activeRunners.filter(r => r.duvId !== null)
+    const unmatched = activeRunners.filter(r => r.duvId === null)
 
     // Sort matched runners by PB (highest first)
     const sortedMatched = matched.sort((a, b) => {
@@ -97,15 +93,22 @@ export default function RunnersPage() {
       return aName.localeCompare(bName)
     })
 
-    // Assign rankings to matched runners
+    // Sort DNS runners by name
+    const sortedDNS = dnsRunners.sort((a, b) => {
+      const aName = `${a.lastname} ${a.firstname}`.toLowerCase()
+      const bName = `${b.lastname} ${b.firstname}`.toLowerCase()
+      return aName.localeCompare(bName)
+    })
+
+    // Assign rankings to matched runners only
     const rankedMatched = sortedMatched.map((runner, index) => ({
       ...runner,
       rank: index + 1
     }))
 
-    // Combine: matched with rankings first, then unmatched without rankings
-    return [...rankedMatched, ...sortedUnmatched]
-  }, [runners, selectedGender, selectedMetric, showDNS])
+    // Combine: ranked matched first, then unmatched, then DNS (all without rankings)
+    return [...rankedMatched, ...sortedUnmatched, ...sortedDNS]
+  }, [runners, selectedGender, selectedMetric])
 
   if (loading) {
     return (
@@ -160,16 +163,6 @@ export default function RunnersPage() {
             >
               Women
             </Button>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="show-dns"
-              checked={showDNS}
-              onCheckedChange={(checked) => setShowDNS(checked as boolean)}
-            />
-            <Label htmlFor="show-dns" className="text-sm font-medium cursor-pointer">
-              Show DNS runners
-            </Label>
           </div>
           <div className="inline-flex rounded-lg border border-input bg-background p-1 ml-auto" role="group">
             <Button

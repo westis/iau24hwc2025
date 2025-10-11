@@ -160,7 +160,10 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
         accessorFn: (row) => `${row.firstname} ${row.lastname}`,
         cell: ({ row }) => (
           <div>
-            <div className="font-medium">{row.original.firstname} {row.original.lastname}</div>
+            <div className="font-medium">
+              {row.original.firstname} {row.original.lastname}
+              {row.original.dns && <span className="text-xs text-muted-foreground ml-1">(DNS)</span>}
+            </div>
           </div>
         ),
         filterFn: (row, id, value) => {
@@ -483,7 +486,10 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
               <div key={row.id} className="border rounded-lg overflow-hidden">
                 {/* Collapsed View - Always Visible */}
                 <div
-                  className="p-3 cursor-pointer hover:bg-accent/50 flex gap-3"
+                  className={cn(
+                    "p-3 cursor-pointer hover:bg-accent/50 flex gap-3",
+                    runner.dns && "opacity-60"
+                  )}
                   onClick={() => onRowClick(runner.id)}
                 >
                   {/* Rank - spans both rows */}
@@ -496,7 +502,10 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
                   {/* Main content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2 mb-1">
-                      <div className="font-medium text-sm">{runner.firstname} {runner.lastname}</div>
+                      <div className="font-medium text-sm">
+                        {runner.firstname} {runner.lastname}
+                        {runner.dns && <span className="text-xs text-muted-foreground ml-1">(DNS)</span>}
+                      </div>
                       <button
                         onClick={(e) => {
                           e.stopPropagation()
@@ -617,7 +626,10 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
                   key={row.id}
                   data-state={row.getIsSelected() && 'selected'}
                   onClick={() => onRowClick(row.original.id)}
-                  className="cursor-pointer hover:bg-muted/50"
+                  className={cn(
+                    "cursor-pointer hover:bg-muted/50",
+                    row.original.dns && "opacity-60"
+                  )}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} className="whitespace-nowrap">
