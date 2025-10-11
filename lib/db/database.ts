@@ -121,11 +121,54 @@ export async function updateRunner(entryId: string, updates: Partial<Runner>): P
 
 export async function getRunners(): Promise<Runner[]> {
   const db = getDatabase()
-  const result = await db.query(`
+
+  // Fetch all runners
+  const runnersResult = await db.query(`
     SELECT * FROM runners ORDER BY entry_id
   `)
 
-  return Promise.all(result.rows.map(row => rowToRunner(row)))
+  // Fetch all performances in one query
+  const performancesResult = await db.query(`
+    SELECT * FROM performances ORDER BY runner_id, event_date DESC
+  `)
+
+  // Group performances by runner_id
+  const performancesByRunner = new Map<number, any[]>()
+  for (const perf of performancesResult.rows) {
+    if (!performancesByRunner.has(perf.runner_id)) {
+      performancesByRunner.set(perf.runner_id, [])
+    }
+    performancesByRunner.get(perf.runner_id)!.push({
+      eventId: perf.event_id,
+      eventName: perf.event_name,
+      date: perf.event_date,
+      distance: perf.distance,
+      rank: perf.rank,
+      eventType: perf.event_type,
+    })
+  }
+
+  // Build runner objects with performances
+  return runnersResult.rows.map(row => ({
+    id: row.id,
+    entryId: row.entry_id,
+    firstname: row.firstname,
+    lastname: row.lastname,
+    nationality: row.nationality,
+    gender: row.gender as Gender,
+    dns: row.dns || false,
+    duvId: row.duv_id,
+    matchStatus: row.match_status as MatchStatus,
+    matchConfidence: row.match_confidence,
+    personalBestAllTime: row.personal_best_all_time,
+    personalBestAllTimeYear: row.personal_best_all_time_year,
+    personalBestLast3Years: row.personal_best_last_2_years,
+    personalBestLast3YearsYear: row.personal_best_last_2_years_year,
+    dateOfBirth: row.date_of_birth,
+    age: row.age,
+    allPBs: row.all_pbs || [],
+    performanceHistory: performancesByRunner.get(row.id) || [],
+  }))
 }
 
 export async function getRunnerByEntryId(entryId: string): Promise<Runner | null> {
