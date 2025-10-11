@@ -12,7 +12,7 @@ export default function Home() {
           src="https://www.albi24h.fr/wp-content/uploads/2025/04/ALBI24H2025-EN.jpg"
           alt="IAU 24h World Championships 2025 - Albi, France"
           fill
-          className="object-cover object-[center_bottom]"
+          className="object-cover object-[center_15%]"
           priority
         />
         {/* Dark overlay from bottom for text readability - sharp edge */}

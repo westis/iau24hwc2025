@@ -125,17 +125,34 @@ export async function getRunners(): Promise<Runner[]> {
     SELECT * FROM runners ORDER BY entry_id
   `)
 
-  return result.rows.map(rowToRunner)
+  return Promise.all(result.rows.map(row => rowToRunner(row)))
 }
 
 export async function getRunnerByEntryId(entryId: string): Promise<Runner | null> {
   const db = getDatabase()
   const result = await db.query('SELECT * FROM runners WHERE entry_id = $1', [entryId])
 
-  return result.rows[0] ? rowToRunner(result.rows[0]) : null
+  return result.rows[0] ? await rowToRunner(result.rows[0]) : null
 }
 
-function rowToRunner(row: any): Runner {
+async function rowToRunner(row: any): Promise<Runner> {
+  const db = getDatabase()
+
+  // Fetch performances for this runner
+  const perfResult = await db.query(
+    'SELECT * FROM performances WHERE runner_id = $1 ORDER BY event_date DESC',
+    [row.id]
+  )
+
+  const performanceHistory = perfResult.rows.map((perf: any) => ({
+    eventId: perf.event_id,
+    eventName: perf.event_name,
+    date: perf.event_date,
+    distance: perf.distance,
+    rank: perf.rank,
+    eventType: perf.event_type,
+  }))
+
   return {
     id: row.id,
     entryId: row.entry_id,
@@ -153,6 +170,8 @@ function rowToRunner(row: any): Runner {
     personalBestLast3YearsYear: row.personal_best_last_2_years_year,
     dateOfBirth: row.date_of_birth,
     age: row.age,
+    allPBs: row.all_pbs || [],
+    performanceHistory,
   }
 }
 
@@ -333,7 +352,7 @@ export async function getTeams(metric: 'all-time' | 'last-3-years', gender: Gend
       SELECT * FROM runners WHERE nationality = $1 AND gender = $2
     `, [nationality, genderVal])
 
-    const runners = runnersResult.rows.map(rowToRunner).sort((a, b) => {
+    const runners = (await Promise.all(runnersResult.rows.map(row => rowToRunner(row)))).sort((a, b) => {
       const aVal = metric === 'all-time' ? a.personalBestAllTime : a.personalBestLast3Years
       const bVal = metric === 'all-time' ? b.personalBestAllTime : b.personalBestLast3Years
       return (bVal || 0) - (aVal || 0)
@@ -343,15 +362,15 @@ export async function getTeams(metric: 'all-time' | 'last-3-years', gender: Gend
     const topThree: Runner[] = []
     if (row.runner1_id) {
       const r1Result = await db.query('SELECT * FROM runners WHERE id = $1', [row.runner1_id])
-      if (r1Result.rows[0]) topThree.push(rowToRunner(r1Result.rows[0]))
+      if (r1Result.rows[0]) topThree.push(await rowToRunner(r1Result.rows[0]))
     }
     if (row.runner2_id) {
       const r2Result = await db.query('SELECT * FROM runners WHERE id = $1', [row.runner2_id])
-      if (r2Result.rows[0]) topThree.push(rowToRunner(r2Result.rows[0]))
+      if (r2Result.rows[0]) topThree.push(await rowToRunner(r2Result.rows[0]))
     }
     if (row.runner3_id) {
       const r3Result = await db.query('SELECT * FROM runners WHERE id = $1', [row.runner3_id])
-      if (r3Result.rows[0]) topThree.push(rowToRunner(r3Result.rows[0]))
+      if (r3Result.rows[0]) topThree.push(await rowToRunner(r3Result.rows[0]))
     }
 
     teams.push({
