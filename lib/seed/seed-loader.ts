@@ -107,30 +107,11 @@ export async function loadSeedData(): Promise<boolean> {
   }
 
   try {
-    let runners: Runner[] = []
-
-    // Try loading from Vercel Blob first
-    try {
-      console.log('Seed data: Attempting to load from Vercel Blob...')
-      const response = await fetch('/api/blob/runners')
-      if (response.ok) {
-        const data = await response.json()
-        if (data.runners && Array.isArray(data.runners)) {
-          runners = data.runners
-          console.log(`Seed data: Loaded ${runners.length} runners from Vercel Blob`)
-        }
-      }
-    } catch (blobError) {
-      console.log('Seed data: Blob not available, falling back to seed-data.json')
-    }
-
-    // Fallback to seed-data.json if blob failed
-    if (runners.length === 0) {
-      console.log('Seed data: Loading from seed-data.json...')
-      const data = seedData as SeedData
-      runners = data.runners.map(transformDBRunner)
-      console.log(`Seed data: Loaded ${runners.length} runners from seed-data.json`)
-    }
+    // Load from seed-data.json (blob storage disabled)
+    console.log('Seed data: Loading from seed-data.json...')
+    const data = seedData as SeedData
+    const runners = data.runners.map(transformDBRunner)
+    console.log(`Seed data: Loaded ${runners.length} runners from seed-data.json`)
 
     // Save to localStorage
     localStorage.setItem('runners', JSON.stringify(runners))
