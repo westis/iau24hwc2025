@@ -86,6 +86,10 @@ function latLonToXY(lat: number, lon: number): { x: number; y: number } {
 export function ChoroplethMap({ countries }: ChoroplethMapProps) {
   const [hoveredCountry, setHoveredCountry] = useState<string | null>(null)
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 })
+  const [zoom, setZoom] = useState(1)
+  const [pan, setPan] = useState({ x: 0, y: 0 })
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
 
   // Get max participants for color scaling
   const maxParticipants = Math.max(...countries.map(c => c.total))
@@ -111,6 +115,45 @@ export function ChoroplethMap({ countries }: ChoroplethMapProps) {
     setHoveredCountry(null)
   }
 
+  // Zoom handlers
+  const handleZoomIn = () => {
+    setZoom(prev => Math.min(prev * 1.5, 5))
+  }
+
+  const handleZoomOut = () => {
+    setZoom(prev => Math.max(prev / 1.5, 0.5))
+  }
+
+  const handleReset = () => {
+    setZoom(1)
+    setPan({ x: 0, y: 0 })
+  }
+
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault()
+    const delta = e.deltaY > 0 ? 0.9 : 1.1
+    setZoom(prev => Math.min(Math.max(prev * delta, 0.5), 5))
+  }
+
+  // Pan handlers
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true)
+    setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y })
+  }
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isDragging) {
+      setPan({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y,
+      })
+    }
+  }
+
+  const handleMouseUp = () => {
+    setIsDragging(false)
+  }
+
   return (
     <div className="relative">
       {/* Legend */}
@@ -130,21 +173,71 @@ export function ChoroplethMap({ countries }: ChoroplethMapProps) {
         </div>
       </div>
 
+      {/* Zoom Controls */}
+      <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
+        <button
+          onClick={handleZoomIn}
+          className="bg-background border border-border rounded-md p-2 hover:bg-accent transition-colors shadow-md"
+          title="Zoom in"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+        </button>
+        <button
+          onClick={handleZoomOut}
+          className="bg-background border border-border rounded-md p-2 hover:bg-accent transition-colors shadow-md"
+          title="Zoom out"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+          </svg>
+        </button>
+        <button
+          onClick={handleReset}
+          className="bg-background border border-border rounded-md p-2 hover:bg-accent transition-colors shadow-md"
+          title="Reset view"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+        </button>
+      </div>
+
       {/* World Map with Overlay */}
-      <div className="relative w-full border border-border rounded-lg overflow-hidden bg-gray-100">
+      <div
+        className="relative w-full border border-border rounded-lg overflow-hidden bg-gray-100"
+        onWheel={handleWheel}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+        style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+      >
         <div className="relative w-full" style={{ height: '600px' }}>
           {/* Real world map as background image */}
           <img
             src="https://upload.wikimedia.org/wikipedia/commons/8/83/Equirectangular_projection_SW.jpg"
             alt="World Map"
-            className="absolute inset-0 w-full h-full object-cover opacity-40"
+            className="absolute inset-0 w-full h-full object-cover opacity-40 pointer-events-none"
+            style={{
+              transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+              transformOrigin: '0 0',
+            }}
           />
 
           {/* SVG overlay for country markers */}
           <svg
             viewBox="0 0 2000 1000"
-            className="w-full h-full absolute inset-0"
+            className="w-full h-full absolute inset-0 pointer-events-none"
           >
+            <g
+              style={{
+                transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+                transformOrigin: '0 0',
+              }}
+              className="pointer-events-auto"
+            >
             {/* Overlay country markers */}
             {Object.entries(COUNTRY_COORDS).map(([code, coords]) => {
               const countryData = getCountryData(code)
@@ -183,6 +276,7 @@ export function ChoroplethMap({ countries }: ChoroplethMapProps) {
                 </g>
               )
             })}
+            </g>
           </svg>
         </div>
       </div>
