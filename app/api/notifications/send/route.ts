@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
   try {
-    const { title, message, url } = await request.json()
+    const { title, message, url, scheduleTime } = await request.json()
 
     // Validate required fields
     if (!title || !message) {
@@ -30,6 +30,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Build OneSignal notification payload
+    const notificationPayload: any = {
+      app_id: appId,
+      headings: { en: title },
+      contents: { en: message },
+      url: url || undefined,
+      included_segments: ['All'] // Send to all subscribers
+    }
+
+    // Add schedule time if provided (OneSignal's send_after parameter)
+    if (scheduleTime) {
+      notificationPayload.send_after = scheduleTime
+    }
+
     // Send notification to OneSignal
     const response = await fetch('https://onesignal.com/api/v1/notifications', {
       method: 'POST',
@@ -37,13 +51,7 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'application/json',
         'Authorization': `Basic ${restApiKey}`
       },
-      body: JSON.stringify({
-        app_id: appId,
-        headings: { en: title },
-        contents: { en: message },
-        url: url || undefined,
-        included_segments: ['All'] // Send to all subscribers
-      })
+      body: JSON.stringify(notificationPayload)
     })
 
     const data = await response.json()

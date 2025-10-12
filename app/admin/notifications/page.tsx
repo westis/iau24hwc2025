@@ -17,6 +17,9 @@ export default function AdminNotificationsPage() {
   const [url, setUrl] = useState('')
   const [sending, setSending] = useState(false)
   const [lastResult, setLastResult] = useState<{ success: boolean; message: string } | null>(null)
+  const [sendImmediately, setSendImmediately] = useState(true)
+  const [scheduleDate, setScheduleDate] = useState('')
+  const [scheduleTime, setScheduleTime] = useState('')
 
   if (!isAdmin) {
     router.push('/')
@@ -29,6 +32,26 @@ export default function AdminNotificationsPage() {
       return
     }
 
+    // Validate scheduled time if not sending immediately
+    let scheduleTimestamp: string | undefined = undefined
+    if (!sendImmediately) {
+      if (!scheduleDate || !scheduleTime) {
+        alert('Please select both date and time for scheduled notification')
+        return
+      }
+
+      const scheduledDateTime = new Date(`${scheduleDate}T${scheduleTime}`)
+      const now = new Date()
+
+      if (scheduledDateTime <= now) {
+        alert('Scheduled time must be in the future')
+        return
+      }
+
+      // Convert to ISO 8601 format for OneSignal
+      scheduleTimestamp = scheduledDateTime.toISOString()
+    }
+
     setSending(true)
     setLastResult(null)
 
@@ -39,21 +62,29 @@ export default function AdminNotificationsPage() {
         body: JSON.stringify({
           title,
           message,
-          url: url || undefined
+          url: url || undefined,
+          scheduleTime: scheduleTimestamp
         })
       })
 
       const data = await response.json()
 
       if (response.ok) {
+        const successMessage = sendImmediately
+          ? `Notification sent successfully to ${data.recipients || 'all'} subscribers!`
+          : `Notification scheduled successfully for ${scheduleDate} at ${scheduleTime}`
+
         setLastResult({
           success: true,
-          message: `Notification sent successfully to ${data.recipients || 'all'} subscribers!`
+          message: successMessage
         })
         // Clear form
         setTitle('')
         setMessage('')
         setUrl('')
+        setScheduleDate('')
+        setScheduleTime('')
+        setSendImmediately(true)
       } else {
         setLastResult({
           success: false,
@@ -132,6 +163,67 @@ export default function AdminNotificationsPage() {
             <p className="text-xs text-muted-foreground mt-1">
               Clicking the notification will open this URL
             </p>
+          </div>
+
+          <div className="border-t pt-4">
+            <label className="block text-sm font-medium mb-3">
+              Delivery Timing
+            </label>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  id="sendNow"
+                  checked={sendImmediately}
+                  onChange={() => setSendImmediately(true)}
+                  className="w-4 h-4"
+                />
+                <label htmlFor="sendNow" className="text-sm cursor-pointer">
+                  Send immediately
+                </label>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  id="sendLater"
+                  checked={!sendImmediately}
+                  onChange={() => setSendImmediately(false)}
+                  className="w-4 h-4"
+                />
+                <label htmlFor="sendLater" className="text-sm cursor-pointer">
+                  Schedule for later
+                </label>
+              </div>
+
+              {!sendImmediately && (
+                <div className="ml-6 space-y-3 mt-3">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Date
+                    </label>
+                    <Input
+                      type="date"
+                      value={scheduleDate}
+                      onChange={(e) => setScheduleDate(e.target.value)}
+                      min={new Date().toISOString().split('T')[0]}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Time
+                    </label>
+                    <Input
+                      type="time"
+                      value={scheduleTime}
+                      onChange={(e) => setScheduleTime(e.target.value)}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Time is in your local timezone
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
 
           {lastResult && (
