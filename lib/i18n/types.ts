@@ -28,6 +28,7 @@ export interface Translations {
     previous: string
     match: string
     manageNews: string
+    admin: string
     logout: string
   }
   home: {

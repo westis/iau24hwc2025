@@ -28,6 +28,7 @@ export const sv: Translations = {
     previous: 'Föregående',
     match: 'Matcha',
     manageNews: 'Hantera nyheter',
+    admin: 'Admin',
     logout: 'Logga ut',
   },
   home: {

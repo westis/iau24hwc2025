@@ -28,6 +28,7 @@ export const en: Translations = {
     previous: 'Previous',
     match: 'Match',
     manageNews: 'Manage News',
+    admin: 'Admin',
     logout: 'Logout',
   },
   home: {
