@@ -54,6 +54,10 @@ export async function GET(
       dateOfBirth: runner.date_of_birth,
       age: runner.age,
       allPBs: runner.all_pbs || [],
+      photoUrl: runner.photo_url,
+      bio: runner.bio,
+      instagramUrl: runner.instagram_url,
+      stravaUrl: runner.strava_url,
       performanceHistory: performancesResult.rows.map((perf: any) => ({
         eventId: perf.event_id,
         eventName: perf.event_name,
@@ -87,7 +91,7 @@ export async function PATCH(
     const db = getDatabase()
 
     // Validate input
-    const allowedFields = ['firstname', 'lastname', 'nationality', 'gender', 'dns']
+    const allowedFields = ['firstname', 'lastname', 'nationality', 'gender', 'dns', 'photo_url', 'bio', 'instagram_url', 'strava_url']
     const updates: string[] = []
     const values: any[] = []
     let paramIndex = 1

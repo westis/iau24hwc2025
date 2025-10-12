@@ -173,6 +173,10 @@ export async function getRunners(): Promise<Runner[]> {
     dateOfBirth: row.date_of_birth,
     age: row.age,
     allPBs: row.all_pbs || [],
+    photoUrl: row.photo_url,
+    bio: row.bio,
+    instagramUrl: row.instagram_url,
+    stravaUrl: row.strava_url,
     performanceHistory: performancesByRunner.get(row.id) || [],
     noteCount: noteCounts.get(row.id) || 0,
   }))
@@ -222,6 +226,10 @@ async function rowToRunner(row: any): Promise<Runner> {
     dateOfBirth: row.date_of_birth,
     age: row.age,
     allPBs: row.all_pbs || [],
+    photoUrl: row.photo_url,
+    bio: row.bio,
+    instagramUrl: row.instagram_url,
+    stravaUrl: row.strava_url,
     performanceHistory,
   }
 }

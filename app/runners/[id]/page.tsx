@@ -12,11 +12,14 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
-import { ArrowLeft, Pencil, Plus, Edit, Trash2 } from 'lucide-react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { ArrowLeft, Pencil, Plus, Edit, Trash2, Instagram, ExternalLink } from 'lucide-react'
+import Image from 'next/image'
 import { RunnerNotesDisplay } from '@/components/runner-notes-display'
 import type { RunnerNote } from '@/types/runner-note'
 import type { NewsItem } from '@/types/news'
 import { Textarea } from '@/components/ui/textarea'
+import { ImageUpload } from '@/components/ImageUpload'
 
 interface Performance {
   id: number
@@ -56,6 +59,10 @@ interface RunnerProfile {
   allPBs?: Array<{
     [distance: string]: DUVPersonalBest
   }>
+  photoUrl?: string | null
+  bio?: string | null
+  instagramUrl?: string | null
+  stravaUrl?: string | null
 }
 
 export default function RunnerProfilePage() {
@@ -74,7 +81,11 @@ export default function RunnerProfilePage() {
     lastname: '',
     nationality: '',
     gender: '' as 'M' | 'W' | '',
-    dns: false
+    dns: false,
+    photo_url: '' as string | null,
+    bio: '',
+    instagram_url: '',
+    strava_url: ''
   })
   const [isSaving, setIsSaving] = useState(false)
   const [isUnmatching, setIsUnmatching] = useState(false)
@@ -126,6 +137,10 @@ export default function RunnerProfilePage() {
           age: foundRunner.age,
           match_status: foundRunner.matchStatus,
           allPBs: foundRunner.allPBs || [],
+          photoUrl: foundRunner.photoUrl,
+          bio: foundRunner.bio,
+          instagramUrl: foundRunner.instagramUrl,
+          stravaUrl: foundRunner.stravaUrl,
           performances: (foundRunner.performanceHistory || []).map((p: any) => ({
             id: p.eventId,
             event_name: p.eventName,
@@ -177,7 +192,11 @@ export default function RunnerProfilePage() {
         lastname: runner.lastname,
         nationality: runner.nationality,
         gender: runner.gender as 'M' | 'W',
-        dns: runner.dns || false
+        dns: runner.dns || false,
+        photo_url: runner.photoUrl || null,
+        bio: runner.bio || '',
+        instagram_url: runner.instagramUrl || '',
+        strava_url: runner.stravaUrl || ''
       })
       setIsEditDialogOpen(true)
     }
@@ -185,7 +204,17 @@ export default function RunnerProfilePage() {
 
   function closeEditDialog() {
     setIsEditDialogOpen(false)
-    setEditForm({ firstname: '', lastname: '', nationality: '', gender: '', dns: false })
+    setEditForm({
+      firstname: '',
+      lastname: '',
+      nationality: '',
+      gender: '',
+      dns: false,
+      photo_url: null,
+      bio: '',
+      instagram_url: '',
+      strava_url: ''
+    })
   }
 
   async function saveEdit() {
@@ -504,18 +533,78 @@ export default function RunnerProfilePage() {
                 {runner.date_of_birth && `${t.runnerDetail.yob} ${new Date(runner.date_of_birth).getFullYear()}`}
               </Badge>
             )}
-            {runner.duv_id && (
-              <a
-                href={`https://statistik.d-u-v.org/getresultperson.php?runner=${runner.duv_id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-muted-foreground hover:text-primary transition-colors ml-2"
-              >
-                {t.runnerDetail.duvProfile}
-              </a>
-            )}
           </div>
+
+          {/* Social Links */}
+          {(runner.duv_id || runner.instagramUrl || runner.stravaUrl) && (
+            <div className="flex flex-wrap items-center gap-2 mt-3">
+              {runner.duv_id && (
+                <a
+                  href={`https://statistik.d-u-v.org/getresultperson.php?runner=${runner.duv_id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border rounded-md hover:bg-accent transition-colors"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  <span>DUV</span>
+                </a>
+              )}
+              {runner.instagramUrl && (
+                <a
+                  href={runner.instagramUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border rounded-md hover:bg-accent transition-colors"
+                >
+                  <Instagram className="h-3.5 w-3.5" />
+                  <span>Instagram</span>
+                </a>
+              )}
+              {runner.stravaUrl && (
+                <a
+                  href={runner.stravaUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border rounded-md hover:bg-accent transition-colors"
+                >
+                  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169" />
+                  </svg>
+                  <span>Strava</span>
+                </a>
+              )}
+            </div>
+          )}
         </div>
+
+        {/* Profile Information Section */}
+        {(runner.photoUrl || runner.bio) && (
+          <Card className="mb-6">
+            <CardContent className="pt-6">
+              <div className="grid md:grid-cols-3 gap-6">
+                {runner.photoUrl && (
+                  <div className="md:col-span-1">
+                    <div className="relative w-full aspect-square rounded-lg overflow-hidden">
+                      <Image
+                        src={runner.photoUrl}
+                        alt={`${runner.firstname} ${runner.lastname}`}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                      />
+                    </div>
+                  </div>
+                )}
+                {runner.bio && (
+                  <div className={runner.photoUrl ? "md:col-span-2" : "md:col-span-3"}>
+                    <h3 className="text-lg font-semibold mb-2">About</h3>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{runner.bio}</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Notes Section */}
         {(notes.length > 0 || isAdmin) && (
@@ -747,85 +836,127 @@ export default function RunnerProfilePage() {
 
         {/* Edit Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={(open) => !open && closeEditDialog()}>
-          <DialogContent>
+          <DialogContent className="max-h-[90vh] flex flex-col max-w-2xl">
             <DialogHeader>
               <DialogTitle>{t.runnerDetail.editRunner}</DialogTitle>
               <DialogDescription>
                 {t.runnerDetail.editDescription}
               </DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="firstname" className="text-right">
-                  {t.runnerDetail.firstName}
-                </Label>
-                <Input
-                  id="firstname"
-                  value={editForm.firstname}
-                  onChange={(e) => setEditForm({ ...editForm, firstname: e.target.value })}
-                  className="col-span-3"
-                />
+
+            <Tabs defaultValue="basic" className="flex-1 flex flex-col overflow-hidden">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="basic">Basic Information</TabsTrigger>
+                <TabsTrigger value="profile">Profile & Social</TabsTrigger>
+              </TabsList>
+
+              <div className="flex-1 overflow-y-auto pr-2 pt-4">
+                <TabsContent value="basic" className="space-y-4 mt-0">
+                  <div className="space-y-2">
+                    <Label htmlFor="firstname">{t.runnerDetail.firstName}</Label>
+                    <Input
+                      id="firstname"
+                      value={editForm.firstname}
+                      onChange={(e) => setEditForm({ ...editForm, firstname: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="lastname">{t.runnerDetail.lastName}</Label>
+                    <Input
+                      id="lastname"
+                      value={editForm.lastname}
+                      onChange={(e) => setEditForm({ ...editForm, lastname: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="nationality">{t.runnerDetail.nationality}</Label>
+                    <Input
+                      id="nationality"
+                      value={editForm.nationality}
+                      onChange={(e) => setEditForm({ ...editForm, nationality: e.target.value.toUpperCase() })}
+                      maxLength={3}
+                      placeholder={t.runnerDetail.nationalityPlaceholder}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="gender">{t.runnerDetail.gender}</Label>
+                    <Select
+                      value={editForm.gender}
+                      onValueChange={(value: 'M' | 'W') => setEditForm({ ...editForm, gender: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={t.runnerDetail.selectGender} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="M">M</SelectItem>
+                        <SelectItem value="W">W</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex items-center space-x-2 pt-2">
+                    <Checkbox
+                      id="dns"
+                      checked={editForm.dns}
+                      onCheckedChange={(checked) => setEditForm({ ...editForm, dns: checked as boolean })}
+                    />
+                    <label
+                      htmlFor="dns"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      {t.runnerDetail.dns}: {t.runnerDetail.dnsDescription}
+                    </label>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="profile" className="space-y-4 mt-0">
+                  <div className="space-y-2">
+                    <Label className="block">Runner Photo</Label>
+                    <ImageUpload
+                      bucket="runner-photos"
+                      currentImageUrl={editForm.photo_url}
+                      onUploadComplete={(url, path) => setEditForm({ ...editForm, photo_url: url })}
+                      onDelete={() => setEditForm({ ...editForm, photo_url: null })}
+                      label="Upload Runner Photo"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="bio">Bio / Description</Label>
+                    <Textarea
+                      id="bio"
+                      value={editForm.bio}
+                      onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
+                      placeholder="Enter runner bio or description"
+                      rows={4}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="instagram_url">Instagram URL</Label>
+                    <Input
+                      id="instagram_url"
+                      value={editForm.instagram_url}
+                      onChange={(e) => setEditForm({ ...editForm, instagram_url: e.target.value })}
+                      placeholder="https://instagram.com/username"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="strava_url">Strava URL</Label>
+                    <Input
+                      id="strava_url"
+                      value={editForm.strava_url}
+                      onChange={(e) => setEditForm({ ...editForm, strava_url: e.target.value })}
+                      placeholder="https://strava.com/athletes/123456"
+                    />
+                  </div>
+                </TabsContent>
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="lastname" className="text-right">
-                  {t.runnerDetail.lastName}
-                </Label>
-                <Input
-                  id="lastname"
-                  value={editForm.lastname}
-                  onChange={(e) => setEditForm({ ...editForm, lastname: e.target.value })}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="nationality" className="text-right">
-                  {t.runnerDetail.nationality}
-                </Label>
-                <Input
-                  id="nationality"
-                  value={editForm.nationality}
-                  onChange={(e) => setEditForm({ ...editForm, nationality: e.target.value.toUpperCase() })}
-                  className="col-span-3"
-                  maxLength={3}
-                  placeholder={t.runnerDetail.nationalityPlaceholder}
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="gender" className="text-right">
-                  {t.runnerDetail.gender}
-                </Label>
-                <Select
-                  value={editForm.gender}
-                  onValueChange={(value: 'M' | 'W') => setEditForm({ ...editForm, gender: value })}
-                >
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder={t.runnerDetail.selectGender} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="M">M</SelectItem>
-                    <SelectItem value="W">W</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="dns" className="text-right">
-                  {t.runnerDetail.dns}
-                </Label>
-                <div className="col-span-3 flex items-center space-x-2">
-                  <Checkbox
-                    id="dns"
-                    checked={editForm.dns}
-                    onCheckedChange={(checked) => setEditForm({ ...editForm, dns: checked as boolean })}
-                  />
-                  <label
-                    htmlFor="dns"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    {t.runnerDetail.dnsDescription}
-                  </label>
-                </div>
-              </div>
-            </div>
+            </Tabs>
             <DialogFooter className="flex-col sm:flex-row gap-2">
               <div className="flex gap-2 flex-1">
                 {runner?.duv_id && (
