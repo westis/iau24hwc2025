@@ -62,18 +62,31 @@ export function NotificationButton() {
       window.OneSignalDeferred = window.OneSignalDeferred || []
       window.OneSignalDeferred.push(async function (OneSignal: any) {
         try {
-          console.log('OneSignal: Showing permission prompt...')
-          await OneSignal.Slidedown.promptPush()
+          // Check if user is opted out (previously unsubscribed)
+          const isOptedOut = await OneSignal.User.PushSubscription.optedOut
+          console.log('OneSignal: Is opted out:', isOptedOut)
 
-          // Check status after prompt
-          const permission = OneSignal.Notifications.permission
-          console.log('OneSignal: Permission after prompt:', permission)
-          setIsSubscribed(permission)
-
-          if (permission) {
-            console.log('OneSignal: Successfully subscribed!')
+          if (isOptedOut) {
+            // User was previously subscribed but opted out - opt them back in
+            console.log('OneSignal: User is opted out, opting back in...')
+            await OneSignal.User.PushSubscription.optIn()
+            setIsSubscribed(true)
+            console.log('OneSignal: Successfully opted back in!')
           } else {
-            console.warn('OneSignal: User denied permission or closed prompt')
+            // First time subscribing - show permission prompt
+            console.log('OneSignal: Showing permission prompt...')
+            await OneSignal.Slidedown.promptPush()
+
+            // Check status after prompt
+            const permission = OneSignal.Notifications.permission
+            console.log('OneSignal: Permission after prompt:', permission)
+            setIsSubscribed(permission)
+
+            if (permission) {
+              console.log('OneSignal: Successfully subscribed!')
+            } else {
+              console.warn('OneSignal: User denied permission or closed prompt')
+            }
           }
         } catch (error) {
           console.error('OneSignal: Error subscribing to notifications:', error)
