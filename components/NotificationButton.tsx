@@ -27,10 +27,21 @@ export function NotificationButton() {
       window.OneSignalDeferred.push(async function (OneSignal: any) {
         try {
           const isPushSupported = OneSignal.Notifications.isPushSupported()
+          console.log('OneSignal: Push supported:', isPushSupported)
+
           if (isPushSupported) {
             setIsInitialized(true)
             const permission = OneSignal.Notifications.permission
+            console.log('OneSignal: Current permission:', permission)
             setIsSubscribed(permission)
+
+            // Listen for permission changes
+            OneSignal.Notifications.addEventListener('permissionChange', (granted: boolean) => {
+              console.log('OneSignal: Permission changed to:', granted)
+              setIsSubscribed(granted)
+            })
+          } else {
+            console.warn('OneSignal: Push notifications not supported on this browser')
           }
         } catch (error) {
           console.error('Error checking subscription status:', error)
@@ -45,23 +56,35 @@ export function NotificationButton() {
   const handleSubscribe = async () => {
     if (typeof window === 'undefined') return
 
+    console.log('OneSignal: Attempting to subscribe...')
     setIsLoading(true)
     try {
       window.OneSignalDeferred = window.OneSignalDeferred || []
       window.OneSignalDeferred.push(async function (OneSignal: any) {
         try {
+          console.log('OneSignal: Showing permission prompt...')
           await OneSignal.Slidedown.promptPush()
+
           // Check status after prompt
           const permission = OneSignal.Notifications.permission
+          console.log('OneSignal: Permission after prompt:', permission)
           setIsSubscribed(permission)
+
+          if (permission) {
+            console.log('OneSignal: Successfully subscribed!')
+          } else {
+            console.warn('OneSignal: User denied permission or closed prompt')
+          }
         } catch (error) {
-          console.error('Error subscribing to notifications:', error)
+          console.error('OneSignal: Error subscribing to notifications:', error)
+          alert('Failed to subscribe to notifications. Please check browser permissions.')
         } finally {
           setIsLoading(false)
         }
       })
     } catch (error) {
-      console.error('Error subscribing to notifications:', error)
+      console.error('OneSignal: Error subscribing to notifications:', error)
+      alert('Failed to subscribe to notifications. Please try again.')
       setIsLoading(false)
     }
   }
@@ -69,6 +92,7 @@ export function NotificationButton() {
   const handleUnsubscribe = async () => {
     if (typeof window === 'undefined') return
 
+    console.log('OneSignal: Attempting to unsubscribe...')
     setIsLoading(true)
     try {
       window.OneSignalDeferred = window.OneSignalDeferred || []
@@ -76,14 +100,17 @@ export function NotificationButton() {
         try {
           await OneSignal.User.PushSubscription.optOut()
           setIsSubscribed(false)
+          console.log('OneSignal: Successfully unsubscribed')
         } catch (error) {
-          console.error('Error unsubscribing from notifications:', error)
+          console.error('OneSignal: Error unsubscribing from notifications:', error)
+          alert('Failed to unsubscribe. Please try again.')
         } finally {
           setIsLoading(false)
         }
       })
     } catch (error) {
-      console.error('Error unsubscribing from notifications:', error)
+      console.error('OneSignal: Error unsubscribing from notifications:', error)
+      alert('Failed to unsubscribe. Please try again.')
       setIsLoading(false)
     }
   }
