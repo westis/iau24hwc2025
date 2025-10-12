@@ -7,7 +7,14 @@ import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { NotificationButton } from '@/components/NotificationButton'
-import { Menu, X } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu'
+import { Menu, X, ChevronDown } from 'lucide-react'
 import { useState } from 'react'
 
 export function Navbar() {
@@ -25,11 +32,9 @@ export function Navbar() {
   ]
 
   const adminNavItems = [
-    { href: '/match', label: t.common.match, adminOnly: true },
-    { href: '/admin/news', label: t.common.manageNews, adminOnly: true },
+    { href: '/match', label: t.common.match },
+    { href: '/admin/news', label: t.common.manageNews },
   ]
-
-  const navItems = isAdmin ? [...publicNavItems, ...adminNavItems] : publicNavItems
 
   return (
     <nav className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -42,7 +47,7 @@ export function Navbar() {
 
           {/* Desktop Nav */}
           <div className="hidden md:flex md:items-center md:gap-6">
-            {navItems.map((item) => (
+            {publicNavItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
@@ -55,17 +60,30 @@ export function Navbar() {
                 {item.label}
               </Link>
             ))}
+            {isAdmin && (
+              <DropdownMenu>
+                <DropdownMenuTrigger className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1">
+                  {t.common.admin}
+                  <ChevronDown className="h-3 w-3" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {adminNavItems.map((item) => (
+                    <DropdownMenuItem key={item.href} asChild>
+                      <Link href={item.href} className="cursor-pointer">
+                        {item.label}
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={logout} className="cursor-pointer">
+                    {t.common.logout}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
             <NotificationButton />
             <LanguageSwitcher />
             <ThemeToggle />
-            {isAdmin && (
-              <button
-                onClick={logout}
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {t.common.logout}
-              </button>
-            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -86,7 +104,7 @@ export function Navbar() {
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-border py-3">
             <div className="flex flex-col space-y-3">
-              {navItems.map((item) => (
+              {publicNavItems.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
@@ -101,15 +119,34 @@ export function Navbar() {
                 </Link>
               ))}
               {isAdmin && (
-                <button
-                  onClick={() => {
-                    logout()
-                    setMobileMenuOpen(false)
-                  }}
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors text-left"
-                >
-                  {t.common.logout}
-                </button>
+                <>
+                  <div className="text-xs font-semibold text-muted-foreground uppercase pt-2">
+                    {t.common.admin}
+                  </div>
+                  {adminNavItems.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`text-sm font-medium transition-colors pl-4 ${
+                        pathname === item.href
+                          ? 'text-foreground'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                  <button
+                    onClick={() => {
+                      logout()
+                      setMobileMenuOpen(false)
+                    }}
+                    className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors text-left pl-4"
+                  >
+                    {t.common.logout}
+                  </button>
+                </>
               )}
             </div>
           </div>
