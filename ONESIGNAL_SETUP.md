@@ -28,38 +28,50 @@ xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
 Copy this App ID - you'll need it for the next step.
 
-## 4. Configure Environment Variables
+## 4. Get Your REST API Key
+
+To send notifications from the admin panel, you need the REST API Key:
+
+1. In OneSignal dashboard, go to **Settings → Keys & IDs**
+2. Under "REST API Key", copy the key (starts with `Basic...` or `OS...`)
+3. Keep this key secret - it has full access to send notifications!
+
+## 5. Configure Environment Variables
 
 ### Local Development
 
 1. Open `.env.local` in your project root
-2. Replace the placeholder with your actual App ID:
+2. Replace the placeholders with your actual keys:
    ```env
-   NEXT_PUBLIC_ONESIGNAL_APP_ID=your-actual-app-id-here
+   NEXT_PUBLIC_ONESIGNAL_APP_ID=b6b6c180-92d4-43c9-b425-724d0c0113ed
+   ONESIGNAL_REST_API_KEY=your-rest-api-key-here
    ```
 
 ### Vercel Deployment
 
 1. Go to your Vercel project dashboard
 2. Navigate to: **Settings → Environment Variables**
-3. Add a new variable:
+3. Add these variables:
    - **Key**: `NEXT_PUBLIC_ONESIGNAL_APP_ID`
-   - **Value**: Your OneSignal App ID
-   - **Environment**: Production, Preview, Development (select all)
+   - **Value**: `b6b6c180-92d4-43c9-b425-724d0c0113ed`
+   - **Environment**: Production, Preview, Development (all)
+
+   - **Key**: `ONESIGNAL_REST_API_KEY`
+   - **Value**: Your REST API Key from OneSignal
+   - **Environment**: Production, Preview, Development (all)
 4. Click "Save"
 5. Redeploy your app for changes to take effect
 
-## 5. Test Notifications
+## 6. Test Notifications
 
 1. Visit your site (locally or on Vercel)
-2. You should see a "Subscribe to Updates" button (you can add this to any page)
-3. Click the button to subscribe
-4. The browser will show a permission prompt
-5. Accept the prompt to enable notifications
+2. Click the bell icon in the navbar to subscribe
+3. The browser will show a permission prompt
+4. Accept the prompt to enable notifications
 
-## 6. Send Test Notification
+## 7. Send Test Notification
 
-From your OneSignal dashboard:
+### From OneSignal Dashboard:
 
 1. Go to **Messages → Push**
 2. Click "New Push"
@@ -70,42 +82,23 @@ From your OneSignal dashboard:
 
 You should receive the notification even if your browser tab is closed!
 
-## 7. Using the Subscribe Button
+### From Admin Panel:
 
-Add the button to any page:
+Once you've added the REST API Key, you can send notifications from the app:
 
-```tsx
-import { NotificationSubscribeButton } from '@/components/NotificationSubscribeButton'
+1. Go to **Admin → Send Notifications** in the navbar
+2. Enter title and message
+3. Optionally add a URL to open when clicked
+4. Click "Send Notification"
 
-export default function YourPage() {
-  return (
-    <div>
-      <NotificationSubscribeButton />
-    </div>
-  )
-}
-```
+## 8. Sending Notifications with News
 
-## 8. Sending Notifications from Admin Panel
+When creating or editing news articles:
 
-You can integrate notification sending into your admin panel. Example API usage:
-
-```typescript
-// Example: Send notification when creating news
-const response = await fetch('https://onesignal.com/api/v1/notifications', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'Authorization': 'Basic YOUR_REST_API_KEY'
-  },
-  body: JSON.stringify({
-    app_id: process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID,
-    headings: { en: "New Article" },
-    contents: { en: "Check out the latest news!" },
-    included_segments: ["All"]
-  })
-})
-```
+1. Check "Published" to make it visible
+2. Check "Send push notification" to notify all subscribers
+3. The notification will include the news title and a preview of the content
+4. Clicking the notification will open the news article
 
 ## Platform-Specific Behavior
 

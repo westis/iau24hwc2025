@@ -22,7 +22,7 @@ export default function AdminNewsPage() {
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState<NewsItem | null>(null)
   const [creating, setCreating] = useState(false)
-  const [formData, setFormData] = useState({ title: '', content: '', published: false, runnerIds: [] as number[] })
+  const [formData, setFormData] = useState({ title: '', content: '', published: false, runnerIds: [] as number[], sendNotification: false })
   const [runners, setRunners] = useState<Runner[]>([])
   const [runnerSearch, setRunnerSearch] = useState('')
 
@@ -73,8 +73,15 @@ export default function AdminNewsPage() {
       })
 
       if (response.ok) {
+        const data = await response.json()
+
+        // Send push notification if requested
+        if (formData.sendNotification && formData.published) {
+          await sendPushNotification(formData.title, formData.content, data.newsItem.id)
+        }
+
         setCreating(false)
-        setFormData({ title: '', content: '', published: false, runnerIds: [] })
+        setFormData({ title: '', content: '', published: false, runnerIds: [], sendNotification: false })
         setRunnerSearch('')
         await fetchNews()
       }
@@ -92,8 +99,13 @@ export default function AdminNewsPage() {
       })
 
       if (response.ok) {
+        // Send push notification if requested
+        if (formData.sendNotification && formData.published) {
+          await sendPushNotification(formData.title, formData.content, id)
+        }
+
         setEditing(null)
-        setFormData({ title: '', content: '', published: false, runnerIds: [] })
+        setFormData({ title: '', content: '', published: false, runnerIds: [], sendNotification: false })
         setRunnerSearch('')
         await fetchNews()
       }
@@ -118,13 +130,40 @@ export default function AdminNewsPage() {
     }
   }
 
+  async function sendPushNotification(title: string, content: string, newsId: number) {
+    try {
+      // Strip HTML tags and truncate content for notification
+      const plainText = content.replace(/<[^>]*>/g, '').substring(0, 150) + (content.length > 150 ? '...' : '')
+
+      const response = await fetch('/api/notifications/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title,
+          message: plainText,
+          url: `${window.location.origin}/news/${newsId}`
+        })
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        console.error('Failed to send notification:', error)
+        alert('Failed to send push notification: ' + error.error)
+      }
+    } catch (error) {
+      console.error('Error sending notification:', error)
+      alert('Error sending push notification')
+    }
+  }
+
   function startEdit(item: NewsItem) {
     setEditing(item)
     setFormData({
       title: item.title,
       content: item.content,
       published: item.published,
-      runnerIds: item.linkedRunnerIds || []
+      runnerIds: item.linkedRunnerIds || [],
+      sendNotification: false
     })
     setRunnerSearch('')
     setCreating(false)
@@ -133,14 +172,14 @@ export default function AdminNewsPage() {
   function startCreate() {
     setCreating(true)
     setEditing(null)
-    setFormData({ title: '', content: '', published: false, runnerIds: [] })
+    setFormData({ title: '', content: '', published: false, runnerIds: [], sendNotification: false })
     setRunnerSearch('')
   }
 
   function cancelEdit() {
     setEditing(null)
     setCreating(false)
-    setFormData({ title: '', content: '', published: false, runnerIds: [] })
+    setFormData({ title: '', content: '', published: false, runnerIds: [], sendNotification: false })
     setRunnerSearch('')
   }
 
@@ -195,17 +234,32 @@ export default function AdminNewsPage() {
                 placeholder={t.news.contentPlaceholder}
               />
             </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="published"
-                checked={formData.published}
-                onChange={(e) => setFormData({ ...formData, published: e.target.checked })}
-                className="w-4 h-4"
-              />
-              <label htmlFor="published" className="text-sm font-medium cursor-pointer">
-                {t.news.published} ({t.news.publishedDesc})
-              </label>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="published"
+                  checked={formData.published}
+                  onChange={(e) => setFormData({ ...formData, published: e.target.checked })}
+                  className="w-4 h-4"
+                />
+                <label htmlFor="published" className="text-sm font-medium cursor-pointer">
+                  {t.news.published} ({t.news.publishedDesc})
+                </label>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="sendNotification"
+                  checked={formData.sendNotification}
+                  onChange={(e) => setFormData({ ...formData, sendNotification: e.target.checked })}
+                  className="w-4 h-4"
+                  disabled={!formData.published}
+                />
+                <label htmlFor="sendNotification" className="text-sm font-medium cursor-pointer">
+                  Send push notification (only when published)
+                </label>
+              </div>
             </div>
 
             {/* Runner Linking */}
