@@ -16,14 +16,14 @@ export async function POST(request: NextRequest) {
     const restApiKey = process.env.ONESIGNAL_REST_API_KEY
 
     // Check if OneSignal is configured
-    if (!appId || appId === 'b6b6c180-92d4-43c9-b425-724d0c0113ed') {
+    if (!appId) {
       return NextResponse.json(
         { error: 'OneSignal App ID not configured' },
         { status: 500 }
       )
     }
 
-    if (!restApiKey || restApiKey === 'your-rest-api-key-here') {
+    if (!restApiKey) {
       return NextResponse.json(
         { error: 'OneSignal REST API Key not configured. Get it from OneSignal Dashboard > Settings > Keys & IDs' },
         { status: 500 }
