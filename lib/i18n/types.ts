@@ -218,6 +218,10 @@ export interface Translations {
     titlePlaceholder: string
     contentPlaceholder: string
     noNewsYet: string
+    readMore: string
+    showLess: string
+    viewArticle: string
+    backToNews: string
   }
   admin: {
     manageNews: string

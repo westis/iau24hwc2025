@@ -218,6 +218,10 @@ export const en: Translations = {
     titlePlaceholder: 'Enter news title',
     contentPlaceholder: 'Enter news content',
     noNewsYet: 'No news items yet. Create one to get started.',
+    readMore: 'Read more',
+    showLess: 'Show less',
+    viewArticle: 'View full article',
+    backToNews: 'Back to News',
   },
   admin: {
     manageNews: 'Manage News',

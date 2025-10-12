@@ -218,6 +218,10 @@ export const sv: Translations = {
     titlePlaceholder: 'Ange nyhetsrubrik',
     contentPlaceholder: 'Ange nyhetsinnehåll',
     noNewsYet: 'Inga nyheter ännu. Skapa en för att komma igång.',
+    readMore: 'Läs mer',
+    showLess: 'Visa mindre',
+    viewArticle: 'Visa hela artikeln',
+    backToNews: 'Tillbaka till Nyheter',
   },
   admin: {
     manageNews: 'Hantera nyheter',
