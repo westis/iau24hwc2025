@@ -1,4 +1,6 @@
 // types/runner.ts
+import type { RunnerNote } from './runner-note'
+
 export type Gender = 'M' | 'W'
 export type MatchStatus = 'unmatched' | 'auto-matched' | 'manually-matched' | 'no-match'
 
@@ -40,6 +42,9 @@ export interface Runner {
   allPBs?: Array<{                             // All distance PBs (6h, 12h, 24h, 48h, etc.)
     [distance: string]: DUVPersonalBest
   }>
+
+  // Notes (both standalone and news-linked)
+  notes?: RunnerNote[]
 }
 
 export interface Performance {

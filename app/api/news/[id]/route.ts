@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getNewsById, updateNews, deleteNews } from '@/lib/db/database'
+import { getNewsById, updateNews, deleteNews, linkRunnersToNews, getRunnersByNewsId } from '@/lib/db/database'
 import type { NewsItemUpdate } from '@/types/news'
 
 export const dynamic = 'force-dynamic'
@@ -28,6 +28,9 @@ export async function GET(
         { status: 404 }
       )
     }
+
+    // Get linked runner IDs
+    news.linkedRunnerIds = await getRunnersByNewsId(newsId)
 
     return NextResponse.json(news)
   } catch (error) {
@@ -64,6 +67,14 @@ export async function PUT(
         { error: 'News not found' },
         { status: 404 }
       )
+    }
+
+    // Update linked runners if provided
+    if (body.runnerIds !== undefined) {
+      await linkRunnersToNews(newsId, body.runnerIds)
+      news.linkedRunnerIds = body.runnerIds
+    } else {
+      news.linkedRunnerIds = await getRunnersByNewsId(newsId)
     }
 
     return NextResponse.json(news)

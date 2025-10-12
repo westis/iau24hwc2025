@@ -4,6 +4,7 @@ import type { Runner, Performance, MatchStatus, Gender } from '@/types/runner'
 import type { DUVSearchResult } from '@/types/match'
 import type { Team } from '@/types/team'
 import type { NewsItem, NewsItemCreate, NewsItemUpdate } from '@/types/news'
+import type { RunnerNote, RunnerNoteCreate, RunnerNoteUpdate } from '@/types/runner-note'
 
 // PostgreSQL connection pool
 let pool: Pool | null = null
@@ -545,4 +546,125 @@ export async function deleteNews(id: number): Promise<boolean> {
   const db = getDatabase()
   const result = await db.query('DELETE FROM news WHERE id = $1', [id])
   return result.rowCount !== null && result.rowCount > 0
+}
+
+// Runner notes operations
+export async function getRunnerNotes(runnerId: number): Promise<RunnerNote[]> {
+  const db = getDatabase()
+  const result = await db.query(`
+    SELECT
+      rn.*,
+      n.title as news_title,
+      n.content as news_content,
+      n.published as news_published
+    FROM runner_notes rn
+    LEFT JOIN news n ON rn.news_id = n.id
+    WHERE rn.runner_id = $1
+    ORDER BY rn.created_at DESC
+  `, [runnerId])
+
+  return result.rows.map(row => ({
+    id: row.id,
+    runnerId: row.runner_id,
+    noteText: row.note_text,
+    newsId: row.news_id,
+    newsItem: row.news_id ? {
+      id: row.news_id,
+      title: row.news_title,
+      content: row.news_content,
+      published: row.news_published,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+    } : undefined,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }))
+}
+
+export async function createRunnerNote(note: RunnerNoteCreate): Promise<RunnerNote> {
+  const db = getDatabase()
+  const result = await db.query(`
+    INSERT INTO runner_notes (runner_id, note_text, news_id)
+    VALUES ($1, $2, $3)
+    RETURNING *
+  `, [note.runnerId, note.noteText || null, note.newsId || null])
+
+  const row = result.rows[0]
+  return {
+    id: row.id,
+    runnerId: row.runner_id,
+    noteText: row.note_text,
+    newsId: row.news_id,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
+export async function updateRunnerNote(id: number, updates: RunnerNoteUpdate): Promise<RunnerNote | null> {
+  const db = getDatabase()
+  const fields: string[] = []
+  const values: any[] = []
+  let paramIndex = 1
+
+  if (updates.noteText !== undefined) {
+    fields.push(`note_text = $${paramIndex++}`)
+    values.push(updates.noteText || null)
+  }
+  if (updates.newsId !== undefined) {
+    fields.push(`news_id = $${paramIndex++}`)
+    values.push(updates.newsId || null)
+  }
+
+  if (fields.length === 0) return null
+
+  fields.push(`updated_at = CURRENT_TIMESTAMP`)
+  values.push(id)
+
+  const result = await db.query(`
+    UPDATE runner_notes SET ${fields.join(', ')} WHERE id = $${paramIndex}
+    RETURNING *
+  `, values)
+
+  if (result.rows.length === 0) return null
+
+  const row = result.rows[0]
+  return {
+    id: row.id,
+    runnerId: row.runner_id,
+    noteText: row.note_text,
+    newsId: row.news_id,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
+export async function deleteRunnerNote(id: number): Promise<boolean> {
+  const db = getDatabase()
+  const result = await db.query('DELETE FROM runner_notes WHERE id = $1', [id])
+  return result.rowCount !== null && result.rowCount > 0
+}
+
+// Get runner notes by news ID (to show which runners are linked to a news item)
+export async function getRunnersByNewsId(newsId: number): Promise<number[]> {
+  const db = getDatabase()
+  const result = await db.query(`
+    SELECT DISTINCT runner_id FROM runner_notes WHERE news_id = $1
+  `, [newsId])
+  return result.rows.map(row => row.runner_id)
+}
+
+// Link multiple runners to a news item
+export async function linkRunnersToNews(newsId: number, runnerIds: number[]): Promise<void> {
+  const db = getDatabase()
+
+  // First, remove existing links for this news item
+  await db.query('DELETE FROM runner_notes WHERE news_id = $1 AND note_text IS NULL', [newsId])
+
+  // Create new links
+  for (const runnerId of runnerIds) {
+    await db.query(`
+      INSERT INTO runner_notes (runner_id, news_id)
+      VALUES ($1, $2)
+    `, [runnerId, newsId])
+  }
 }

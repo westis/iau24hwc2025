@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getNews, createNews } from '@/lib/db/database'
+import { getNews, createNews, linkRunnersToNews, getRunnersByNewsId } from '@/lib/db/database'
 import type { NewsItemCreate } from '@/types/news'
 
 export const dynamic = 'force-dynamic'
@@ -9,8 +9,16 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const includeUnpublished = searchParams.get('includeUnpublished') === 'true'
+    const includeRunnerLinks = searchParams.get('includeRunnerLinks') === 'true'
 
     const news = await getNews(!includeUnpublished)
+
+    // Optionally fetch linked runner IDs for each news item
+    if (includeRunnerLinks) {
+      for (const item of news) {
+        item.linkedRunnerIds = await getRunnersByNewsId(item.id)
+      }
+    }
 
     return NextResponse.json({
       news,
@@ -38,6 +46,12 @@ export async function POST(request: NextRequest) {
     }
 
     const news = await createNews(body)
+
+    // Link runners if provided
+    if (body.runnerIds && body.runnerIds.length > 0) {
+      await linkRunnersToNews(news.id, body.runnerIds)
+      news.linkedRunnerIds = body.runnerIds
+    }
 
     return NextResponse.json(news, { status: 201 })
   } catch (error) {

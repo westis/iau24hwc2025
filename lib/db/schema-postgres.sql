@@ -85,6 +85,32 @@ CREATE TABLE IF NOT EXISTS teams (
     FOREIGN KEY (runner3_id) REFERENCES runners(id)
 );
 
+-- News table: News items and announcements
+CREATE TABLE IF NOT EXISTS news (
+    id SERIAL PRIMARY KEY,
+    title TEXT NOT NULL,
+    content TEXT NOT NULL,
+    published BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Runner notes: Allows both standalone notes and links to news items
+CREATE TABLE IF NOT EXISTS runner_notes (
+    id SERIAL PRIMARY KEY,
+    runner_id INTEGER NOT NULL,
+    note_text TEXT,              -- Optional standalone note
+    news_id INTEGER,             -- Optional link to news item
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    -- At least one of note_text or news_id must be present
+    CHECK (note_text IS NOT NULL OR news_id IS NOT NULL),
+
+    FOREIGN KEY (runner_id) REFERENCES runners(id) ON DELETE CASCADE,
+    FOREIGN KEY (news_id) REFERENCES news(id) ON DELETE CASCADE
+);
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_runners_nationality_gender ON runners(nationality, gender);
 CREATE INDEX IF NOT EXISTS idx_runners_duv_id ON runners(duv_id);
@@ -93,6 +119,8 @@ CREATE INDEX IF NOT EXISTS idx_performances_runner_id ON performances(runner_id)
 CREATE INDEX IF NOT EXISTS idx_performances_event_date ON performances(event_date);
 CREATE INDEX IF NOT EXISTS idx_match_candidates_runner_id ON match_candidates(runner_id);
 CREATE INDEX IF NOT EXISTS idx_teams_nationality_gender ON teams(nationality, gender);
+CREATE INDEX IF NOT EXISTS idx_runner_notes_runner_id ON runner_notes(runner_id);
+CREATE INDEX IF NOT EXISTS idx_runner_notes_news_id ON runner_notes(news_id);
 
 -- Function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -111,5 +139,15 @@ CREATE TRIGGER update_runners_timestamp
 
 CREATE TRIGGER update_teams_timestamp
     BEFORE UPDATE ON teams
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_news_timestamp
+    BEFORE UPDATE ON news
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_runner_notes_timestamp
+    BEFORE UPDATE ON runner_notes
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
