@@ -7,7 +7,7 @@ import type { Team } from '@/types/team'
 import type { Gender } from '@/types/runner'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import { ChevronDown, ChevronUp, MessageSquare } from 'lucide-react'
 import { getCountryCodeForFlag } from '@/lib/utils/country-codes'
 import { getCountryName } from '@/lib/utils/country-names'
 import { cn } from '@/lib/utils'
@@ -80,7 +80,7 @@ export function TeamCard({ rank, team, gender, metric }: TeamCardProps) {
       {/* Top 3 Runners - Collapsed */}
       {!isExpanded && (
         <div className="space-y-1.5">
-          {team.topThree.map((runner, index) => {
+          {team.runners.slice(0, 3).map((runner, index) => {
             const pb = metric === 'all-time' ? runner.personalBestAllTime : runner.personalBestLast3Years
             const pbYear = metric === 'all-time' ? runner.personalBestAllTimeYear : runner.personalBestLast3YearsYear
             return (
@@ -94,15 +94,27 @@ export function TeamCard({ rank, team, gender, metric }: TeamCardProps) {
               >
                 <div className="flex items-center gap-2">
                   <span className="text-muted-foreground w-4">{index + 1}.</span>
-                  <span className="truncate">
-                    {runner.firstname} {runner.lastname}
-                    {runner.dns && <span className="text-xs text-muted-foreground ml-1">(DNS)</span>}
+                  <span className="truncate flex items-center gap-1.5">
+                    <span>
+                      {runner.firstname} {runner.lastname}
+                      {runner.dns && <span className="text-xs text-muted-foreground ml-1">(DNS)</span>}
+                    </span>
+                    {(runner.noteCount ?? 0) > 0 && (
+                      <span className="inline-flex items-center relative ml-1" title="Click to view notes">
+                        <MessageSquare className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                        <span className="absolute -top-0.5 -right-0.5 bg-blue-600 dark:bg-blue-500 text-white text-[9px] font-semibold rounded-full h-3 w-3 flex items-center justify-center">
+                          {runner.noteCount}
+                        </span>
+                      </span>
+                    )}
                   </span>
                 </div>
-                {pb && (
+                {pb ? (
                   <span className="text-muted-foreground text-xs">
                     {pb.toFixed(3)} {pbYear && `(${pbYear})`}
                   </span>
+                ) : (
+                  <span className="text-muted-foreground text-xs italic">{t.teams.noPB}</span>
                 )}
               </div>
             )
@@ -130,9 +142,19 @@ export function TeamCard({ rank, team, gender, metric }: TeamCardProps) {
               >
                 <div className="flex items-center gap-2">
                   <span className="text-muted-foreground w-4">{index + 1}.</span>
-                  <span className="truncate">
-                    {runner.firstname} {runner.lastname}
-                    {runner.dns && <span className="text-xs text-muted-foreground ml-1">(DNS)</span>}
+                  <span className="truncate flex items-center gap-1.5">
+                    <span>
+                      {runner.firstname} {runner.lastname}
+                      {runner.dns && <span className="text-xs text-muted-foreground ml-1">(DNS)</span>}
+                    </span>
+                    {(runner.noteCount ?? 0) > 0 && (
+                      <span className="inline-flex items-center relative ml-1" title="Click to view notes">
+                        <MessageSquare className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                        <span className="absolute -top-0.5 -right-0.5 bg-blue-600 dark:bg-blue-500 text-white text-[9px] font-semibold rounded-full h-3 w-3 flex items-center justify-center">
+                          {runner.noteCount}
+                        </span>
+                      </span>
+                    )}
                   </span>
                 </div>
                 {pb ? (

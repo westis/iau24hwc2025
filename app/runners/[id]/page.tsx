@@ -12,7 +12,11 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
-import { ArrowLeft, Pencil } from 'lucide-react'
+import { ArrowLeft, Pencil, Plus, Edit, Trash2 } from 'lucide-react'
+import { RunnerNotesDisplay } from '@/components/runner-notes-display'
+import type { RunnerNote } from '@/types/runner-note'
+import type { NewsItem } from '@/types/news'
+import { Textarea } from '@/components/ui/textarea'
 
 interface Performance {
   id: number
@@ -60,6 +64,7 @@ export default function RunnerProfilePage() {
   const { isAdmin } = useAuth()
   const { t } = useLanguage()
   const [runner, setRunner] = useState<RunnerProfile | null>(null)
+  const [notes, setNotes] = useState<RunnerNote[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showAllRaces, setShowAllRaces] = useState(false)
@@ -73,6 +78,14 @@ export default function RunnerProfilePage() {
   })
   const [isSaving, setIsSaving] = useState(false)
   const [isUnmatching, setIsUnmatching] = useState(false)
+  const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false)
+  const [editingNote, setEditingNote] = useState<RunnerNote | null>(null)
+  const [noteForm, setNoteForm] = useState({
+    noteText: '',
+    newsId: ''
+  })
+  const [availableNews, setAvailableNews] = useState<NewsItem[]>([])
+  const [isSavingNote, setIsSavingNote] = useState(false)
 
   useEffect(() => {
     async function loadRunner() {
@@ -132,6 +145,18 @@ export default function RunnerProfilePage() {
         })
 
         setRunner(runnerProfile)
+
+        // Fetch notes for this runner
+        try {
+          const notesResponse = await fetch(`/api/runners/${foundRunner.id}/notes`)
+          if (notesResponse.ok) {
+            const notesData = await notesResponse.json()
+            setNotes(notesData.notes || [])
+          }
+        } catch (notesErr) {
+          console.error('Error loading notes:', notesErr)
+          // Don't fail the whole page if notes fail to load
+        }
       } catch (err) {
         console.error('Error loading runner:', err)
         setError(err instanceof Error ? err.message : 'Failed to load runner')
@@ -214,6 +239,119 @@ export default function RunnerProfilePage() {
       alert(err instanceof Error ? err.message : 'Failed to unmatch runner')
     } finally {
       setIsUnmatching(false)
+    }
+  }
+
+  async function openNoteDialog(note?: RunnerNote) {
+    // Fetch available news items
+    try {
+      const response = await fetch('/api/news')
+      if (response.ok) {
+        const data = await response.json()
+        setAvailableNews(data.news || [])
+      }
+    } catch (err) {
+      console.error('Error loading news:', err)
+    }
+
+    if (note) {
+      setEditingNote(note)
+      setNoteForm({
+        noteText: note.noteText || '',
+        newsId: note.newsId?.toString() || ''
+      })
+    } else {
+      setEditingNote(null)
+      setNoteForm({ noteText: '', newsId: '' })
+    }
+    setIsNoteDialogOpen(true)
+  }
+
+  function closeNoteDialog() {
+    setIsNoteDialogOpen(false)
+    setEditingNote(null)
+    setNoteForm({ noteText: '', newsId: '' })
+  }
+
+  async function saveNote() {
+    if (!runner || (!noteForm.noteText && !noteForm.newsId)) {
+      alert('Please provide either note text or select a news item')
+      return
+    }
+
+    setIsSavingNote(true)
+    try {
+      if (editingNote) {
+        // Update existing note
+        const response = await fetch(`/api/runner-notes/${editingNote.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            noteText: noteForm.noteText || null,
+            newsId: noteForm.newsId ? parseInt(noteForm.newsId) : null
+          })
+        })
+
+        if (!response.ok) {
+          throw new Error('Failed to update note')
+        }
+      } else {
+        // Create new note
+        const response = await fetch(`/api/runners/${runner.id}/notes`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            noteText: noteForm.noteText || null,
+            newsId: noteForm.newsId ? parseInt(noteForm.newsId) : null
+          })
+        })
+
+        if (!response.ok) {
+          throw new Error('Failed to create note')
+        }
+      }
+
+      // Reload notes
+      const notesResponse = await fetch(`/api/runners/${runner.id}/notes`)
+      if (notesResponse.ok) {
+        const notesData = await notesResponse.json()
+        setNotes(notesData.notes || [])
+      }
+
+      closeNoteDialog()
+    } catch (err) {
+      console.error('Error saving note:', err)
+      alert(err instanceof Error ? err.message : 'Failed to save note')
+    } finally {
+      setIsSavingNote(false)
+    }
+  }
+
+  async function deleteNote(noteId: number) {
+    if (!confirm(t.runners.confirmDeleteNote)) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/runner-notes/${noteId}`, {
+        method: 'DELETE'
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to delete note')
+      }
+
+      // Reload notes
+      if (runner) {
+        const notesResponse = await fetch(`/api/runners/${runner.id}/notes`)
+        if (notesResponse.ok) {
+          const notesData = await notesResponse.json()
+          setNotes(notesData.notes || [])
+        }
+      }
+    } catch (err) {
+      console.error('Error deleting note:', err)
+      alert(err instanceof Error ? err.message : 'Failed to delete note')
     }
   }
 
@@ -379,34 +517,101 @@ export default function RunnerProfilePage() {
           </div>
         </div>
 
-        <div className={`grid gap-6 ${hasOtherPBs ? 'md:grid-cols-2' : 'md:grid-cols-1 max-w-2xl'} mb-6`}>
-          <Card>
+        {/* Notes Section */}
+        {(notes.length > 0 || isAdmin) && (
+          <Card className="mb-6">
             <CardHeader>
-              <CardTitle>{t.runnerDetail.personalBests}</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle>{t.runners.notes}</CardTitle>
+                {isAdmin && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => openNoteDialog()}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    {t.runners.addNote}
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              {notes.length === 0 ? (
+                <p className="text-sm text-muted-foreground">{t.runners.noNotes}</p>
+              ) : (
+                <div className="space-y-4">
+                  {notes.map((note) => (
+                    <div key={note.id} className="relative bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-3">
+                      {isAdmin && (
+                        <div className="absolute top-2 right-2 flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openNoteDialog(note)}
+                            className="h-7 w-7 p-0"
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => deleteNote(note.id)}
+                            className="h-7 w-7 p-0 text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      )}
+                      {note.noteText && (
+                        <p className="text-sm text-foreground pr-16">{note.noteText}</p>
+                      )}
+                      {note.newsItem && (
+                        <div className={note.noteText ? "mt-2 pt-2 border-t border-blue-200 dark:border-blue-800" : ""}>
+                          <a
+                            href={`/news/${note.newsItem.id}`}
+                            className="text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                          >
+                            <span className="text-xs font-medium">{t.runners.linkedNews}:</span>
+                            <span className="text-xs">{note.newsItem.title}</span>
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        <div className={`grid gap-6 ${hasOtherPBs ? 'grid-cols-2' : 'md:grid-cols-1 max-w-2xl'} mb-6`}>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg md:text-xl">{t.runnerDetail.personalBests}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3 md:space-y-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">{t.runnerDetail.allTimePB}</p>
-                  <p className="text-2xl font-bold text-primary">
+                  <p className="text-xs md:text-sm text-muted-foreground">{t.runnerDetail.allTimePB}</p>
+                  <p className="text-xl md:text-2xl font-bold text-primary">
                     {runner.personal_best_all_time ? (
                       <>
                         {runner.personal_best_all_time.toFixed(3)} km
                         {runner.personal_best_all_time_year && (
-                          <span className="text-base text-muted-foreground ml-2">({runner.personal_best_all_time_year})</span>
+                          <span className="text-sm md:text-base text-muted-foreground ml-2">({runner.personal_best_all_time_year})</span>
                         )}
                       </>
                     ) : 'N/A'}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">{t.runnerDetail.pb20232025}</p>
-                  <p className="text-2xl font-bold text-primary">
+                  <p className="text-xs md:text-sm text-muted-foreground">{t.runnerDetail.pb20232025}</p>
+                  <p className="text-xl md:text-2xl font-bold text-primary">
                     {runner.personal_best_last_3_years ? (
                       <>
                         {runner.personal_best_last_3_years.toFixed(3)} km
                         {runner.personal_best_last_3_years_year && (
-                          <span className="text-base text-muted-foreground ml-2">({runner.personal_best_last_3_years_year})</span>
+                          <span className="text-sm md:text-base text-muted-foreground ml-2">({runner.personal_best_last_3_years_year})</span>
                         )}
                       </>
                     ) : 'N/A'}
@@ -419,34 +624,34 @@ export default function RunnerProfilePage() {
           {hasOtherPBs && (
             <Card>
               <CardHeader>
-                <CardTitle>{t.runnerDetail.otherPBs}</CardTitle>
+                <CardTitle className="text-lg md:text-xl">{t.runnerDetail.otherPBs}</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+                <div className="space-y-2 md:space-y-4">
                   {pb6h && (
                     <div>
-                      <p className="text-sm text-muted-foreground">{t.runnerDetail.pb6h}</p>
-                      <p className="text-2xl font-bold text-primary">
+                      <p className="text-xs md:text-sm text-muted-foreground">{t.runnerDetail.pb6h}</p>
+                      <p className="text-lg md:text-2xl font-bold text-primary">
                         {pb6h.distance.toFixed(3)} km
-                        <span className="text-base text-muted-foreground ml-2">({pb6h.year})</span>
+                        <span className="text-xs md:text-base text-muted-foreground ml-2">({pb6h.year})</span>
                       </p>
                     </div>
                   )}
                   {pb12h && (
                     <div>
-                      <p className="text-sm text-muted-foreground">{t.runnerDetail.pb12h}</p>
-                      <p className="text-2xl font-bold text-primary">
+                      <p className="text-xs md:text-sm text-muted-foreground">{t.runnerDetail.pb12h}</p>
+                      <p className="text-lg md:text-2xl font-bold text-primary">
                         {pb12h.distance.toFixed(3)} km
-                        <span className="text-base text-muted-foreground ml-2">({pb12h.year})</span>
+                        <span className="text-xs md:text-base text-muted-foreground ml-2">({pb12h.year})</span>
                       </p>
                     </div>
                   )}
                   {pb48h && (
                     <div>
-                      <p className="text-sm text-muted-foreground">{t.runnerDetail.pb48h}</p>
-                      <p className="text-2xl font-bold text-primary">
+                      <p className="text-xs md:text-sm text-muted-foreground">{t.runnerDetail.pb48h}</p>
+                      <p className="text-lg md:text-2xl font-bold text-primary">
                         {pb48h.distance.toFixed(3)} km
-                        <span className="text-base text-muted-foreground ml-2">({pb48h.year})</span>
+                        <span className="text-xs md:text-base text-muted-foreground ml-2">({pb48h.year})</span>
                       </p>
                     </div>
                   )}
@@ -641,6 +846,57 @@ export default function RunnerProfilePage() {
                   {isSaving ? t.runnerDetail.saving : t.runnerDetail.saveChanges}
                 </Button>
               </div>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Notes Dialog */}
+        <Dialog open={isNoteDialogOpen} onOpenChange={(open) => !open && closeNoteDialog()}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{editingNote ? t.runners.editNote : t.runners.addNote}</DialogTitle>
+              <DialogDescription>
+                {editingNote ? 'Edit the note for this runner' : 'Add a note for this runner'}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="noteText">{t.runners.noteText}</Label>
+                <Textarea
+                  id="noteText"
+                  value={noteForm.noteText}
+                  onChange={(e) => setNoteForm({ ...noteForm, noteText: e.target.value })}
+                  placeholder="Enter note text (optional)"
+                  rows={4}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="newsId">{t.runners.linkedNews}</Label>
+                <Select
+                  value={noteForm.newsId || "0"}
+                  onValueChange={(value) => setNoteForm({ ...noteForm, newsId: value === "0" ? "" : value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a news item (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">None</SelectItem>
+                    {availableNews.map((news) => (
+                      <SelectItem key={news.id} value={news.id.toString()}>
+                        {news.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={closeNoteDialog} disabled={isSavingNote}>
+                {t.runners.cancel}
+              </Button>
+              <Button onClick={saveNote} disabled={isSavingNote}>
+                {isSavingNote ? t.runners.saving : t.runners.saveChanges}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

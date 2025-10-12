@@ -20,7 +20,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
-import { ArrowUpDown, Pencil, ChevronDown, ChevronUp } from 'lucide-react'
+import { ArrowUpDown, Pencil, ChevronDown, ChevronUp, MessageSquare } from 'lucide-react'
 import { getCountryCodeForFlag } from '@/lib/utils/country-codes'
 import { getCountryName } from '@/lib/utils/country-names'
 import { cn } from '@/lib/utils'
@@ -141,11 +141,19 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
         },
         accessorFn: (row) => `${row.firstname} ${row.lastname}`,
         cell: ({ row }) => (
-          <div>
+          <div className="flex items-center gap-2">
             <div className="font-medium">
               {row.original.firstname} {row.original.lastname}
               {row.original.dns && <span className="text-xs text-muted-foreground ml-1">(DNS)</span>}
             </div>
+            {(row.original.noteCount ?? 0) > 0 && (
+              <div className="inline-flex items-center relative" title="Click to view notes">
+                <MessageSquare className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                <span className="absolute -top-1 -right-1 bg-blue-600 dark:bg-blue-500 text-white text-[10px] font-semibold rounded-full h-3.5 w-3.5 flex items-center justify-center">
+                  {row.original.noteCount}
+                </span>
+              </div>
+            )}
           </div>
         ),
         filterFn: (row, id, value) => {
@@ -378,9 +386,19 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
                   {/* Main content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2 mb-1">
-                      <div className="font-medium text-sm">
-                        {runner.firstname} {runner.lastname}
-                        {runner.dns && <span className="text-xs text-muted-foreground ml-1">(DNS)</span>}
+                      <div className="flex items-center gap-2">
+                        <div className="font-medium text-sm">
+                          {runner.firstname} {runner.lastname}
+                          {runner.dns && <span className="text-xs text-muted-foreground ml-1">(DNS)</span>}
+                        </div>
+                        {(runner.noteCount ?? 0) > 0 && (
+                          <div className="inline-flex items-center relative" title="Click to view notes">
+                            <MessageSquare className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                            <span className="absolute -top-1 -right-1 bg-blue-600 dark:bg-blue-500 text-white text-[10px] font-semibold rounded-full h-3.5 w-3.5 flex items-center justify-center">
+                              {runner.noteCount}
+                            </span>
+                          </div>
+                        )}
                       </div>
                       <button
                         onClick={(e) => {

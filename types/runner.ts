@@ -45,6 +45,7 @@ export interface Runner {
 
   // Notes (both standalone and news-linked)
   notes?: RunnerNote[]
+  noteCount?: number  // Count of notes for efficient display in lists
 }
 
 export interface Performance {

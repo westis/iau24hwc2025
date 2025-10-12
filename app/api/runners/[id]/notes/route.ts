@@ -7,10 +7,11 @@ export const dynamic = 'force-dynamic'
 // GET /api/runners/[id]/notes - Get all notes for a runner
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const runnerId = parseInt(params.id)
+    const { id } = await params
+    const runnerId = parseInt(id)
     if (isNaN(runnerId)) {
       return NextResponse.json(
         { error: 'Invalid runner ID' },
@@ -36,10 +37,11 @@ export async function GET(
 // POST /api/runners/[id]/notes - Create a new note for a runner
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const runnerId = parseInt(params.id)
+    const { id } = await params
+    const runnerId = parseInt(id)
     if (isNaN(runnerId)) {
       return NextResponse.json(
         { error: 'Invalid runner ID' },

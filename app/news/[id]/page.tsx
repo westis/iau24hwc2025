@@ -2,38 +2,54 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { SafeHtml } from '@/components/safe-html'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { ArrowLeft } from 'lucide-react'
 import type { NewsItem } from '@/types/news'
+
+interface Runner {
+  id: number
+  firstname: string
+  lastname: string
+  entryId: string
+}
 
 export default function NewsArticlePage() {
   const { t, language } = useLanguage()
   const params = useParams()
   const router = useRouter()
   const [newsItem, setNewsItem] = useState<NewsItem | null>(null)
+  const [runners, setRunners] = useState<Runner[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    async function fetchNewsItem() {
+    async function fetchData() {
       try {
-        const response = await fetch('/api/news')
-        if (!response.ok) {
+        // Fetch news with runner links
+        const newsResponse = await fetch('/api/news?includeRunnerLinks=true')
+        if (!newsResponse.ok) {
           throw new Error('Failed to fetch news')
         }
-        const data = await response.json()
-        const item = data.news.find((n: NewsItem) => n.id === Number(params.id))
+        const newsData = await newsResponse.json()
+        const item = newsData.news.find((n: NewsItem) => n.id === Number(params.id))
 
         if (!item) {
           throw new Error('News item not found')
         }
 
         setNewsItem(item)
+
+        // Fetch runners
+        const runnersResponse = await fetch('/api/runners')
+        const runnersData = await runnersResponse.json()
+        setRunners(runnersData.runners || [])
       } catch (err) {
-        console.error('Error loading news:', err)
+        console.error('Error loading data:', err)
         setError(err instanceof Error ? err.message : 'Failed to load news')
       } finally {
         setLoading(false)
@@ -41,7 +57,7 @@ export default function NewsArticlePage() {
     }
 
     if (params.id) {
-      fetchNewsItem()
+      fetchData()
     }
   }, [params.id])
 
@@ -70,6 +86,10 @@ export default function NewsArticlePage() {
     )
   }
 
+  const linkedRunners = newsItem.linkedRunnerIds
+    ? runners.filter(r => newsItem.linkedRunnerIds?.includes(r.id))
+    : []
+
   return (
     <main className="container mx-auto px-4 py-6 max-w-4xl">
       {/* Back Button */}
@@ -84,15 +104,34 @@ export default function NewsArticlePage() {
       <Card className="hover:shadow-md transition-shadow">
         <CardHeader>
           <CardTitle className="text-2xl">{newsItem.title}</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            {new Date(newsItem.created_at).toLocaleDateString(language === 'sv' ? 'sv-SE' : 'en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
-          </p>
+          <div className="flex items-center gap-3 flex-wrap">
+            <p className="text-sm text-muted-foreground">
+              {new Date(newsItem.created_at).toLocaleDateString(language === 'sv' ? 'sv-SE' : 'en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </p>
+            {linkedRunners.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {linkedRunners.map(runner => (
+                  <Link
+                    key={runner.id}
+                    href={`/runners/${runner.entryId}`}
+                  >
+                    <Badge
+                      variant="secondary"
+                      className="text-xs cursor-pointer hover:bg-secondary/80"
+                    >
+                      {runner.firstname} {runner.lastname}
+                    </Badge>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           <SafeHtml html={newsItem.content} className="text-base leading-relaxed" />

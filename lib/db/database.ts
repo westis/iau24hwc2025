@@ -151,7 +151,10 @@ export async function getRunners(): Promise<Runner[]> {
     })
   }
 
-  // Build runner objects with performances
+  // Fetch note counts for all runners
+  const noteCounts = await getRunnerNoteCounts()
+
+  // Build runner objects with performances and note counts
   return runnersResult.rows.map(row => ({
     id: row.id,
     entryId: row.entry_id,
@@ -171,6 +174,7 @@ export async function getRunners(): Promise<Runner[]> {
     age: row.age,
     allPBs: row.all_pbs || [],
     performanceHistory: performancesByRunner.get(row.id) || [],
+    noteCount: noteCounts.get(row.id) || 0,
   }))
 }
 
@@ -667,4 +671,20 @@ export async function linkRunnersToNews(newsId: number, runnerIds: number[]): Pr
       VALUES ($1, $2)
     `, [runnerId, newsId])
   }
+}
+
+// Get note counts for all runners efficiently
+export async function getRunnerNoteCounts(): Promise<Map<number, number>> {
+  const db = getDatabase()
+  const result = await db.query(`
+    SELECT runner_id, COUNT(*) as note_count
+    FROM runner_notes
+    GROUP BY runner_id
+  `)
+
+  const noteCounts = new Map<number, number>()
+  for (const row of result.rows) {
+    noteCounts.set(row.runner_id, parseInt(row.note_count))
+  }
+  return noteCounts
 }

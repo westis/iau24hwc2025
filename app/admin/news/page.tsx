@@ -8,7 +8,11 @@ import { Button } from '@/components/ui/button'
 import { RichTextEditor } from '@/components/rich-text-editor'
 import { SafeHtml } from '@/components/safe-html'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
+import { X } from 'lucide-react'
 import type { NewsItem, NewsItemCreate } from '@/types/news'
+import type { Runner } from '@/types/runner'
 
 export default function AdminNewsPage() {
   const { t } = useLanguage()
@@ -18,7 +22,9 @@ export default function AdminNewsPage() {
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState<NewsItem | null>(null)
   const [creating, setCreating] = useState(false)
-  const [formData, setFormData] = useState({ title: '', content: '', published: false })
+  const [formData, setFormData] = useState({ title: '', content: '', published: false, runnerIds: [] as number[] })
+  const [runners, setRunners] = useState<Runner[]>([])
+  const [runnerSearch, setRunnerSearch] = useState('')
 
   useEffect(() => {
     if (!isAdmin) {
@@ -29,9 +35,26 @@ export default function AdminNewsPage() {
     fetchNews()
   }, [isAdmin, router])
 
+  // Fetch runners when creating or editing
+  useEffect(() => {
+    async function fetchRunners() {
+      try {
+        const response = await fetch('/api/runners')
+        const data = await response.json()
+        setRunners(data.runners || [])
+      } catch (error) {
+        console.error('Failed to fetch runners:', error)
+      }
+    }
+
+    if (creating || editing) {
+      fetchRunners()
+    }
+  }, [creating, editing])
+
   async function fetchNews() {
     try {
-      const response = await fetch('/api/news?includeUnpublished=true')
+      const response = await fetch('/api/news?includeUnpublished=true&includeRunnerLinks=true')
       const data = await response.json()
       setNews(data.news)
     } catch (error) {
@@ -51,7 +74,8 @@ export default function AdminNewsPage() {
 
       if (response.ok) {
         setCreating(false)
-        setFormData({ title: '', content: '', published: false })
+        setFormData({ title: '', content: '', published: false, runnerIds: [] })
+        setRunnerSearch('')
         await fetchNews()
       }
     } catch (error) {
@@ -69,7 +93,8 @@ export default function AdminNewsPage() {
 
       if (response.ok) {
         setEditing(null)
-        setFormData({ title: '', content: '', published: false })
+        setFormData({ title: '', content: '', published: false, runnerIds: [] })
+        setRunnerSearch('')
         await fetchNews()
       }
     } catch (error) {
@@ -95,20 +120,37 @@ export default function AdminNewsPage() {
 
   function startEdit(item: NewsItem) {
     setEditing(item)
-    setFormData({ title: item.title, content: item.content, published: item.published })
+    setFormData({
+      title: item.title,
+      content: item.content,
+      published: item.published,
+      runnerIds: item.linkedRunnerIds || []
+    })
+    setRunnerSearch('')
     setCreating(false)
   }
 
   function startCreate() {
     setCreating(true)
     setEditing(null)
-    setFormData({ title: '', content: '', published: false })
+    setFormData({ title: '', content: '', published: false, runnerIds: [] })
+    setRunnerSearch('')
   }
 
   function cancelEdit() {
     setEditing(null)
     setCreating(false)
-    setFormData({ title: '', content: '', published: false })
+    setFormData({ title: '', content: '', published: false, runnerIds: [] })
+    setRunnerSearch('')
+  }
+
+  function toggleRunner(runnerId: number) {
+    setFormData(prev => ({
+      ...prev,
+      runnerIds: prev.runnerIds.includes(runnerId)
+        ? prev.runnerIds.filter(id => id !== runnerId)
+        : [...prev.runnerIds, runnerId]
+    }))
   }
 
   if (!isAdmin) return null
@@ -165,6 +207,66 @@ export default function AdminNewsPage() {
                 {t.news.published} ({t.news.publishedDesc})
               </label>
             </div>
+
+            {/* Runner Linking */}
+            <div className="border-t pt-4">
+              <label className="block text-sm font-medium mb-2">{t.news.linkRunners}</label>
+
+              {/* Selected Runners */}
+              {formData.runnerIds.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {formData.runnerIds.map(runnerId => {
+                    const runner = runners.find(r => r.id === runnerId)
+                    if (!runner) return null
+                    return (
+                      <Badge key={runnerId} variant="secondary" className="gap-1">
+                        {runner.firstname} {runner.lastname}
+                        <X
+                          className="h-3 w-3 cursor-pointer"
+                          onClick={() => toggleRunner(runnerId)}
+                        />
+                      </Badge>
+                    )
+                  })}
+                </div>
+              )}
+
+              {/* Search */}
+              <Input
+                type="text"
+                value={runnerSearch}
+                onChange={(e) => setRunnerSearch(e.target.value)}
+                placeholder={t.news.searchRunners}
+                className="mb-2"
+              />
+
+              {/* Runner List */}
+              <div className="max-h-48 overflow-y-auto border rounded-md">
+                {runners
+                  .filter(r =>
+                    !runnerSearch ||
+                    `${r.firstname} ${r.lastname}`.toLowerCase().includes(runnerSearch.toLowerCase()) ||
+                    r.nationality.toLowerCase().includes(runnerSearch.toLowerCase())
+                  )
+                  .map(runner => (
+                    <div
+                      key={runner.id}
+                      onClick={() => toggleRunner(runner.id)}
+                      className={`px-3 py-2 cursor-pointer hover:bg-accent transition-colors ${
+                        formData.runnerIds.includes(runner.id) ? 'bg-accent' : ''
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">
+                          {runner.firstname} {runner.lastname}
+                        </span>
+                        <span className="text-xs text-muted-foreground">{runner.nationality}</span>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+
             <div className="flex gap-2">
               <Button
                 onClick={() => editing ? handleUpdate(editing.id) : handleCreate()}
@@ -205,6 +307,9 @@ export default function AdminNewsPage() {
                     <p className="text-xs text-muted-foreground mt-1">
                       {t.news.created}: {new Date(item.created_at).toLocaleString()} |
                       {t.news.updated}: {new Date(item.updated_at).toLocaleString()}
+                      {item.linkedRunnerIds && item.linkedRunnerIds.length > 0 && (
+                        <> | {t.news.linkedRunners}: {item.linkedRunnerIds.length}</>
+                      )}
                     </p>
                   </div>
                   <div className="flex gap-2">

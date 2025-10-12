@@ -1,29 +1,23 @@
 'use client'
 
 import { useLanguage } from '@/lib/i18n/LanguageContext'
-import { Button } from '@/components/ui/button'
+import { Languages } from 'lucide-react'
 
 export function LanguageSwitcher() {
   const { language, setLanguage } = useLanguage()
 
+  const toggleLanguage = () => {
+    setLanguage(language === 'en' ? 'sv' : 'en')
+  }
+
   return (
-    <div className="flex items-center gap-1 rounded-md border border-input bg-background p-1">
-      <Button
-        variant={language === 'en' ? 'default' : 'ghost'}
-        size="sm"
-        onClick={() => setLanguage('en')}
-        className="h-7 px-2 text-xs"
-      >
-        EN
-      </Button>
-      <Button
-        variant={language === 'sv' ? 'default' : 'ghost'}
-        size="sm"
-        onClick={() => setLanguage('sv')}
-        className="h-7 px-2 text-xs"
-      >
-        SV
-      </Button>
-    </div>
+    <button
+      onClick={toggleLanguage}
+      className="p-2 text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-accent"
+      title={language === 'en' ? 'Switch to Swedish (SV)' : 'Switch to English (EN)'}
+      aria-label={language === 'en' ? 'Switch to Swedish' : 'Switch to English'}
+    >
+      <Languages className="h-5 w-5" />
+    </button>
   )
 }

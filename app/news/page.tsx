@@ -2,12 +2,21 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { SafeHtml } from '@/components/safe-html'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { ChevronDown, ChevronUp, ExternalLink } from 'lucide-react'
 import type { NewsItem } from '@/types/news'
+
+interface Runner {
+  id: number
+  firstname: string
+  lastname: string
+  entryId: string
+}
 
 // Helper function to extract first paragraph from HTML
 function getFirstParagraph(html: string): string {
@@ -33,28 +42,35 @@ export default function NewsPage() {
   const { t, language } = useLanguage()
   const router = useRouter()
   const [news, setNews] = useState<NewsItem[]>([])
+  const [runners, setRunners] = useState<Runner[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set())
 
   useEffect(() => {
-    async function fetchNews() {
+    async function fetchData() {
       try {
-        const response = await fetch('/api/news')
-        if (!response.ok) {
+        // Fetch news with runner links
+        const newsResponse = await fetch('/api/news?includeRunnerLinks=true')
+        if (!newsResponse.ok) {
           throw new Error('Failed to fetch news')
         }
-        const data = await response.json()
-        setNews(data.news)
+        const newsData = await newsResponse.json()
+        setNews(newsData.news)
+
+        // Fetch runners
+        const runnersResponse = await fetch('/api/runners')
+        const runnersData = await runnersResponse.json()
+        setRunners(runnersData.runners || [])
       } catch (err) {
-        console.error('Error loading news:', err)
+        console.error('Error loading data:', err)
         setError(err instanceof Error ? err.message : 'Failed to load news')
       } finally {
         setLoading(false)
       }
     }
 
-    fetchNews()
+    fetchData()
   }, [])
 
   if (loading) {
@@ -102,20 +118,42 @@ export default function NewsPage() {
             const isExpanded = expandedItems.has(item.id)
             const hasMore = hasMultipleParagraphs(item.content)
             const displayContent = !isExpanded && hasMore ? getFirstParagraph(item.content) : item.content
+            const linkedRunners = item.linkedRunnerIds
+              ? runners.filter(r => item.linkedRunnerIds?.includes(r.id))
+              : []
 
             return (
               <Card key={item.id} className="hover:shadow-md transition-shadow">
                 <CardHeader>
                   <CardTitle className="text-xl">{item.title}</CardTitle>
-                  <p className="text-xs text-muted-foreground">
-                    {new Date(item.created_at).toLocaleDateString(language === 'sv' ? 'sv-SE' : 'en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </p>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(item.created_at).toLocaleDateString(language === 'sv' ? 'sv-SE' : 'en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </p>
+                    {linkedRunners.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {linkedRunners.map(runner => (
+                          <Link
+                            key={runner.id}
+                            href={`/runners/${runner.entryId}`}
+                          >
+                            <Badge
+                              variant="secondary"
+                              className="text-xs cursor-pointer hover:bg-secondary/80"
+                            >
+                              {runner.firstname} {runner.lastname}
+                            </Badge>
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <SafeHtml html={displayContent} className="text-sm leading-relaxed" />

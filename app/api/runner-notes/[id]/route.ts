@@ -7,10 +7,11 @@ export const dynamic = 'force-dynamic'
 // PUT /api/runner-notes/[id] - Update a runner note
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const noteId = parseInt(params.id)
+    const { id } = await params
+    const noteId = parseInt(id)
     if (isNaN(noteId)) {
       return NextResponse.json(
         { error: 'Invalid note ID' },
@@ -42,10 +43,11 @@ export async function PUT(
 // DELETE /api/runner-notes/[id] - Delete a runner note
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const noteId = parseInt(params.id)
+    const { id } = await params
+    const noteId = parseInt(id)
     if (isNaN(noteId)) {
       return NextResponse.json(
         { error: 'Invalid note ID' },
