@@ -89,7 +89,16 @@ Once you've added the REST API Key, you can send notifications from the app:
 1. Go to **Admin → Send Notifications** in the navbar
 2. Enter title and message
 3. Optionally add a URL to open when clicked
-4. Click "Send Notification"
+4. Choose delivery timing:
+   - **Send immediately**: Notification is sent right away
+   - **Schedule for later**: Select a date and time for the notification
+5. Click "Send Notification"
+
+**Scheduled Notifications:**
+- Select date and time in your local timezone
+- OneSignal will automatically deliver at the scheduled time
+- Time validation ensures you can't schedule in the past
+- View scheduled notifications in OneSignal dashboard
 
 ## 8. Sending Notifications with News
 
@@ -131,9 +140,24 @@ When creating or editing news articles:
 - Redeploy after adding the variable
 - Check production URL is added in OneSignal site settings
 
+## Managing Scheduled Notifications
+
+You can view and manage scheduled notifications in the OneSignal dashboard:
+
+1. Go to **Messages → Push** in OneSignal dashboard
+2. Click the **Scheduled** tab to see all pending notifications
+3. You can:
+   - View when each notification will be sent
+   - Edit the scheduled time
+   - Cancel scheduled notifications if needed
+   - See the notification content and recipients
+
+**Note:** Scheduled times are converted to UTC by OneSignal, so the dashboard may show a different time than your local timezone.
+
 ## Next Steps
 
-- Add the subscribe button to your navbar or home page
-- Set up automatic notifications when news is published
-- Create targeted notifications for specific teams/countries
+- Test notifications by subscribing via the bell icon in the navbar
+- Set up automatic notifications when news is published (checkbox in news admin)
+- Schedule important notifications in advance (race start reminders, etc.)
+- Create targeted notifications for specific teams/countries using OneSignal segments
 - Use tags to segment users by interests
