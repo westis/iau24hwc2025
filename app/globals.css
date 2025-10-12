@@ -57,3 +57,69 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* React Quill editor styles */
+.rich-text-editor .ql-container {
+  @apply border-border rounded-b-md min-h-[200px];
+}
+
+.rich-text-editor .ql-toolbar {
+  @apply border-border rounded-t-md bg-muted/30;
+}
+
+.rich-text-editor .ql-editor {
+  @apply min-h-[200px];
+}
+
+.rich-text-editor .ql-editor.ql-blank::before {
+  @apply text-muted-foreground italic;
+}
+
+/* Prose styles for rendered HTML */
+.prose {
+  @apply text-foreground;
+}
+
+.prose p {
+  @apply mb-4;
+}
+
+.prose a {
+  @apply text-primary underline hover:text-primary/80;
+}
+
+.prose strong {
+  @apply font-bold;
+}
+
+.prose em {
+  @apply italic;
+}
+
+.prose ul, .prose ol {
+  @apply ml-6 mb-4;
+}
+
+.prose ul {
+  @apply list-disc;
+}
+
+.prose ol {
+  @apply list-decimal;
+}
+
+.prose li {
+  @apply mb-2;
+}
+
+.prose h1 {
+  @apply text-2xl font-bold mb-4 mt-6;
+}
+
+.prose h2 {
+  @apply text-xl font-bold mb-3 mt-5;
+}
+
+.prose h3 {
+  @apply text-lg font-bold mb-2 mt-4;
+}

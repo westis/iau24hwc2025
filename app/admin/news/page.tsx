@@ -5,6 +5,8 @@ import { useAuth } from '@/lib/auth/auth-context'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { RichTextEditor } from '@/components/rich-text-editor'
+import { SafeHtml } from '@/components/safe-html'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import type { NewsItem, NewsItemCreate } from '@/types/news'
 
@@ -145,10 +147,9 @@ export default function AdminNewsPage() {
             </div>
             <div>
               <label className="block text-sm font-medium mb-2">{t.news.contentLabel}</label>
-              <textarea
+              <RichTextEditor
                 value={formData.content}
-                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                className="w-full px-3 py-2 border border-border rounded-md bg-background min-h-[200px]"
+                onChange={(content) => setFormData({ ...formData, content })}
                 placeholder={t.news.contentPlaceholder}
               />
             </div>
@@ -226,7 +227,7 @@ export default function AdminNewsPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="whitespace-pre-wrap text-sm">{item.content}</p>
+                <SafeHtml html={item.content} />
               </CardContent>
             </Card>
           ))

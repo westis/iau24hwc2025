@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { SafeHtml } from '@/components/safe-html'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import type { NewsItem } from '@/types/news'
 
 export default function NewsPage() {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   const [news, setNews] = useState<NewsItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -77,7 +78,7 @@ export default function NewsPage() {
               <CardHeader>
                 <CardTitle className="text-xl">{item.title}</CardTitle>
                 <p className="text-xs text-muted-foreground">
-                  {new Date(item.created_at).toLocaleDateString('en-US', {
+                  {new Date(item.created_at).toLocaleDateString(language === 'sv' ? 'sv-SE' : 'en-US', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric',
@@ -87,9 +88,7 @@ export default function NewsPage() {
                 </p>
               </CardHeader>
               <CardContent>
-                <div className="whitespace-pre-wrap text-sm leading-relaxed">
-                  {item.content}
-                </div>
+                <SafeHtml html={item.content} className="text-sm leading-relaxed" />
               </CardContent>
             </Card>
           ))
