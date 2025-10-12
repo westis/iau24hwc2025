@@ -241,4 +241,8 @@ export const sv: Translations = {
   admin: {
     manageNews: 'Hantera nyheter',
   },
+  notifications: {
+    subscribe: 'Prenumerera på nyhetsuppdateringar',
+    unsubscribe: 'Avsluta prenumeration på notiser',
+  },
 }

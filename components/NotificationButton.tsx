@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Bell, BellOff, BellRing } from 'lucide-react'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 
 // Declare OneSignal types for TypeScript
 declare global {
@@ -12,6 +13,7 @@ declare global {
 }
 
 export function NotificationButton() {
+  const { t } = useLanguage()
   const [isSubscribed, setIsSubscribed] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isInitialized, setIsInitialized] = useState(false)
@@ -91,7 +93,7 @@ export function NotificationButton() {
     return null
   }
 
-  const title = isSubscribed ? 'Unsubscribe from notifications' : 'Subscribe to get news updates'
+  const title = isSubscribed ? t.notifications.unsubscribe : t.notifications.subscribe
 
   return (
     <button
@@ -104,9 +106,9 @@ export function NotificationButton() {
       {isLoading ? (
         <BellRing className="h-5 w-5 animate-pulse" />
       ) : isSubscribed ? (
-        <BellOff className="h-5 w-5 text-muted-foreground" />
+        <BellRing className="h-5 w-5 text-green-600 dark:text-green-400" />
       ) : (
-        <Bell className="h-5 w-5 text-muted-foreground" />
+        <BellOff className="h-5 w-5 text-muted-foreground" />
       )}
     </button>
   )

@@ -241,4 +241,8 @@ export interface Translations {
   admin: {
     manageNews: string
   }
+  notifications: {
+    subscribe: string
+    unsubscribe: string
+  }
 }

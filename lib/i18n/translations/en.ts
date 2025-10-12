@@ -241,4 +241,8 @@ export const en: Translations = {
   admin: {
     manageNews: 'Manage News',
   },
+  notifications: {
+    subscribe: 'Subscribe to get news updates',
+    unsubscribe: 'Unsubscribe from notifications',
+  },
 }
