@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth/auth-context'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
+import { NotificationButton } from '@/components/NotificationButton'
 import { Menu, X } from 'lucide-react'
 import { useState } from 'react'
 
@@ -54,6 +55,7 @@ export function Navbar() {
                 {item.label}
               </Link>
             ))}
+            <NotificationButton />
             <LanguageSwitcher />
             <ThemeToggle />
             {isAdmin && (
@@ -68,6 +70,7 @@ export function Navbar() {
 
           {/* Mobile Menu Button */}
           <div className="flex items-center gap-2 md:hidden">
+            <NotificationButton />
             <LanguageSwitcher />
             <ThemeToggle />
             <button

@@ -46,9 +46,17 @@ export default function RootLayout({
             __html: `
               window.OneSignalDeferred = window.OneSignalDeferred || [];
               OneSignalDeferred.push(async function(OneSignal) {
-                await OneSignal.init({
-                  appId: "${process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID}",
-                });
+                try {
+                  await OneSignal.init({
+                    appId: "${process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID}",
+                    allowLocalhostAsSecureOrigin: true,
+                    serviceWorkerParam: { scope: '/' },
+                    serviceWorkerPath: '/OneSignalSDKWorker.js'
+                  });
+                  console.log('OneSignal initialized successfully');
+                } catch (error) {
+                  console.error('OneSignal initialization error:', error);
+                }
               });
             `,
           }}
