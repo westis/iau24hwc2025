@@ -169,24 +169,24 @@ export default function AdminNotificationsPage() {
           <div className="border-l-4 border-blue-500 pl-4 py-2">
             <div className="font-medium">Race Start Alert</div>
             <div className="text-sm text-muted-foreground mt-1">
-              Title: "Women's Race Starting Now!"<br />
-              Message: "Follow live progress and rankings on the site. Good luck to all runners!"
+              Title: &quot;Women&apos;s Race Starting Now!&quot;<br />
+              Message: &quot;Follow live progress and rankings on the site. Good luck to all runners!&quot;
             </div>
           </div>
 
           <div className="border-l-4 border-green-500 pl-4 py-2">
             <div className="font-medium">Breaking News</div>
             <div className="text-sm text-muted-foreground mt-1">
-              Title: "New World Record!"<br />
-              Message: "Camille Herron breaks the 24h world record with 270.363 km!"
+              Title: &quot;New World Record!&quot;<br />
+              Message: &quot;Camille Herron breaks the 24h world record with 270.363 km!&quot;
             </div>
           </div>
 
           <div className="border-l-4 border-orange-500 pl-4 py-2">
             <div className="font-medium">Results Posted</div>
             <div className="text-sm text-muted-foreground mt-1">
-              Title: "Final Results Available"<br />
-              Message: "View complete results and rankings for all teams and runners."
+              Title: &quot;Final Results Available&quot;<br />
+              Message: &quot;View complete results and rankings for all teams and runners.&quot;
             </div>
           </div>
         </CardContent>
