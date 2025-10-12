@@ -31,14 +31,24 @@ export function NotificationButton() {
 
           if (isPushSupported) {
             setIsInitialized(true)
+
+            // Check both permission and opt-out status
             const permission = OneSignal.Notifications.permission
+            const isOptedOut = OneSignal.User.PushSubscription.optedOut
+
             console.log('OneSignal: Current permission:', permission)
-            setIsSubscribed(permission)
+            console.log('OneSignal: Is opted out:', isOptedOut)
+
+            // Only show as subscribed if permission granted AND not opted out
+            const isActuallySubscribed = permission && !isOptedOut
+            console.log('OneSignal: Actually subscribed:', isActuallySubscribed)
+            setIsSubscribed(isActuallySubscribed)
 
             // Listen for permission changes
             OneSignal.Notifications.addEventListener('permissionChange', (granted: boolean) => {
               console.log('OneSignal: Permission changed to:', granted)
-              setIsSubscribed(granted)
+              const currentOptedOut = OneSignal.User.PushSubscription.optedOut
+              setIsSubscribed(granted && !currentOptedOut)
             })
           } else {
             console.warn('OneSignal: Push notifications not supported on this browser')
@@ -62,27 +72,29 @@ export function NotificationButton() {
       window.OneSignalDeferred = window.OneSignalDeferred || []
       window.OneSignalDeferred.push(async function (OneSignal: any) {
         try {
-          // Check if user is opted out (previously unsubscribed)
-          const isOptedOut = await OneSignal.User.PushSubscription.optedOut
-          console.log('OneSignal: Is opted out:', isOptedOut)
+          // Check if browser permission is already granted
+          const permission = OneSignal.Notifications.permission
+          console.log('OneSignal: Current permission:', permission)
 
-          if (isOptedOut) {
-            // User was previously subscribed but opted out - opt them back in
-            console.log('OneSignal: User is opted out, opting back in...')
+          if (permission) {
+            // Permission already granted - just opt in (handles both first time and re-subscribe)
+            console.log('OneSignal: Permission already granted, calling optIn()...')
             await OneSignal.User.PushSubscription.optIn()
             setIsSubscribed(true)
-            console.log('OneSignal: Successfully opted back in!')
+            console.log('OneSignal: Successfully opted in!')
           } else {
             // First time subscribing - show permission prompt
             console.log('OneSignal: Showing permission prompt...')
             await OneSignal.Slidedown.promptPush()
 
             // Check status after prompt
-            const permission = OneSignal.Notifications.permission
-            console.log('OneSignal: Permission after prompt:', permission)
-            setIsSubscribed(permission)
+            const newPermission = OneSignal.Notifications.permission
+            console.log('OneSignal: Permission after prompt:', newPermission)
 
-            if (permission) {
+            if (newPermission) {
+              // Permission granted, now opt in
+              await OneSignal.User.PushSubscription.optIn()
+              setIsSubscribed(true)
               console.log('OneSignal: Successfully subscribed!')
             } else {
               console.warn('OneSignal: User denied permission or closed prompt')
