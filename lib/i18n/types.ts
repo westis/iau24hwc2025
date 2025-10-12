@@ -108,6 +108,15 @@ export interface Translations {
     noCountryFound: string
     loadingRunners: string
     runBackendTools: string
+    notes: string
+    note: string
+    addNote: string
+    editNote: string
+    deleteNote: string
+    noteText: string
+    linkedNews: string
+    noNotes: string
+    confirmDeleteNote: string
   }
   runnerDetail: {
     loadingProfile: string
@@ -222,6 +231,11 @@ export interface Translations {
     showLess: string
     viewArticle: string
     backToNews: string
+    linkedRunners: string
+    linkRunners: string
+    selectRunners: string
+    searchRunners: string
+    runnersLinked: string
   }
   admin: {
     manageNews: string
