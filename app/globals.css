@@ -58,21 +58,14 @@
   }
 }
 
-/* React Quill editor styles */
-.rich-text-editor .ql-container {
-  @apply border-border rounded-b-md min-h-[200px];
+/* Tiptap editor styles */
+.ProseMirror {
+  @apply focus:outline-none;
 }
 
-.rich-text-editor .ql-toolbar {
-  @apply border-border rounded-t-md bg-muted/30;
-}
-
-.rich-text-editor .ql-editor {
-  @apply min-h-[200px];
-}
-
-.rich-text-editor .ql-editor.ql-blank::before {
-  @apply text-muted-foreground italic;
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  @apply text-muted-foreground pointer-events-none float-left h-0;
 }
 
 /* Prose styles for rendered HTML */
