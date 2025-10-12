@@ -33,27 +33,6 @@ function RunnersPageContent() {
   const [searchQuery, setSearchQuery] = useState(() => searchParams.get('search') || '')
   const [countryFilter, setCountryFilter] = useState<string>(() => searchParams.get('country') || 'all')
   const [countryComboboxOpen, setCountryComboboxOpen] = useState(false)
-  const [isPending, startTransition] = React.useTransition()
-
-  // Update URL when filters change
-  const updateURL = (params: { gender?: 'M' | 'W'; metric?: 'last-3-years' | 'all-time'; country?: string; search?: string }) => {
-    const newParams = new URLSearchParams(searchParams.toString())
-
-    if (params.gender) newParams.set('gender', params.gender)
-    if (params.metric) newParams.set('metric', params.metric)
-    if (params.country && params.country !== 'all') {
-      newParams.set('country', params.country)
-    } else {
-      newParams.delete('country')
-    }
-    if (params.search && params.search.trim()) {
-      newParams.set('search', params.search)
-    } else {
-      newParams.delete('search')
-    }
-
-    router.push(`/runners?${newParams.toString()}`, { scroll: false })
-  }
 
   // Get unique countries from runners
   const uniqueCountries = useMemo(() => {
@@ -200,24 +179,20 @@ function RunnersPageContent() {
               <Button
                 variant={selectedGender === 'M' ? 'default' : 'ghost'}
                 size="sm"
-                onClick={() => startTransition(() => {
+                onClick={() => {
                   setSelectedGender('M')
-                  updateURL({ gender: 'M', metric: selectedMetric, country: countryFilter, search: searchQuery })
-                })}
+                }}
                 className={selectedGender === 'M' ? '' : 'hover:bg-accent'}
-                disabled={isPending}
               >
                 {t.runners.men}
               </Button>
               <Button
                 variant={selectedGender === 'W' ? 'default' : 'ghost'}
                 size="sm"
-                onClick={() => startTransition(() => {
+                onClick={() => {
                   setSelectedGender('W')
-                  updateURL({ gender: 'W', metric: selectedMetric, country: countryFilter, search: searchQuery })
-                })}
+                }}
                 className={selectedGender === 'W' ? '' : 'hover:bg-accent'}
-                disabled={isPending}
               >
                 {t.runners.women}
               </Button>
@@ -226,24 +201,20 @@ function RunnersPageContent() {
               <Button
                 variant={selectedMetric === 'last-3-years' ? 'default' : 'ghost'}
                 size="sm"
-                onClick={() => startTransition(() => {
+                onClick={() => {
                   setSelectedMetric('last-3-years')
-                  updateURL({ gender: selectedGender, metric: 'last-3-years', country: countryFilter, search: searchQuery })
-                })}
+                }}
                 className={selectedMetric === 'last-3-years' ? '' : 'hover:bg-accent'}
-                disabled={isPending}
               >
                 2023-2025
               </Button>
               <Button
                 variant={selectedMetric === 'all-time' ? 'default' : 'ghost'}
                 size="sm"
-                onClick={() => startTransition(() => {
+                onClick={() => {
                   setSelectedMetric('all-time')
-                  updateURL({ gender: selectedGender, metric: 'all-time', country: countryFilter, search: searchQuery })
-                })}
+                }}
                 className={selectedMetric === 'all-time' ? '' : 'hover:bg-accent'}
-                disabled={isPending}
               >
                 {t.runners.allTime}
               </Button>
@@ -256,9 +227,7 @@ function RunnersPageContent() {
               placeholder={t.runners.searchByName}
               value={searchQuery}
               onChange={(e) => {
-                const value = e.target.value
-                setSearchQuery(value)
-                updateURL({ gender: selectedGender, metric: selectedMetric, country: countryFilter, search: value })
+                setSearchQuery(e.target.value)
               }}
               className="w-full sm:w-[200px]"
             />
@@ -298,7 +267,6 @@ function RunnersPageContent() {
                         value="all"
                         onSelect={() => {
                           setCountryFilter('all')
-                          updateURL({ gender: selectedGender, metric: selectedMetric, country: 'all', search: searchQuery })
                           setCountryComboboxOpen(false)
                         }}
                       >
@@ -317,9 +285,7 @@ function RunnersPageContent() {
                             key={country}
                             value={country}
                             onSelect={(currentValue) => {
-                              const upperValue = currentValue.toUpperCase()
-                              setCountryFilter(upperValue)
-                              updateURL({ gender: selectedGender, metric: selectedMetric, country: upperValue, search: searchQuery })
+                              setCountryFilter(currentValue.toUpperCase())
                               setCountryComboboxOpen(false)
                             }}
                           >

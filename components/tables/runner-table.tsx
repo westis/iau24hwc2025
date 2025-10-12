@@ -120,6 +120,9 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
         accessorKey: 'rank',
         header: t.runners.rank,
         cell: ({ row }) => {
+          if (row.original.dns) {
+            return <div className="text-xs text-muted-foreground text-center w-12">DNS</div>
+          }
           const rank = (row.original as any).rank
           return rank ? <div className="font-bold text-center w-12">{rank}</div> : <div className="text-muted-foreground text-center w-12">-</div>
         },
@@ -144,7 +147,6 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
           <div className="flex items-center gap-2">
             <div className="font-medium">
               {row.original.firstname} {row.original.lastname}
-              {row.original.dns && <span className="text-xs text-muted-foreground ml-1">(DNS)</span>}
             </div>
             {(row.original.noteCount ?? 0) > 0 && (
               <div className="inline-flex items-center relative" title="Click to view notes">
@@ -194,15 +196,6 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
             </div>
           )
         },
-        filterFn: (row, id, value) => {
-          if (value === 'all') return true
-          return row.getValue(id) === value
-        },
-      },
-      {
-        accessorKey: 'gender',
-        header: t.runners.gender,
-        cell: ({ row }) => <div>{row.getValue('gender')}</div>,
         filterFn: (row, id, value) => {
           if (value === 'all') return true
           return row.getValue(id) === value
@@ -377,11 +370,15 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
                   onClick={() => onRowClick(runner.id)}
                 >
                   {/* Rank - spans both rows */}
-                  {rank && (
+                  {runner.dns ? (
+                    <div className="flex items-center justify-center w-8 text-xs text-muted-foreground">
+                      DNS
+                    </div>
+                  ) : rank ? (
                     <div className="flex items-center justify-center w-8 font-bold text-lg text-primary">
                       {rank}
                     </div>
-                  )}
+                  ) : null}
 
                   {/* Main content */}
                   <div className="flex-1 min-w-0">
@@ -389,7 +386,6 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
                       <div className="flex items-center gap-2">
                         <div className="font-medium text-sm">
                           {runner.firstname} {runner.lastname}
-                          {runner.dns && <span className="text-xs text-muted-foreground ml-1">(DNS)</span>}
                         </div>
                         {(runner.noteCount ?? 0) > 0 && (
                           <div className="inline-flex items-center relative" title="Click to view notes">
