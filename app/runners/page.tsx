@@ -169,17 +169,8 @@ function RunnersPageContent() {
   return (
     <main className="min-h-screen py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6">
           <h1 className="text-3xl font-bold">{t.runners.title}</h1>
-          {isAdmin && (
-            <Button
-              variant="outline"
-              onClick={() => router.push('/admin/runners/quick-edit')}
-            >
-              <Edit3 className="h-4 w-4 mr-2" />
-              Quick Edit
-            </Button>
-          )}
         </div>
 
         {/* Filters - Responsive Layout */}

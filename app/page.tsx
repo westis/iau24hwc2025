@@ -78,13 +78,13 @@ export default function Home() {
 
             {/* Quick Links */}
             <div className="flex gap-3">
-              <Link href="/deltagare?view=individual">
+              <Link href="/participants?view=individual">
                 <Button variant="default" size="lg" className="font-semibold">
                   <Users className="w-5 h-5 mr-2" />
                   {t.home.individualRunners}
                 </Button>
               </Link>
-              <Link href="/deltagare?view=teams">
+              <Link href="/participants?view=teams">
                 <Button variant="default" size="lg" className="font-semibold">
                   <Trophy className="w-5 h-5 mr-2" />
                   {t.home.teamPredictions}
