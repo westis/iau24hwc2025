@@ -3,6 +3,8 @@ export type Language = 'en' | 'sv'
 export interface Translations {
   common: {
     home: string
+    loppet: string
+    participants: string
     news: string
     runners: string
     teams: string

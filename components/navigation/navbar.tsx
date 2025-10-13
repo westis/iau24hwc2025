@@ -25,9 +25,9 @@ export function Navbar() {
 
   const publicNavItems = [
     { href: '/', label: t.common.home },
+    { href: '/loppet', label: t.common.loppet },
+    { href: '/deltagare', label: t.common.participants },
     { href: '/news', label: t.common.news },
-    { href: '/runners', label: t.common.runners },
-    { href: '/teams', label: t.common.teams },
     { href: '/stats', label: t.common.stats },
   ]
 

@@ -3,6 +3,8 @@ import type { Translations } from '../types'
 export const en: Translations = {
   common: {
     home: 'Home',
+    loppet: 'The Race',
+    participants: 'Participants',
     news: 'News',
     runners: 'Runners',
     teams: 'Teams',
