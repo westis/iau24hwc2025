@@ -59,6 +59,12 @@ export function ImageUpload({
     typeof currentZoom === "number" ? currentZoom : 1.5
   );
   const imageRef = useRef<HTMLDivElement>(null);
+  const [imageDisplayInfo, setImageDisplayInfo] = useState<{
+    displayedWidth: number;
+    displayedHeight: number;
+    offsetX: number;
+    offsetY: number;
+  } | null>(null);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -117,20 +123,20 @@ export function ImageUpload({
     if (!imageRef.current || !tempImageUrl) return;
 
     const container = imageRef.current.getBoundingClientRect();
-    
+
     // Get the actual image element to determine its natural dimensions
-    const imgElement = imageRef.current.querySelector('img');
+    const imgElement = imageRef.current.querySelector("img");
     if (!imgElement) return;
 
     const naturalWidth = imgElement.naturalWidth;
     const naturalHeight = imgElement.naturalHeight;
-    
+
     if (!naturalWidth || !naturalHeight) return;
 
     // Calculate the displayed image dimensions with object-fit: contain
     const containerAspect = container.width / container.height;
     const imageAspect = naturalWidth / naturalHeight;
-    
+
     let displayedWidth: number;
     let displayedHeight: number;
     let offsetX: number;
@@ -168,6 +174,14 @@ export function ImageUpload({
     // Calculate the percentage within the actual image
     const x = ((clickX - offsetX) / displayedWidth) * 100;
     const y = ((clickY - offsetY) / displayedHeight) * 100;
+
+    // Store display info for positioning the marker correctly
+    setImageDisplayInfo({
+      displayedWidth,
+      displayedHeight,
+      offsetX,
+      offsetY,
+    });
 
     setTempFocalPoint({ x, y });
   };
@@ -216,7 +230,48 @@ export function ImageUpload({
     setTempImagePath(null); // No new upload, just adjusting existing
     setTempFocalPoint({ x: focalPoint.x, y: focalPoint.y });
     setZoom(typeof currentZoom === "number" ? currentZoom : 1.5);
+    setImageDisplayInfo(null); // Reset display info, will be calculated on first click
     setShowFocalPointModal(true);
+  };
+
+  // Calculate display info when modal opens or image changes
+  const calculateImageDisplayInfo = () => {
+    if (!imageRef.current || !tempImageUrl) return;
+
+    const container = imageRef.current.getBoundingClientRect();
+    const imgElement = imageRef.current.querySelector("img");
+    if (!imgElement) return;
+
+    const naturalWidth = imgElement.naturalWidth;
+    const naturalHeight = imgElement.naturalHeight;
+    if (!naturalWidth || !naturalHeight) return;
+
+    const containerAspect = container.width / container.height;
+    const imageAspect = naturalWidth / naturalHeight;
+
+    let displayedWidth: number;
+    let displayedHeight: number;
+    let offsetX: number;
+    let offsetY: number;
+
+    if (imageAspect > containerAspect) {
+      displayedWidth = container.width;
+      displayedHeight = container.width / imageAspect;
+      offsetX = 0;
+      offsetY = (container.height - displayedHeight) / 2;
+    } else {
+      displayedHeight = container.height;
+      displayedWidth = container.height * imageAspect;
+      offsetX = (container.width - displayedWidth) / 2;
+      offsetY = 0;
+    }
+
+    setImageDisplayInfo({
+      displayedWidth,
+      displayedHeight,
+      offsetX,
+      offsetY,
+    });
   };
 
   return (
@@ -356,13 +411,18 @@ export function ImageUpload({
                         className="object-contain"
                         quality={100}
                         priority
+                        onLoad={calculateImageDisplayInfo}
                       />
                       {/* Focal point marker */}
                       <div
                         className="absolute w-6 h-6 pointer-events-none"
                         style={{
-                          left: `${tempFocalPoint.x}%`,
-                          top: `${tempFocalPoint.y}%`,
+                          left: imageDisplayInfo
+                            ? `${imageDisplayInfo.offsetX + (tempFocalPoint.x / 100) * imageDisplayInfo.displayedWidth}px`
+                            : `${tempFocalPoint.x}%`,
+                          top: imageDisplayInfo
+                            ? `${imageDisplayInfo.offsetY + (tempFocalPoint.y / 100) * imageDisplayInfo.displayedHeight}px`
+                            : `${tempFocalPoint.y}%`,
                           transform: "translate(-50%, -50%)",
                         }}
                       >
