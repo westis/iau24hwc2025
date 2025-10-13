@@ -29,11 +29,17 @@ import type { Runner } from "@/types/runner";
 
 interface RunnersViewProps {
   initialGender?: "M" | "W";
+  initialCountry?: string;
+  onGenderChange?: (gender: "M" | "W") => void;
+  onCountryChange?: (country: string) => void;
   showHeader?: boolean;
 }
 
 export function RunnersView({
   initialGender = "M",
+  initialCountry = "all",
+  onGenderChange,
+  onCountryChange,
   showHeader = true,
 }: RunnersViewProps) {
   const router = useRouter();
@@ -49,7 +55,7 @@ export function RunnersView({
     "last-3-years" | "all-time"
   >("last-3-years");
   const [searchQuery, setSearchQuery] = useState("");
-  const [countryFilter, setCountryFilter] = useState<string>("all");
+  const [countryFilter, setCountryFilter] = useState<string>(initialCountry);
   const [countryComboboxOpen, setCountryComboboxOpen] = useState(false);
 
   // Get unique countries from runners
@@ -205,6 +211,7 @@ export function RunnersView({
               size="sm"
               onClick={() => {
                 setSelectedGender("M");
+                onGenderChange?.("M");
               }}
               className={selectedGender === "M" ? "" : "hover:bg-accent"}
             >
@@ -215,6 +222,7 @@ export function RunnersView({
               size="sm"
               onClick={() => {
                 setSelectedGender("W");
+                onGenderChange?.("W");
               }}
               className={selectedGender === "W" ? "" : "hover:bg-accent"}
             >
@@ -299,6 +307,7 @@ export function RunnersView({
                       value="all"
                       onSelect={() => {
                         setCountryFilter("all");
+                        onCountryChange?.("all");
                         setCountryComboboxOpen(false);
                       }}
                     >
@@ -317,7 +326,9 @@ export function RunnersView({
                           key={country}
                           value={country}
                           onSelect={(currentValue) => {
-                            setCountryFilter(currentValue.toUpperCase());
+                            const newCountry = currentValue.toUpperCase();
+                            setCountryFilter(newCountry);
+                            onCountryChange?.(newCountry);
                             setCountryComboboxOpen(false);
                           }}
                         >

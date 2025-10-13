@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
@@ -26,14 +26,34 @@ function ParticipantsPageContent() {
     return g === 'W' ? 'W' : 'M'
   })
 
+  const [country, setCountry] = useState<string>(() => {
+    return searchParams.get('country') || 'all'
+  })
+
+  // Sync state with URL changes
+  useEffect(() => {
+    const v = searchParams.get('view')
+    const g = searchParams.get('gender')
+    const c = searchParams.get('country')
+    
+    if (v === 'teams' || v === 'individual') setActiveTab(v)
+    if (g === 'W' || g === 'M') setGender(g)
+    if (c !== null) setCountry(c)
+  }, [searchParams])
+
   // Update URL when parameters change
   const updateURL = (params: {
     view?: 'individual' | 'teams'
     gender?: 'M' | 'W'
+    country?: string
   }) => {
     const newParams = new URLSearchParams()
-    newParams.set('view', params.view || activeTab)
-    newParams.set('gender', params.gender || gender)
+    newParams.set('view', params.view !== undefined ? params.view : activeTab)
+    newParams.set('gender', params.gender !== undefined ? params.gender : gender)
+    const newCountry = params.country !== undefined ? params.country : country
+    if (newCountry !== 'all') {
+      newParams.set('country', newCountry)
+    }
     router.push(`/participants?${newParams.toString()}`, { scroll: false })
   }
 
@@ -41,6 +61,16 @@ function ParticipantsPageContent() {
     const newTab = value as 'individual' | 'teams'
     setActiveTab(newTab)
     updateURL({ view: newTab })
+  }
+
+  const handleGenderChange = (newGender: 'M' | 'W') => {
+    setGender(newGender)
+    updateURL({ gender: newGender })
+  }
+
+  const handleCountryChange = (newCountry: string) => {
+    setCountry(newCountry)
+    updateURL({ country: newCountry })
   }
 
   return (
@@ -66,11 +96,21 @@ function ParticipantsPageContent() {
           </TabsList>
 
           <TabsContent value="individual" className="mt-0">
-            <RunnersView initialGender={gender} showHeader={false} />
+            <RunnersView 
+              initialGender={gender}
+              initialCountry={country}
+              onGenderChange={handleGenderChange}
+              onCountryChange={handleCountryChange}
+              showHeader={false} 
+            />
           </TabsContent>
 
           <TabsContent value="teams" className="mt-0">
-            <TeamsView initialGender={gender} showHeader={false} />
+            <TeamsView 
+              initialGender={gender}
+              onGenderChange={handleGenderChange}
+              showHeader={false} 
+            />
           </TabsContent>
         </Tabs>
       </div>

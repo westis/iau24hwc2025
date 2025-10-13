@@ -9,10 +9,11 @@ import type { Runner, Gender } from '@/types/runner'
 
 interface TeamsViewProps {
   initialGender?: Gender
+  onGenderChange?: (gender: Gender) => void
   showHeader?: boolean
 }
 
-export function TeamsView({ initialGender = 'M', showHeader = true }: TeamsViewProps) {
+export function TeamsView({ initialGender = 'M', onGenderChange, showHeader = true }: TeamsViewProps) {
   const { t } = useLanguage()
   const [runners, setRunners] = useState<Runner[]>([])
   const [metric, setMetric] = useState<'all-time' | 'last-3-years'>('last-3-years')
