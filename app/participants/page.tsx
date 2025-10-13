@@ -47,10 +47,7 @@ function ParticipantsPageContent() {
     <main className="min-h-screen py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">{t.participants.title}</h1>
-            <p className="text-muted-foreground">IAU 24h WC 2025</p>
-          </div>
+          <h1 className="text-3xl font-bold">{t.participants.title}</h1>
           {isAdmin && (
             <Button
               variant="outline"
