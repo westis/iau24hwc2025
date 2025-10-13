@@ -1261,7 +1261,7 @@ export default function RunnerProfilePage() {
           </DialogContent>
         </Dialog>
 
-        {/* Avatar Dialog */}
+        {/* Avatar Dialog - Show cropped avatar at larger size */}
         <Dialog open={isAvatarDialogOpen} onOpenChange={setIsAvatarDialogOpen}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
@@ -1269,30 +1269,20 @@ export default function RunnerProfilePage() {
                 {runner.firstname} {runner.lastname}
               </DialogTitle>
             </DialogHeader>
-            {runner.photoUrl && (
-              <div className="relative w-full aspect-square rounded-lg overflow-hidden">
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    transform: `scale(${runner.photoZoom || 1.5})`,
-                    transformOrigin: `${runner.photoFocalX || 50}% ${
-                      runner.photoFocalY || 50
-                    }%`,
-                  }}
-                >
-                  <Image
-                    src={runner.photoUrl}
-                    alt={`${runner.firstname} ${runner.lastname}`}
-                    fill
-                    className="object-cover"
-                    style={{
-                      objectPosition: `${runner.photoFocalX || 50}% ${
-                        runner.photoFocalY || 50
-                      }%`,
-                    }}
-                    sizes="(max-width: 768px) 100vw, 600px"
-                  />
-                </div>
+            {(runner.avatarUrl || runner.photoUrl) && (
+              <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-black">
+                <Image
+                  src={
+                    runner.avatarUrl
+                      ? runner.avatarUrl.replace(".jpg", "@3x.jpg")
+                      : runner.photoUrl!
+                  }
+                  alt={`${runner.firstname} ${runner.lastname}`}
+                  fill
+                  className="object-contain"
+                  sizes="(max-width: 768px) 100vw, 600px"
+                  quality={100}
+                />
               </div>
             )}
           </DialogContent>
