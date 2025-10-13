@@ -86,6 +86,7 @@ interface RunnerProfile {
   photoFocalX?: number;
   photoFocalY?: number;
   photoZoom?: number;
+  avatarUrl?: string | null;
   bio?: string | null;
   instagramUrl?: string | null;
   stravaUrl?: string | null;
@@ -168,6 +169,7 @@ export default function RunnerProfilePage() {
           photoFocalX: foundRunner.photoFocalX || 50,
           photoFocalY: foundRunner.photoFocalY || 50,
           photoZoom: foundRunner.photoZoom || 1.5,
+          avatarUrl: foundRunner.avatarUrl,
           bio: foundRunner.bio,
           instagramUrl: foundRunner.instagramUrl,
           stravaUrl: foundRunner.stravaUrl,
@@ -575,35 +577,20 @@ export default function RunnerProfilePage() {
         <div className="mb-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              {/* Runner Photo Avatar */}
-              {runner.photoUrl && (
+              {/* Runner Photo Avatar - Use pre-cropped avatarUrl */}
+              {(runner.avatarUrl || runner.photoUrl) && (
                 <div
                   className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-border flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
                   onClick={() => setIsAvatarDialogOpen(true)}
                 >
-                  <div
-                    className="absolute inset-0"
-                    style={{
-                      transform: `scale(${runner.photoZoom || 1.5})`,
-                      transformOrigin: `${runner.photoFocalX || 50}% ${
-                        runner.photoFocalY || 50
-                      }%`,
-                    }}
-                  >
-                    <Image
-                      src={runner.photoUrl}
-                      alt={`${runner.firstname} ${runner.lastname}`}
-                      fill
-                      className="object-cover"
-                      style={{
-                        objectPosition: `${runner.photoFocalX || 50}% ${
-                          runner.photoFocalY || 50
-                        }%`,
-                      }}
-                      sizes="80px"
-                      quality={100}
-                    />
-                  </div>
+                  <Image
+                    src={runner.avatarUrl || runner.photoUrl!}
+                    alt={`${runner.firstname} ${runner.lastname}`}
+                    fill
+                    className="object-cover"
+                    sizes="80px"
+                    quality={100}
+                  />
                 </div>
               )}
               <div>

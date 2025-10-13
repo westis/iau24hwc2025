@@ -59,7 +59,7 @@ export function ImageUpload({
     typeof currentZoom === "number" ? currentZoom : 1.5
   );
   const imageRef = useRef<HTMLDivElement>(null);
-  
+
   // For drag-to-position
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -130,7 +130,7 @@ export function ImageUpload({
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!isDragging) return;
-    
+
     setImagePosition({
       x: e.clientX - dragStart.x,
       y: e.clientY - dragStart.y,
@@ -159,6 +159,14 @@ export function ImageUpload({
     // Clamp to 0-100
     calculatedFocalPoint.x = Math.max(0, Math.min(100, calculatedFocalPoint.x));
     calculatedFocalPoint.y = Math.max(0, Math.min(100, calculatedFocalPoint.y));
+
+    console.log('Saving avatar crop settings:', {
+      imagePosition,
+      zoom,
+      calculatedFocalPoint,
+      tempImagePath,
+      tempImageUrl,
+    });
 
     setPreviewUrl(tempImageUrl);
     setFocalPoint(calculatedFocalPoint);
@@ -201,16 +209,27 @@ export function ImageUpload({
     setTempImageUrl(previewUrl);
     setTempImagePath(null); // No new upload, just adjusting existing
     setTempFocalPoint({ x: focalPoint.x, y: focalPoint.y });
-    
-    const currentZoomValue = typeof currentZoom === "number" ? currentZoom : 1.5;
+
+    const currentZoomValue =
+      typeof currentZoom === "number" ? currentZoom : 1.5;
     setZoom(currentZoomValue);
-    
+
     // Convert focal point percentage to drag position
     const previewSize = 320;
-    const dragX = (50 - focalPoint.x) * (previewSize * currentZoomValue) / 100;
-    const dragY = (50 - focalPoint.y) * (previewSize * currentZoomValue) / 100;
-    setImagePosition({ x: dragX, y: dragY });
+    const dragX =
+      ((50 - focalPoint.x) * (previewSize * currentZoomValue)) / 100;
+    const dragY =
+      ((50 - focalPoint.y) * (previewSize * currentZoomValue)) / 100;
     
+    console.log('Loading avatar crop settings:', {
+      focalPoint,
+      currentZoom: currentZoomValue,
+      calculatedDragPosition: { x: dragX, y: dragY },
+      previewUrl,
+    });
+    
+    setImagePosition({ x: dragX, y: dragY });
+
     setShowFocalPointModal(true);
   };
 
@@ -339,7 +358,7 @@ export function ImageUpload({
                 <div className="flex justify-center">
                   <div
                     ref={imageRef}
-                    className="relative w-80 h-80 rounded-lg overflow-hidden border-4 border-primary bg-black cursor-move select-none"
+                    className="relative w-80 h-80 rounded-full overflow-hidden border-4 border-primary bg-black cursor-move select-none"
                     onMouseDown={handleMouseDown}
                     onMouseMove={handleMouseMove}
                     onMouseUp={handleMouseUp}
@@ -348,12 +367,14 @@ export function ImageUpload({
                     {tempImageUrl && (
                       <div
                         style={{
-                          position: 'absolute',
-                          width: '100%',
-                          height: '100%',
+                          position: "absolute",
+                          width: "100%",
+                          height: "100%",
                           transform: `translate(${imagePosition.x}px, ${imagePosition.y}px) scale(${zoom})`,
-                          transformOrigin: 'center center',
-                          transition: isDragging ? 'none' : 'transform 0.1s ease-out',
+                          transformOrigin: "center center",
+                          transition: isDragging
+                            ? "none"
+                            : "transform 0.1s ease-out",
                         }}
                       >
                         <Image
@@ -378,7 +399,8 @@ export function ImageUpload({
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground mt-3 text-center">
-                  This square preview shows exactly how your 80x80px avatar will appear
+                  This circular preview shows exactly how your 80x80px avatar will
+                  appear
                 </p>
               </div>
             </div>
@@ -406,7 +428,9 @@ export function ImageUpload({
 
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-3">
               <p className="text-xs text-blue-700 dark:text-blue-300">
-                <strong>Tip:</strong> Drag the image to center the face in the square, then use the zoom slider to get the perfect crop. The exact area you see will be your avatar!
+                <strong>Tip:</strong> Drag the image to center the face in the
+                square, then use the zoom slider to get the perfect crop. The
+                exact area you see will be your avatar!
               </p>
             </div>
           </div>
