@@ -1261,7 +1261,7 @@ export default function RunnerProfilePage() {
           </DialogContent>
         </Dialog>
 
-        {/* Avatar Dialog - Show cropped avatar at larger size */}
+        {/* Avatar Dialog - Show full photo at larger size */}
         <Dialog open={isAvatarDialogOpen} onOpenChange={setIsAvatarDialogOpen}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
@@ -1270,18 +1270,19 @@ export default function RunnerProfilePage() {
               </DialogTitle>
             </DialogHeader>
             {(runner.avatarUrl || runner.photoUrl) && (
-              <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-black">
+              <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-black flex items-center justify-center">
                 <Image
-                  src={runner.avatarUrl || runner.photoUrl!}
+                  src={
+                    runner.avatarUrl
+                      ? runner.avatarUrl.replace(/\.jpg$/i, "@3x.jpg")
+                      : runner.photoUrl!
+                  }
                   alt={`${runner.firstname} ${runner.lastname}`}
-                  fill
-                  className="object-contain"
-                  sizes="(max-width: 768px) 100vw, 600px"
+                  width={320}
+                  height={320}
+                  className="rounded-full"
                   quality={100}
                 />
-                <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
-                  {runner.avatarUrl ? "Avatar" : "Photo"}
-                </div>
               </div>
             )}
           </DialogContent>

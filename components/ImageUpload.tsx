@@ -72,13 +72,9 @@ export function ImageUpload({
 
   // Handle dragging with document-level listeners for smooth dragging
   useEffect(() => {
-    console.log("useEffect triggered, isDragging:", isDragging);
     if (!isDragging) return;
 
-    console.log("Attaching mouse listeners!");
-
     const handleMouseMove = (e: MouseEvent) => {
-      console.log("MOUSE MOVE!", e.clientX, e.clientY);
       const deltaX = e.clientX - dragStartRef.current.x;
       const deltaY = e.clientY - dragStartRef.current.y;
 
@@ -87,8 +83,6 @@ export function ImageUpload({
       // Moving right means showing more of the left side (decrease focal X)
       const focalDeltaX = -(deltaX / (320 * zoomRef.current)) * 100;
       const focalDeltaY = -(deltaY / (320 * zoomRef.current)) * 100;
-
-      console.log("Delta:", { deltaX, deltaY, focalDeltaX, focalDeltaY });
 
       setTempFocalPoint({
         x: Math.max(
@@ -103,7 +97,6 @@ export function ImageUpload({
     };
 
     const handleMouseUp = () => {
-      console.log("MOUSE UP!");
       setIsDragging(false);
     };
 
@@ -111,7 +104,6 @@ export function ImageUpload({
     document.addEventListener("mouseup", handleMouseUp);
 
     return () => {
-      console.log("Cleanup: removing listeners");
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
@@ -172,7 +164,6 @@ export function ImageUpload({
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
-    console.log("MOUSE DOWN!", { tempFocalPoint, zoom });
     dragStartRef.current = {
       x: e.clientX,
       y: e.clientY,
@@ -180,7 +171,6 @@ export function ImageUpload({
       startFocalY: tempFocalPoint.y,
     };
     setIsDragging(true);
-    console.log("isDragging set to true", dragStartRef.current);
   };
 
   const handleZoomChange = (value: number[]) => {
@@ -189,13 +179,6 @@ export function ImageUpload({
 
   const handleFocalPointConfirm = () => {
     if (!tempImageUrl) return;
-
-    console.log("Saving avatar crop settings:", {
-      focalPoint: tempFocalPoint,
-      zoom,
-      tempImagePath,
-      tempImageUrl,
-    });
 
     setPreviewUrl(tempImageUrl);
     setFocalPoint(tempFocalPoint);
@@ -246,12 +229,6 @@ export function ImageUpload({
       typeof currentZoom === "number" && !isNaN(currentZoom) ? currentZoom : 1.5;
     setZoom(currentZoomValue);
     zoomRef.current = currentZoomValue;
-
-    console.log("Loading avatar crop settings:", {
-      focalPoint: { x: validFocalX, y: validFocalY },
-      currentZoom: currentZoomValue,
-      previewUrl,
-    });
 
     setShowFocalPointModal(true);
   };
