@@ -113,12 +113,61 @@ export function ImageUpload({
     }
   };
 
-  const handleImageClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!imageRef.current) return;
+  const handleImageClick = async (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!imageRef.current || !tempImageUrl) return;
 
-    const rect = imageRef.current.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    const container = imageRef.current.getBoundingClientRect();
+    
+    // Get the actual image element to determine its natural dimensions
+    const imgElement = imageRef.current.querySelector('img');
+    if (!imgElement) return;
+
+    const naturalWidth = imgElement.naturalWidth;
+    const naturalHeight = imgElement.naturalHeight;
+    
+    if (!naturalWidth || !naturalHeight) return;
+
+    // Calculate the displayed image dimensions with object-fit: contain
+    const containerAspect = container.width / container.height;
+    const imageAspect = naturalWidth / naturalHeight;
+    
+    let displayedWidth: number;
+    let displayedHeight: number;
+    let offsetX: number;
+    let offsetY: number;
+
+    if (imageAspect > containerAspect) {
+      // Image is wider - will have letterboxing on top/bottom
+      displayedWidth = container.width;
+      displayedHeight = container.width / imageAspect;
+      offsetX = 0;
+      offsetY = (container.height - displayedHeight) / 2;
+    } else {
+      // Image is taller - will have letterboxing on left/right
+      displayedHeight = container.height;
+      displayedWidth = container.height * imageAspect;
+      offsetX = (container.width - displayedWidth) / 2;
+      offsetY = 0;
+    }
+
+    // Calculate click position relative to the container
+    const clickX = e.clientX - container.left;
+    const clickY = e.clientY - container.top;
+
+    // Check if click is within the actual image bounds
+    if (
+      clickX < offsetX ||
+      clickX > offsetX + displayedWidth ||
+      clickY < offsetY ||
+      clickY > offsetY + displayedHeight
+    ) {
+      // Click was in the letterbox area, ignore it
+      return;
+    }
+
+    // Calculate the percentage within the actual image
+    const x = ((clickX - offsetX) / displayedWidth) * 100;
+    const y = ((clickY - offsetY) / displayedHeight) * 100;
 
     setTempFocalPoint({ x, y });
   };
