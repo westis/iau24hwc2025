@@ -22,25 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   ArrowUpDown,
   Pencil,
@@ -57,6 +39,7 @@ interface RunnerTableProps {
   metric: "last-3-years" | "all-time";
   onManualMatch: (runner: Runner) => void;
   onRowClick: (runnerId: number) => void;
+  onEdit?: (runnerId: number) => void;
 }
 
 export function RunnerTable({
@@ -64,6 +47,7 @@ export function RunnerTable({
   metric,
   onManualMatch,
   onRowClick,
+  onEdit,
 }: RunnerTableProps) {
   const { isAdmin } = useAuth();
   const { t } = useLanguage();
@@ -74,15 +58,6 @@ export function RunnerTable({
     personalBestAllTime: metric === "all-time",
     personalBestLast3Years: metric === "last-3-years",
   });
-  const [editingRunner, setEditingRunner] = React.useState<Runner | null>(null);
-  const [editForm, setEditForm] = React.useState({
-    firstname: "",
-    lastname: "",
-    nationality: "",
-    gender: "" as "M" | "W" | "",
-    dns: false,
-  });
-  const [isSaving, setIsSaving] = React.useState(false);
   const [expandedRows, setExpandedRows] = React.useState<Set<number>>(
     new Set()
   );
@@ -94,56 +69,6 @@ export function RunnerTable({
       personalBestLast3Years: metric === "last-3-years",
     });
   }, [metric]);
-
-  // Handle opening edit dialog
-  function openEditDialog(runner: Runner) {
-    setEditingRunner(runner);
-    setEditForm({
-      firstname: runner.firstname,
-      lastname: runner.lastname,
-      nationality: runner.nationality,
-      gender: runner.gender,
-      dns: runner.dns || false,
-    });
-  }
-
-  // Handle closing edit dialog
-  function closeEditDialog() {
-    setEditingRunner(null);
-    setEditForm({
-      firstname: "",
-      lastname: "",
-      nationality: "",
-      gender: "",
-      dns: false,
-    });
-  }
-
-  // Handle saving edits
-  async function saveEdit() {
-    if (!editingRunner) return;
-
-    setIsSaving(true);
-    try {
-      const response = await fetch(`/api/runners/${editingRunner.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editForm),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to update runner");
-      }
-
-      // Reload the page to show updated data
-      window.location.reload();
-    } catch (err) {
-      console.error("Error updating runner:", err);
-      alert(err instanceof Error ? err.message : "Failed to update runner");
-    } finally {
-      setIsSaving(false);
-    }
-  }
 
   // Toggle expanded row
   function toggleRow(runnerId: number) {
@@ -410,7 +335,9 @@ export function RunnerTable({
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
-                        openEditDialog(runner);
+                        if (onEdit) {
+                          onEdit(runner.id);
+                        }
                       }}
                       className="whitespace-nowrap"
                     >
@@ -654,7 +581,9 @@ export function RunnerTable({
                           size="sm"
                           onClick={(e) => {
                             e.stopPropagation();
-                            openEditDialog(runner);
+                            if (onEdit) {
+                              onEdit(runner.id);
+                            }
                           }}
                           className="flex-1"
                         >
@@ -749,116 +678,6 @@ export function RunnerTable({
           .replace("{count}", table.getRowModel().rows.length.toString())
           .replace("{total}", runners.length.toString())}
       </div>
-
-      {/* Edit Dialog */}
-      <Dialog
-        open={!!editingRunner}
-        onOpenChange={(open) => !open && closeEditDialog()}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t.runners.editRunner}</DialogTitle>
-            <DialogDescription>{t.runners.editDescription}</DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="firstname" className="text-right">
-                {t.runners.firstName}
-              </Label>
-              <Input
-                id="firstname"
-                value={editForm.firstname}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, firstname: e.target.value })
-                }
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="lastname" className="text-right">
-                {t.runners.lastName}
-              </Label>
-              <Input
-                id="lastname"
-                value={editForm.lastname}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, lastname: e.target.value })
-                }
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="nationality" className="text-right">
-                {t.runners.nationality}
-              </Label>
-              <Input
-                id="nationality"
-                value={editForm.nationality}
-                onChange={(e) =>
-                  setEditForm({
-                    ...editForm,
-                    nationality: e.target.value.toUpperCase(),
-                  })
-                }
-                className="col-span-3"
-                maxLength={3}
-                placeholder={t.runners.nationalityPlaceholder}
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="gender" className="text-right">
-                {t.runners.gender}
-              </Label>
-              <Select
-                value={editForm.gender}
-                onValueChange={(value: "M" | "W") =>
-                  setEditForm({ ...editForm, gender: value })
-                }
-              >
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder={t.runners.selectGender} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="M">M</SelectItem>
-                  <SelectItem value="W">W</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="dns" className="text-right">
-                {t.runners.dns}
-              </Label>
-              <div className="col-span-3 flex items-center space-x-2">
-                <Checkbox
-                  id="dns"
-                  checked={editForm.dns}
-                  onCheckedChange={(checked) =>
-                    setEditForm({ ...editForm, dns: checked as boolean })
-                  }
-                />
-                <label
-                  htmlFor="dns"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  {t.runners.dnsDescription}
-                </label>
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={closeEditDialog}
-              disabled={isSaving}
-            >
-              {t.runners.cancel}
-            </Button>
-            <Button onClick={saveEdit} disabled={isSaving}>
-              {isSaving ? t.runners.saving : t.runners.saveChanges}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
