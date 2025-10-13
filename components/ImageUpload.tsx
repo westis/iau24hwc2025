@@ -135,9 +135,16 @@ export function ImageUpload({
 
     // If tempImagePath is null, we're just adjusting existing image, use current URL
     const pathToUse = tempImagePath || currentImageUrl || "";
-    
+
     // Pass cropAreaPixels to the parent - the API endpoint will handle cropping
-    onUploadComplete(tempImageUrl, pathToUse, focalPoint, zoom, crop, croppedAreaPixels);
+    onUploadComplete(
+      tempImageUrl,
+      pathToUse,
+      focalPoint,
+      zoom,
+      crop,
+      croppedAreaPixels
+    );
 
     setShowFocalPointModal(false);
     setTempImageUrl(null);
@@ -297,7 +304,10 @@ export function ImageUpload({
                 <h3 className="text-sm font-medium mb-2 text-center">
                   Drag and zoom to crop your avatar
                 </h3>
-                <div className="relative w-full h-96 bg-black rounded-lg overflow-hidden" style={{ touchAction: 'none' }}>
+                <div
+                  className="relative w-full h-96 bg-black rounded-lg overflow-hidden"
+                  style={{ touchAction: "none" }}
+                >
                   {tempImageUrl && (
                     <Cropper
                       image={tempImageUrl}

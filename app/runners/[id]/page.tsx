@@ -1263,15 +1263,15 @@ export default function RunnerProfilePage() {
 
         {/* Avatar Dialog - Show full photo at larger size */}
         <Dialog open={isAvatarDialogOpen} onOpenChange={setIsAvatarDialogOpen}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-[90vw] sm:max-w-2xl">
             <DialogHeader>
               <DialogTitle>
                 {runner.firstname} {runner.lastname}
               </DialogTitle>
             </DialogHeader>
             {(runner.avatarUrl || runner.photoUrl) && (
-              <div className="flex items-center justify-center p-8">
-                <div className="relative w-96 h-96 rounded-full overflow-hidden shadow-2xl">
+              <div className="flex items-center justify-center p-4 sm:p-8">
+                <div className="relative w-full max-w-96 aspect-square rounded-full overflow-hidden shadow-2xl">
                   <Image
                     src={
                       runner.avatarUrl

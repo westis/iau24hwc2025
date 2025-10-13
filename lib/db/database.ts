@@ -269,6 +269,8 @@ async function rowToRunner(row: any): Promise<Runner> {
     photoFocalX: row.photo_focal_x,
     photoFocalY: row.photo_focal_y,
     photoZoom: row.photo_zoom,
+    photoCropX: row.photo_crop_x,
+    photoCropY: row.photo_crop_y,
     avatarUrl: row.avatar_url,
     bio: row.bio,
     instagramUrl: row.instagram_url,
