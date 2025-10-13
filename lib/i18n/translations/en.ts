@@ -139,6 +139,7 @@ export const en: Translations = {
     pb6h: '6h PB',
     pb12h: '12h PB',
     pb48h: '48h PB',
+    raceHistory: 'Race History',
     allRaceHistory: 'All Race History',
     race24hHistory: '24h Race History',
     races: 'races',

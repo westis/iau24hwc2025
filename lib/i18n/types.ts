@@ -139,6 +139,7 @@ export interface Translations {
     pb6h: string
     pb12h: string
     pb48h: string
+    raceHistory: string
     allRaceHistory: string
     race24hHistory: string
     races: string

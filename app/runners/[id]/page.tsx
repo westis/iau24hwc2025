@@ -103,6 +103,7 @@ export default function RunnerProfilePage() {
   })
   const [availableNews, setAvailableNews] = useState<NewsItem[]>([])
   const [isSavingNote, setIsSavingNote] = useState(false)
+  const [isAvatarDialogOpen, setIsAvatarDialogOpen] = useState(false)
 
   useEffect(() => {
     async function loadRunner() {
@@ -515,7 +516,7 @@ export default function RunnerProfilePage() {
       <div className="container mx-auto px-4 max-w-6xl">
         <Button
           variant="ghost"
-          onClick={() => router.push('/runners')}
+          onClick={() => router.push('/participants?view=individual')}
           className="mb-4"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
@@ -527,7 +528,10 @@ export default function RunnerProfilePage() {
             <div className="flex items-center gap-4">
               {/* Runner Photo Avatar */}
               {runner.photoUrl && (
-                <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-border flex-shrink-0">
+                <div
+                  className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-border flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => setIsAvatarDialogOpen(true)}
+                >
                   <div
                     className="absolute inset-0"
                     style={{
@@ -705,12 +709,12 @@ export default function RunnerProfilePage() {
               <div className="space-y-3 md:space-y-4">
                 <div>
                   <p className="text-xs md:text-sm text-muted-foreground">{t.runnerDetail.allTimePB}</p>
-                  <p className="text-xl md:text-2xl font-bold text-primary">
+                  <p className="text-base md:text-2xl font-bold text-primary">
                     {runner.personal_best_all_time ? (
                       <>
                         {runner.personal_best_all_time.toFixed(3)} km
                         {runner.personal_best_all_time_year && (
-                          <span className="text-sm md:text-base text-muted-foreground ml-2">({runner.personal_best_all_time_year})</span>
+                          <span className="text-xs md:text-base text-muted-foreground ml-2">({runner.personal_best_all_time_year})</span>
                         )}
                       </>
                     ) : 'N/A'}
@@ -718,12 +722,12 @@ export default function RunnerProfilePage() {
                 </div>
                 <div>
                   <p className="text-xs md:text-sm text-muted-foreground">{t.runnerDetail.pb20232025}</p>
-                  <p className="text-xl md:text-2xl font-bold text-primary">
+                  <p className="text-base md:text-2xl font-bold text-primary">
                     {runner.personal_best_last_3_years ? (
                       <>
                         {runner.personal_best_last_3_years.toFixed(3)} km
                         {runner.personal_best_last_3_years_year && (
-                          <span className="text-sm md:text-base text-muted-foreground ml-2">({runner.personal_best_last_3_years_year})</span>
+                          <span className="text-xs md:text-base text-muted-foreground ml-2">({runner.personal_best_last_3_years_year})</span>
                         )}
                       </>
                     ) : 'N/A'}
@@ -743,7 +747,7 @@ export default function RunnerProfilePage() {
                   {pb6h && (
                     <div>
                       <p className="text-xs md:text-sm text-muted-foreground">{t.runnerDetail.pb6h}</p>
-                      <p className="text-lg md:text-2xl font-bold text-primary">
+                      <p className="text-base md:text-2xl font-bold text-primary">
                         {pb6h.distance.toFixed(3)} km
                         <span className="text-xs md:text-base text-muted-foreground ml-2">({pb6h.year})</span>
                       </p>
@@ -752,7 +756,7 @@ export default function RunnerProfilePage() {
                   {pb12h && (
                     <div>
                       <p className="text-xs md:text-sm text-muted-foreground">{t.runnerDetail.pb12h}</p>
-                      <p className="text-lg md:text-2xl font-bold text-primary">
+                      <p className="text-base md:text-2xl font-bold text-primary">
                         {pb12h.distance.toFixed(3)} km
                         <span className="text-xs md:text-base text-muted-foreground ml-2">({pb12h.year})</span>
                       </p>
@@ -761,7 +765,7 @@ export default function RunnerProfilePage() {
                   {pb48h && (
                     <div>
                       <p className="text-xs md:text-sm text-muted-foreground">{t.runnerDetail.pb48h}</p>
-                      <p className="text-lg md:text-2xl font-bold text-primary">
+                      <p className="text-base md:text-2xl font-bold text-primary">
                         {pb48h.distance.toFixed(3)} km
                         <span className="text-xs md:text-base text-muted-foreground ml-2">({pb48h.year})</span>
                       </p>
@@ -775,10 +779,11 @@ export default function RunnerProfilePage() {
 
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>
-                {showAllRaces ? t.runnerDetail.allRaceHistory : t.runnerDetail.race24hHistory} ({displayedPerformances.length} {t.runnerDetail.races})
-              </CardTitle>
+            <CardTitle>{t.runnerDetail.raceHistory || 'Race History'}</CardTitle>
+            <div className="flex items-center justify-between mt-3">
+              <p className="text-sm text-muted-foreground">
+                {displayedPerformances.length} {t.runnerDetail.races}
+              </p>
               <div className="inline-flex rounded-lg border border-input bg-background p-1" role="group">
                 <Button
                   variant={!showAllRaces ? 'default' : 'ghost'}
@@ -807,11 +812,11 @@ export default function RunnerProfilePage() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b">
-                      <th className="text-left py-2 px-4">{t.runnerDetail.date}</th>
-                      <th className="text-left py-2 px-4">{t.runnerDetail.event}</th>
-                      {showAllRaces && <th className="text-left py-2 px-4">{t.runnerDetail.type}</th>}
-                      <th className="text-right py-2 px-4">{t.runnerDetail.result}</th>
-                      <th className="text-right py-2 px-4">
+                      <th className="text-left py-2 px-1 md:px-4">{t.runnerDetail.date}</th>
+                      <th className="text-left py-2 px-1 md:px-4">{t.runnerDetail.event}</th>
+                      {showAllRaces && <th className="text-left py-2 px-1 md:px-4">{t.runnerDetail.type}</th>}
+                      <th className="text-right py-2 px-1 md:px-4">{t.runnerDetail.result}</th>
+                      <th className="text-right py-2 px-1 md:px-4">
                         <div className="flex flex-col">
                           <span>{t.runnerDetail.rank}</span>
                           <span className="text-xs font-normal text-muted-foreground">({t.runnerDetail.gender})</span>
@@ -824,18 +829,18 @@ export default function RunnerProfilePage() {
                       const timeBased = isTimeBased(perf.event_type)
                       return (
                         <tr key={perf.id} className="border-b hover:bg-accent">
-                          <td className="py-2 px-4 text-sm">
+                          <td className="py-2 px-1 md:px-4 text-sm">
                             {perf.event_date ? new Date(perf.event_date).toLocaleDateString() : 'N/A'}
                           </td>
-                          <td className="py-2 px-4 text-sm">{decodeHTML(perf.event_name)}</td>
+                          <td className="py-2 px-1 md:px-4 text-sm">{decodeHTML(perf.event_name)}</td>
                           {showAllRaces && (
-                            <td className="py-2 px-4 text-sm">
+                            <td className="py-2 px-1 md:px-4 text-sm">
                               <Badge variant="outline" className="text-xs">
                                 {perf.event_type || t.runnerDetail.unknown}
                               </Badge>
                             </td>
                           )}
-                          <td className="py-2 px-4 text-sm text-right font-medium">
+                          <td className="py-2 px-1 md:px-4 text-sm text-right font-medium">
                             {timeBased ? (
                               // For time-based events, distance is the result in km
                               `${perf.distance.toFixed(3)} km`
@@ -844,7 +849,7 @@ export default function RunnerProfilePage() {
                               formatTime(perf.distance)
                             )}
                           </td>
-                          <td className="py-2 px-4 text-sm text-right">
+                          <td className="py-2 px-1 md:px-4 text-sm text-right">
                             {perf.rank_gender || perf.rank || '-'}
                           </td>
                         </tr>
@@ -1063,6 +1068,37 @@ export default function RunnerProfilePage() {
                 {isSavingNote ? t.runners.saving : t.runners.saveChanges}
               </Button>
             </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Avatar Dialog */}
+        <Dialog open={isAvatarDialogOpen} onOpenChange={setIsAvatarDialogOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>{runner.firstname} {runner.lastname}</DialogTitle>
+            </DialogHeader>
+            {runner.photoUrl && (
+              <div className="relative w-full aspect-square rounded-lg overflow-hidden">
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    transform: `scale(${runner.photoZoom || 1.5})`,
+                    transformOrigin: `${runner.photoFocalX || 50}% ${runner.photoFocalY || 50}%`
+                  }}
+                >
+                  <Image
+                    src={runner.photoUrl}
+                    alt={`${runner.firstname} ${runner.lastname}`}
+                    fill
+                    className="object-cover"
+                    style={{
+                      objectPosition: `${runner.photoFocalX || 50}% ${runner.photoFocalY || 50}%`
+                    }}
+                    sizes="(max-width: 768px) 100vw, 600px"
+                  />
+                </div>
+              </div>
+            )}
           </DialogContent>
         </Dialog>
       </div>

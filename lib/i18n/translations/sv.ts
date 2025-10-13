@@ -139,6 +139,7 @@ export const sv: Translations = {
     pb6h: '6h PR',
     pb12h: '12h PR',
     pb48h: '48h PR',
+    raceHistory: 'Tävlingshistorik',
     allRaceHistory: 'Alla tävlingar',
     race24hHistory: '24h Tävlingshistorik',
     races: 'tävlingar',
