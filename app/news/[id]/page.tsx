@@ -91,7 +91,7 @@ export default function NewsArticlePage() {
     : []
 
   return (
-    <main className="container mx-auto px-4 py-6 max-w-4xl">
+    <main className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-6 sm:py-8 lg:py-10 max-w-5xl lg:max-w-6xl">
       {/* Back Button */}
       <div className="mb-6">
         <Button variant="ghost" onClick={() => router.push('/news')}>
@@ -103,9 +103,9 @@ export default function NewsArticlePage() {
       {/* Article */}
       <Card className="hover:shadow-md transition-shadow">
         <CardHeader>
-          <CardTitle className="text-2xl">{newsItem.title}</CardTitle>
+          <CardTitle className="text-xl sm:text-2xl lg:text-3xl">{newsItem.title}</CardTitle>
           <div className="flex items-center gap-3 flex-wrap">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs sm:text-sm lg:text-base text-muted-foreground">
               {new Date(newsItem.created_at).toLocaleDateString(language === 'sv' ? 'sv-SE' : 'en-US', {
                 year: 'numeric',
                 month: 'long',
@@ -134,7 +134,7 @@ export default function NewsArticlePage() {
           </div>
         </CardHeader>
         <CardContent>
-          <SafeHtml html={newsItem.content} className="text-base leading-relaxed" />
+          <SafeHtml html={newsItem.content} className="text-sm sm:text-base lg:text-lg leading-relaxed lg:leading-relaxed" />
         </CardContent>
       </Card>
     </main>

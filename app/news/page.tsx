@@ -95,11 +95,11 @@ export default function NewsPage() {
   }
 
   return (
-    <main className="container mx-auto px-4 py-6 max-w-4xl">
+    <main className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-6 sm:py-8 lg:py-10 max-w-5xl lg:max-w-6xl">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">{t.news.title}</h1>
-        <p className="text-muted-foreground mt-2">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">{t.news.title}</h1>
+        <p className="text-sm sm:text-base lg:text-lg text-muted-foreground mt-2">
           {t.news.subtitle}
         </p>
       </div>
@@ -125,9 +125,9 @@ export default function NewsPage() {
             return (
               <Card key={item.id} className="hover:shadow-md transition-shadow">
                 <CardHeader>
-                  <CardTitle className="text-xl">{item.title}</CardTitle>
+                  <CardTitle className="text-lg sm:text-xl lg:text-2xl">{item.title}</CardTitle>
                   <div className="flex items-center gap-3 flex-wrap">
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs sm:text-sm text-muted-foreground">
                       {new Date(item.created_at).toLocaleDateString(language === 'sv' ? 'sv-SE' : 'en-US', {
                         year: 'numeric',
                         month: 'long',
@@ -156,7 +156,7 @@ export default function NewsPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <SafeHtml html={displayContent} className="text-sm leading-relaxed" />
+                  <SafeHtml html={displayContent} className="text-sm sm:text-base lg:text-lg leading-relaxed" />
 
                   {hasMore && (
                     <div className="mt-4 flex gap-2">

@@ -97,10 +97,10 @@ function ParticipantsPageContent() {
   };
 
   return (
-    <main className="min-h-screen py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <main className="min-h-screen py-6 sm:py-8 lg:py-10">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
         <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-3xl font-bold">{t.participants.title}</h1>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold">{t.participants.title}</h1>
           {isAdmin && (
             <Button
               variant="outline"
