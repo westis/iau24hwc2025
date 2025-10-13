@@ -272,6 +272,7 @@ export interface Translations {
     title: string
     individual: string
     teams: string
+    media: string
     men: string
     women: string
   }

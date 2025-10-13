@@ -297,7 +297,8 @@ export function SocialView({
               className="group relative overflow-hidden rounded-lg border bg-card hover:shadow-lg transition-all duration-200"
             >
               {/* Photo */}
-              <div className="relative aspect-square w-full overflow-hidden bg-muted cursor-pointer"
+              <div
+                className="relative aspect-square w-full overflow-hidden bg-muted cursor-pointer"
                 onClick={() => router.push(`/runners/${runner.id}`)}
               >
                 {runner.avatarUrl || runner.photoUrl ? (
