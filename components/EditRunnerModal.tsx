@@ -254,11 +254,18 @@ export function EditRunnerModal({
                     }}
                     currentZoom={editForm.photo_zoom}
                     currentCrop={
-                      editForm.photo_crop_x !== undefined && editForm.photo_crop_y !== undefined
+                      editForm.photo_crop_x !== undefined &&
+                      editForm.photo_crop_y !== undefined
                         ? { x: editForm.photo_crop_x, y: editForm.photo_crop_y }
                         : undefined
                     }
-                    onUploadComplete={(url, path, focalPoint, zoom, cropPosition) => {
+                    onUploadComplete={(
+                      url,
+                      path,
+                      focalPoint,
+                      zoom,
+                      cropPosition
+                    ) => {
                       setEditForm({
                         ...editForm,
                         photo_url: url,

@@ -194,7 +194,7 @@ export function ImageUpload({
 
     setTempImageUrl(previewUrl);
     setTempImagePath(null);
-    
+
     // Restore previous crop position if available
     if (currentCrop) {
       setCrop({ x: currentCrop.x, y: currentCrop.y });
@@ -321,7 +321,7 @@ export function ImageUpload({
                 <h3 className="text-sm font-medium mb-2 text-center">
                   Drag and zoom to crop your avatar
                 </h3>
-                <div className="relative w-full h-96 bg-black rounded-lg overflow-hidden">
+                <div className="relative w-full h-96 bg-black rounded-lg overflow-hidden" style={{ touchAction: 'none' }}>
                   {tempImageUrl && (
                     <Cropper
                       image={tempImageUrl}
@@ -333,11 +333,13 @@ export function ImageUpload({
                       onCropChange={setCrop}
                       onZoomChange={setZoom}
                       onCropComplete={onCropComplete}
+                      restrictPosition={true}
+                      zoomWithScroll={true}
                     />
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground mt-3 text-center">
-                  Drag to reposition, scroll or use slider to zoom
+                  Drag to reposition, pinch or use slider to zoom
                 </p>
               </div>
             </div>
