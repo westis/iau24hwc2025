@@ -1270,19 +1270,17 @@ export default function RunnerProfilePage() {
               </DialogTitle>
             </DialogHeader>
             {(runner.avatarUrl || runner.photoUrl) && (
-              <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-black flex items-center justify-center">
-                <Image
-                  src={
-                    runner.avatarUrl
-                      ? runner.avatarUrl.replace(/\.jpg$/i, "@3x.jpg")
-                      : runner.photoUrl!
-                  }
-                  alt={`${runner.firstname} ${runner.lastname}`}
-                  width={320}
-                  height={320}
-                  className="rounded-full"
-                  quality={100}
-                />
+              <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-muted flex items-center justify-center p-8">
+                <div className="relative w-80 h-80">
+                  <Image
+                    src={runner.avatarUrl || runner.photoUrl!}
+                    alt={`${runner.firstname} ${runner.lastname}`}
+                    fill
+                    className="object-cover rounded-full"
+                    quality={100}
+                    unoptimized={runner.avatarUrl?.includes('blob:') || runner.photoUrl?.includes('blob:')}
+                  />
+                </div>
               </div>
             )}
           </DialogContent>
