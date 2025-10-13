@@ -23,6 +23,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { EditRunnerModal } from "@/components/EditRunnerModal";
 import {
   ArrowUpDown,
   Pencil,
@@ -39,7 +40,6 @@ interface RunnerTableProps {
   metric: "last-3-years" | "all-time";
   onManualMatch: (runner: Runner) => void;
   onRowClick: (runnerId: number) => void;
-  onEdit?: (runnerId: number) => void;
 }
 
 export function RunnerTable({
@@ -47,7 +47,6 @@ export function RunnerTable({
   metric,
   onManualMatch,
   onRowClick,
-  onEdit,
 }: RunnerTableProps) {
   const { isAdmin } = useAuth();
   const { t } = useLanguage();
@@ -58,6 +57,7 @@ export function RunnerTable({
     personalBestAllTime: metric === "all-time",
     personalBestLast3Years: metric === "last-3-years",
   });
+  const [editingRunnerId, setEditingRunnerId] = React.useState<number | null>(null);
   const [expandedRows, setExpandedRows] = React.useState<Set<number>>(
     new Set()
   );
@@ -85,7 +85,7 @@ export function RunnerTable({
     () => [
       {
         accessorKey: "rank",
-        header: "#",
+        header: () => <div className="text-center">#</div>,
         cell: ({ row }) => {
           if (row.original.dns) {
             return (
@@ -134,20 +134,19 @@ export function RunnerTable({
                     }%`,
                   }}
                 >
-                  <Image
-                    src={row.original.photoUrl}
-                    alt={`${row.original.firstname} ${row.original.lastname}`}
-                    fill
-                    className="object-cover"
-                    style={{
-                      objectPosition: `${row.original.photoFocalX || 50}% ${
-                        row.original.photoFocalY || 50
-                      }%`,
-                      imageRendering: "crisp-edges",
-                    }}
-                    sizes="40px"
-                    quality={95}
-                  />
+                    <Image
+                      src={row.original.photoUrl}
+                      alt={`${row.original.firstname} ${row.original.lastname}`}
+                      fill
+                      className="object-cover"
+                      style={{
+                        objectPosition: `${row.original.photoFocalX || 50}% ${
+                          row.original.photoFocalY || 50
+                        }%`,
+                      }}
+                      sizes="40px"
+                      quality={100}
+                    />
                 </div>
               </div>
             ) : (
@@ -184,16 +183,18 @@ export function RunnerTable({
         accessorKey: "nationality",
         header: ({ column }) => {
           return (
-            <Button
-              variant="ghost"
-              onClick={() =>
-                column.toggleSorting(column.getIsSorted() === "asc")
-              }
-              className="h-8 px-2"
-            >
-              {t.runners.nation}
-              <ArrowUpDown className="ml-2 h-4 w-4" />
-            </Button>
+            <div className="flex justify-center">
+              <Button
+                variant="ghost"
+                onClick={() =>
+                  column.toggleSorting(column.getIsSorted() === "asc")
+                }
+                className="h-8 px-2"
+              >
+                {t.runners.nation}
+                <ArrowUpDown className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
           );
         },
         cell: ({ row }) => {
@@ -201,7 +202,7 @@ export function RunnerTable({
           const twoLetterCode = getCountryCodeForFlag(threeLetterCode);
           const countryName = getCountryName(threeLetterCode);
           return (
-            <div className="flex items-center gap-2" title={countryName}>
+            <div className="flex items-center justify-center gap-2" title={countryName}>
               <ReactCountryFlag
                 countryCode={twoLetterCode}
                 svg
@@ -335,9 +336,7 @@ export function RunnerTable({
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (onEdit) {
-                          onEdit(runner.id);
-                        }
+                        setEditingRunnerId(runner.id);
                       }}
                       className="whitespace-nowrap"
                     >
@@ -463,10 +462,9 @@ export function RunnerTable({
                             objectPosition: `${runner.photoFocalX || 50}% ${
                               runner.photoFocalY || 50
                             }%`,
-                            imageRendering: "crisp-edges",
                           }}
                           sizes="56px"
-                          quality={95}
+                          quality={100}
                         />
                       </div>
                     </div>
@@ -581,9 +579,7 @@ export function RunnerTable({
                           size="sm"
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (onEdit) {
-                              onEdit(runner.id);
-                            }
+                            setEditingRunnerId(runner.id);
                           }}
                           className="flex-1"
                         >
@@ -678,6 +674,17 @@ export function RunnerTable({
           .replace("{count}", table.getRowModel().rows.length.toString())
           .replace("{total}", runners.length.toString())}
       </div>
+
+      {/* Comprehensive Edit Modal */}
+      <EditRunnerModal
+        runnerId={editingRunnerId}
+        isOpen={!!editingRunnerId}
+        onClose={() => setEditingRunnerId(null)}
+        onSaved={() => {
+          // Reload the page to show updated data
+          window.location.reload();
+        }}
+      />
     </div>
   );
 }

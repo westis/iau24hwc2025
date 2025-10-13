@@ -601,6 +601,7 @@ export default function RunnerProfilePage() {
                         }%`,
                       }}
                       sizes="80px"
+                      quality={100}
                     />
                   </div>
                 </div>

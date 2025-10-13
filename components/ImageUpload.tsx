@@ -305,7 +305,8 @@ export function ImageUpload({
                         alt="Set focal point"
                         fill
                         className="object-contain"
-                        unoptimized
+                        quality={100}
+                        priority
                       />
                       {/* Focal point marker */}
                       <div
@@ -369,7 +370,8 @@ export function ImageUpload({
                           style={{
                             objectPosition: `${tempFocalPoint.x}% ${tempFocalPoint.y}%`,
                           }}
-                          unoptimized
+                          quality={100}
+                          priority
                         />
                       </div>
                     )}

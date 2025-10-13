@@ -360,9 +360,6 @@ export function RunnersView({
         onRowClick={(runnerId) => {
           router.push(`/runners/${runnerId}`);
         }}
-        onEdit={(runnerId) => {
-          router.push(`/runners/${runnerId}`);
-        }}
       />
     </div>
   );
