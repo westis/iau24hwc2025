@@ -62,7 +62,13 @@ export function ImageUpload({
 
   // For drag-to-position
   const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const dragStartRef = useRef({ x: 0, y: 0 });
+  const zoomRef = useRef(1.5);
+
+  // Keep zoom ref in sync
+  useEffect(() => {
+    zoomRef.current = zoom;
+  }, [zoom]);
 
   // Handle dragging with document-level listeners for smooth dragging
   useEffect(() => {
@@ -70,20 +76,20 @@ export function ImageUpload({
 
     const handleMouseMove = (e: MouseEvent) => {
       // Calculate how much the mouse moved
-      const deltaX = e.clientX - dragStart.x;
-      const deltaY = e.clientY - dragStart.y;
+      const deltaX = e.clientX - dragStartRef.current.x;
+      const deltaY = e.clientY - dragStartRef.current.y;
 
       // Update drag start for next movement
-      setDragStart({
+      dragStartRef.current = {
         x: e.clientX,
         y: e.clientY,
-      });
+      };
 
       // Convert pixel movement to focal point percentage change
       // Moving mouse right should move focal point left (show left part of image)
       const previewSize = 320;
-      const focalDeltaX = -(deltaX / (previewSize * zoom)) * 100;
-      const focalDeltaY = -(deltaY / (previewSize * zoom)) * 100;
+      const focalDeltaX = -(deltaX / (previewSize * zoomRef.current)) * 100;
+      const focalDeltaY = -(deltaY / (previewSize * zoomRef.current)) * 100;
 
       setTempFocalPoint((prev) => ({
         x: Math.max(0, Math.min(100, prev.x + focalDeltaX)),
@@ -102,7 +108,7 @@ export function ImageUpload({
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [isDragging, dragStart, zoom]);
+  }, [isDragging]);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -159,11 +165,11 @@ export function ImageUpload({
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
-    setIsDragging(true);
-    setDragStart({
+    dragStartRef.current = {
       x: e.clientX,
       y: e.clientY,
-    });
+    };
+    setIsDragging(true);
   };
 
   const handleZoomChange = (value: number[]) => {
