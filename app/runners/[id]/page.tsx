@@ -1278,7 +1278,10 @@ export default function RunnerProfilePage() {
                     fill
                     className="object-cover rounded-full"
                     quality={100}
-                    unoptimized={runner.avatarUrl?.includes('blob:') || runner.photoUrl?.includes('blob:')}
+                    unoptimized={
+                      runner.avatarUrl?.includes("blob:") ||
+                      runner.photoUrl?.includes("blob:")
+                    }
                   />
                 </div>
               </div>
