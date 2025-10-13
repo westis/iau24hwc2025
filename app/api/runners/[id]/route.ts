@@ -96,6 +96,14 @@ export async function PATCH(
       updates.push(`photo_zoom = $${paramIndex++}`);
       values.push(body.photo_zoom);
     }
+    if (body.photo_crop_x !== undefined) {
+      updates.push(`photo_crop_x = $${paramIndex++}`);
+      values.push(body.photo_crop_x);
+    }
+    if (body.photo_crop_y !== undefined) {
+      updates.push(`photo_crop_y = $${paramIndex++}`);
+      values.push(body.photo_crop_y);
+    }
     if (body.bio !== undefined) {
       updates.push(`bio = $${paramIndex++}`);
       values.push(body.bio);

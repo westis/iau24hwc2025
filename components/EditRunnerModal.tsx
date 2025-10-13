@@ -112,6 +112,8 @@ export function EditRunnerModal({
           photo_focal_x: editForm.photo_focal_x,
           photo_focal_y: editForm.photo_focal_y,
           photo_zoom: editForm.photo_zoom,
+          photo_crop_x: editForm.photo_crop_x,
+          photo_crop_y: editForm.photo_crop_y,
           bio: editForm.bio,
           instagram_url: editForm.instagram_url,
           strava_url: editForm.strava_url,
@@ -251,13 +253,20 @@ export function EditRunnerModal({
                       y: editForm.photo_focal_y,
                     }}
                     currentZoom={editForm.photo_zoom}
-                    onUploadComplete={(url, path, focalPoint, zoom) => {
+                    currentCrop={
+                      editForm.photo_crop_x !== undefined && editForm.photo_crop_y !== undefined
+                        ? { x: editForm.photo_crop_x, y: editForm.photo_crop_y }
+                        : undefined
+                    }
+                    onUploadComplete={(url, path, focalPoint, zoom, cropPosition) => {
                       setEditForm({
                         ...editForm,
                         photo_url: url,
                         photo_focal_x: focalPoint.x,
                         photo_focal_y: focalPoint.y,
                         photo_zoom: zoom,
+                        photo_crop_x: cropPosition?.x,
+                        photo_crop_y: cropPosition?.y,
                       });
                     }}
                     onDelete={() => {
@@ -266,6 +275,8 @@ export function EditRunnerModal({
                         photo_url: null,
                         photo_focal_x: 50,
                         photo_focal_y: 50,
+                        photo_crop_x: 0,
+                        photo_crop_y: 0,
                         photo_zoom: 1.5,
                       });
                     }}

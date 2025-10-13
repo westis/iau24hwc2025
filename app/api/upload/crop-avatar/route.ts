@@ -46,8 +46,10 @@ export async function POST(request: NextRequest) {
       left = Math.round(cropAreaPixels.x);
       top = Math.round(cropAreaPixels.y);
       // Use the smaller of width/height to ensure square crop
-      cropSize = Math.round(Math.min(cropAreaPixels.width, cropAreaPixels.height));
-      
+      cropSize = Math.round(
+        Math.min(cropAreaPixels.width, cropAreaPixels.height)
+      );
+
       // Ensure crop area doesn't go out of bounds
       left = Math.max(0, Math.min(left, originalWidth - cropSize));
       top = Math.max(0, Math.min(top, originalHeight - cropSize));
@@ -72,12 +74,12 @@ export async function POST(request: NextRequest) {
 
     // Generate avatar sizes: 80px (1x), 160px (2x), 320px (3x for very high DPI)
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    
+
     // Generate ONE base filename for all sizes
     const timestamp = Date.now();
     const random = Math.random().toString(36).substring(7);
     const baseFileName = `avatar-${timestamp}-${random}`;
-    
+
     const avatarSizes = [
       { size: 80, suffix: "" },
       { size: 160, suffix: "@2x" },

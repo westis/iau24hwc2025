@@ -20,11 +20,13 @@ interface ImageUploadProps {
   currentImageUrl?: string | null;
   currentFocalPoint?: { x: number; y: number } | null;
   currentZoom?: number | null;
+  currentCrop?: { x: number; y: number } | null;
   onUploadComplete: (
     url: string,
     path: string,
     focalPoint: { x: number; y: number },
-    zoom: number
+    zoom: number,
+    cropPosition?: { x: number; y: number }
   ) => void;
   onDelete?: () => void;
   label?: string;
@@ -35,6 +37,7 @@ export function ImageUpload({
   currentImageUrl,
   currentFocalPoint,
   currentZoom,
+  currentCrop,
   onUploadComplete,
   onDelete,
   label = "Upload Image",
@@ -152,7 +155,7 @@ export function ImageUpload({
 
       // If tempImagePath is null, we're just adjusting existing image, use current URL
       const pathToUse = tempImagePath || currentImageUrl || "";
-      onUploadComplete(tempImageUrl, pathToUse, focalPoint, zoom);
+      onUploadComplete(tempImageUrl, pathToUse, focalPoint, zoom, crop);
 
       setShowFocalPointModal(false);
       setTempImageUrl(null);
@@ -191,7 +194,13 @@ export function ImageUpload({
 
     setTempImageUrl(previewUrl);
     setTempImagePath(null);
-    setCrop({ x: 0, y: 0 });
+    
+    // Restore previous crop position if available
+    if (currentCrop) {
+      setCrop({ x: currentCrop.x, y: currentCrop.y });
+    } else {
+      setCrop({ x: 0, y: 0 });
+    }
 
     const currentZoomValue =
       typeof currentZoom === "number" && !isNaN(currentZoom)
