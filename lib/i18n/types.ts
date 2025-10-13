@@ -245,4 +245,31 @@ export interface Translations {
     subscribe: string
     unsubscribe: string
   }
+  race: {
+    title: string
+    startsIn: string
+    dateTime: string
+    location: string
+    liveResults: string
+    courseMap: string
+    description: string
+    rules: string
+    documents: string
+    contact: string
+    download: string
+    viewLiveResults: string
+    raceInProgress: string
+    raceFinished: string
+    days: string
+    hours: string
+    minutes: string
+    seconds: string
+  }
+  participants: {
+    title: string
+    individual: string
+    teams: string
+    men: string
+    women: string
+  }
 }
