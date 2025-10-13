@@ -236,14 +236,19 @@ export function ImageUpload({
     // Open focal point modal with current image and values
     setTempImageUrl(previewUrl);
     setTempImagePath(null); // No new upload, just adjusting existing
-    setTempFocalPoint({ x: focalPoint.x, y: focalPoint.y });
+    
+    // Ensure we have valid focal point values
+    const validFocalX = typeof focalPoint.x === "number" && !isNaN(focalPoint.x) ? focalPoint.x : 50;
+    const validFocalY = typeof focalPoint.y === "number" && !isNaN(focalPoint.y) ? focalPoint.y : 50;
+    setTempFocalPoint({ x: validFocalX, y: validFocalY });
 
     const currentZoomValue =
-      typeof currentZoom === "number" ? currentZoom : 1.5;
+      typeof currentZoom === "number" && !isNaN(currentZoom) ? currentZoom : 1.5;
     setZoom(currentZoomValue);
+    zoomRef.current = currentZoomValue;
 
     console.log("Loading avatar crop settings:", {
-      focalPoint,
+      focalPoint: { x: validFocalX, y: validFocalY },
       currentZoom: currentZoomValue,
       previewUrl,
     });
