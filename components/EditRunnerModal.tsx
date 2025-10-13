@@ -276,8 +276,8 @@ export function EditRunnerModal({
                         photo_focal_x: focalPoint.x,
                         photo_focal_y: focalPoint.y,
                         photo_zoom: zoom,
-                        photo_crop_x: cropPosition?.x,
-                        photo_crop_y: cropPosition?.y,
+                        photo_crop_x: cropPosition?.x ?? 0,
+                        photo_crop_y: cropPosition?.y ?? 0,
                       });
                     }}
                     onDelete={() => {
