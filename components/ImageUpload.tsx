@@ -353,7 +353,7 @@ export function ImageUpload({
 
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-3">
               <p className="text-xs text-blue-700 dark:text-blue-300">
-                <strong>Tip:</strong> Click on the person's face, then adjust the zoom slider until the face fills the circular preview nicely.
+                <strong>Tip:</strong> Click on the person&apos;s face, then adjust the zoom slider until the face fills the circular preview nicely.
               </p>
             </div>
           </div>
