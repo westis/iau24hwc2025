@@ -55,6 +55,9 @@ export async function GET(
       age: runner.age,
       allPBs: runner.all_pbs || [],
       photoUrl: runner.photo_url,
+      photoFocalX: runner.photo_focal_x,
+      photoFocalY: runner.photo_focal_y,
+      photoZoom: runner.photo_zoom,
       bio: runner.bio,
       instagramUrl: runner.instagram_url,
       stravaUrl: runner.strava_url,
@@ -91,7 +94,7 @@ export async function PATCH(
     const db = getDatabase()
 
     // Validate input
-    const allowedFields = ['firstname', 'lastname', 'nationality', 'gender', 'dns', 'photo_url', 'bio', 'instagram_url', 'strava_url']
+    const allowedFields = ['firstname', 'lastname', 'nationality', 'gender', 'dns', 'photo_url', 'photo_focal_x', 'photo_focal_y', 'photo_zoom', 'bio', 'instagram_url', 'strava_url']
     const updates: string[] = []
     const values: any[] = []
     let paramIndex = 1

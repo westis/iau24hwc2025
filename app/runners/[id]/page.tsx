@@ -60,6 +60,9 @@ interface RunnerProfile {
     [distance: string]: DUVPersonalBest
   }>
   photoUrl?: string | null
+  photoFocalX?: number
+  photoFocalY?: number
+  photoZoom?: number
   bio?: string | null
   instagramUrl?: string | null
   stravaUrl?: string | null
@@ -83,6 +86,9 @@ export default function RunnerProfilePage() {
     gender: '' as 'M' | 'W' | '',
     dns: false,
     photo_url: '' as string | null,
+    photo_focal_x: 50,
+    photo_focal_y: 50,
+    photo_zoom: 1.5,
     bio: '',
     instagram_url: '',
     strava_url: ''
@@ -138,6 +144,9 @@ export default function RunnerProfilePage() {
           match_status: foundRunner.matchStatus,
           allPBs: foundRunner.allPBs || [],
           photoUrl: foundRunner.photoUrl,
+          photoFocalX: foundRunner.photoFocalX || 50,
+          photoFocalY: foundRunner.photoFocalY || 50,
+          photoZoom: foundRunner.photoZoom || 1.5,
           bio: foundRunner.bio,
           instagramUrl: foundRunner.instagramUrl,
           stravaUrl: foundRunner.stravaUrl,
@@ -194,6 +203,9 @@ export default function RunnerProfilePage() {
         gender: runner.gender as 'M' | 'W',
         dns: runner.dns || false,
         photo_url: runner.photoUrl || null,
+        photo_focal_x: runner.photoFocalX || 50,
+        photo_focal_y: runner.photoFocalY || 50,
+        photo_zoom: runner.photoZoom || 1.5,
         bio: runner.bio || '',
         instagram_url: runner.instagramUrl || '',
         strava_url: runner.stravaUrl || ''
@@ -211,6 +223,9 @@ export default function RunnerProfilePage() {
       gender: '',
       dns: false,
       photo_url: null,
+      photo_focal_x: 50,
+      photo_focal_y: 50,
+      photo_zoom: 1.5,
       bio: '',
       instagram_url: '',
       strava_url: ''
@@ -509,9 +524,36 @@ export default function RunnerProfilePage() {
 
         <div className="mb-6">
           <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold">
-              {runner.firstname} {runner.lastname}
-            </h1>
+            <div className="flex items-center gap-4">
+              {/* Runner Photo Avatar */}
+              {runner.photoUrl && (
+                <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-border flex-shrink-0">
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      transform: `scale(${runner.photoZoom || 1.5})`,
+                      transformOrigin: `${runner.photoFocalX || 50}% ${runner.photoFocalY || 50}%`
+                    }}
+                  >
+                    <Image
+                      src={runner.photoUrl}
+                      alt={`${runner.firstname} ${runner.lastname}`}
+                      fill
+                      className="object-cover"
+                      style={{
+                        objectPosition: `${runner.photoFocalX || 50}% ${runner.photoFocalY || 50}%`
+                      }}
+                      sizes="80px"
+                    />
+                  </div>
+                </div>
+              )}
+              <div>
+                <h1 className="text-3xl font-bold">
+                  {runner.firstname} {runner.lastname}
+                </h1>
+              </div>
+            </div>
             {isAdmin && (
               <Button
                 variant="outline"
@@ -577,31 +619,12 @@ export default function RunnerProfilePage() {
           )}
         </div>
 
-        {/* Profile Information Section */}
-        {(runner.photoUrl || runner.bio) && (
+        {/* Bio Section */}
+        {runner.bio && (
           <Card className="mb-6">
             <CardContent className="pt-6">
-              <div className="grid md:grid-cols-3 gap-6">
-                {runner.photoUrl && (
-                  <div className="md:col-span-1">
-                    <div className="relative w-full aspect-square rounded-lg overflow-hidden">
-                      <Image
-                        src={runner.photoUrl}
-                        alt={`${runner.firstname} ${runner.lastname}`}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 768px) 100vw, 33vw"
-                      />
-                    </div>
-                  </div>
-                )}
-                {runner.bio && (
-                  <div className={runner.photoUrl ? "md:col-span-2" : "md:col-span-3"}>
-                    <h3 className="text-lg font-semibold mb-2">About</h3>
-                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{runner.bio}</p>
-                  </div>
-                )}
-              </div>
+              <h3 className="text-lg font-semibold mb-2">About</h3>
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{runner.bio}</p>
             </CardContent>
           </Card>
         )}
@@ -918,7 +941,18 @@ export default function RunnerProfilePage() {
                     <ImageUpload
                       bucket="runner-photos"
                       currentImageUrl={editForm.photo_url}
-                      onUploadComplete={(url, path) => setEditForm({ ...editForm, photo_url: url })}
+                      currentFocalPoint={{ x: editForm.photo_focal_x, y: editForm.photo_focal_y }}
+                      currentZoom={editForm.photo_zoom}
+                      onUploadComplete={(url, path, focalPoint, zoom) => {
+                        console.log('Focal point and zoom set:', focalPoint, zoom)
+                        setEditForm({
+                          ...editForm,
+                          photo_url: url,
+                          photo_focal_x: focalPoint.x,
+                          photo_focal_y: focalPoint.y,
+                          photo_zoom: zoom
+                        })
+                      }}
                       onDelete={() => setEditForm({ ...editForm, photo_url: null })}
                       label="Upload Runner Photo"
                     />

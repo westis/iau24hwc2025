@@ -146,7 +146,13 @@ export default function AdminTeamEditPage() {
               <ImageUpload
                 bucket="team-photos"
                 currentImageUrl={formData.team_photo_url}
-                onUploadComplete={(url, path) => setFormData({ ...formData, team_photo_url: url })}
+                currentFocalPoint={{ x: 50, y: 50 }}
+                currentZoom={1.5}
+                onUploadComplete={(url, path, focalPoint, zoom) => {
+                  console.log('Focal point and zoom set:', focalPoint, zoom)
+                  setFormData({ ...formData, team_photo_url: url })
+                  // TODO: Store focal point and zoom in database
+                }}
                 onDelete={() => setFormData({ ...formData, team_photo_url: null })}
                 label="Upload Team Photo"
               />

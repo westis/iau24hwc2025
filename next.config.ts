@@ -15,6 +15,11 @@ const nextConfig: NextConfig = {
         hostname: 'www.albi24h.fr',
         pathname: '/wp-content/uploads/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'cxvlndgqwlpeddupqpuf.supabase.co',
+        pathname: '/storage/v1/object/public/**',
+      },
     ],
   },
 }
