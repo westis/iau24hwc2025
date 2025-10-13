@@ -1,130 +1,155 @@
-'use client'
+"use client";
 
-import * as React from 'react'
-import { useEffect, useState, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
-import ReactCountryFlag from 'react-country-flag'
-import { RunnerTable } from '@/components/tables/runner-table'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
-import { Check, ChevronsUpDown, Edit3 } from 'lucide-react'
-import { getCountryCodeForFlag } from '@/lib/utils/country-codes'
-import { cn } from '@/lib/utils'
-import { useLanguage } from '@/lib/i18n/LanguageContext'
-import { useAuth } from '@/lib/auth/auth-context'
-import type { Runner } from '@/types/runner'
+import * as React from "react";
+import { useEffect, useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import ReactCountryFlag from "react-country-flag";
+import { RunnerTable } from "@/components/tables/runner-table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Check, ChevronsUpDown, Edit3 } from "lucide-react";
+import { getCountryCodeForFlag } from "@/lib/utils/country-codes";
+import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { useAuth } from "@/lib/auth/auth-context";
+import type { Runner } from "@/types/runner";
 
 interface RunnersViewProps {
-  initialGender?: 'M' | 'W'
-  showHeader?: boolean
+  initialGender?: "M" | "W";
+  showHeader?: boolean;
 }
 
-export function RunnersView({ initialGender = 'M', showHeader = true }: RunnersViewProps) {
-  const router = useRouter()
-  const { t } = useLanguage()
-  const { isAdmin } = useAuth()
-  const [runners, setRunners] = useState<Runner[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [selectedGender, setSelectedGender] = useState<'M' | 'W'>(initialGender)
-  const [selectedMetric, setSelectedMetric] = useState<'last-3-years' | 'all-time'>('last-3-years')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [countryFilter, setCountryFilter] = useState<string>('all')
-  const [countryComboboxOpen, setCountryComboboxOpen] = useState(false)
+export function RunnersView({
+  initialGender = "M",
+  showHeader = true,
+}: RunnersViewProps) {
+  const router = useRouter();
+  const { t } = useLanguage();
+  const { isAdmin } = useAuth();
+  const [runners, setRunners] = useState<Runner[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedGender, setSelectedGender] = useState<"M" | "W">(
+    initialGender
+  );
+  const [selectedMetric, setSelectedMetric] = useState<
+    "last-3-years" | "all-time"
+  >("last-3-years");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [countryFilter, setCountryFilter] = useState<string>("all");
+  const [countryComboboxOpen, setCountryComboboxOpen] = useState(false);
 
   // Get unique countries from runners
   const uniqueCountries = useMemo(() => {
-    const countries = Array.from(new Set(runners.map(r => r.nationality))).sort()
-    return countries
-  }, [runners])
+    const countries = Array.from(
+      new Set(runners.map((r) => r.nationality))
+    ).sort();
+    return countries;
+  }, [runners]);
 
   useEffect(() => {
     // Fetch runners from API (Supabase)
     async function fetchRunners() {
       try {
-        setLoading(true)
+        setLoading(true);
 
-        const response = await fetch('/api/runners')
+        const response = await fetch("/api/runners");
         if (!response.ok) {
-          throw new Error('Failed to fetch runners from API')
+          throw new Error("Failed to fetch runners from API");
         }
 
-        const data = await response.json()
-        const fetchedRunners = data.runners as Runner[]
+        const data = await response.json();
+        const fetchedRunners = data.runners as Runner[];
 
-        setRunners(fetchedRunners)
+        setRunners(fetchedRunners);
       } catch (err) {
-        console.error('Error loading runners from API:', err)
-        setError(err instanceof Error ? err.message : 'Failed to load runners')
+        console.error("Error loading runners from API:", err);
+        setError(err instanceof Error ? err.message : "Failed to load runners");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
 
-    fetchRunners()
-  }, [])
+    fetchRunners();
+  }, []);
 
   // Filter, sort, and add rankings
   const runnersWithRankings = useMemo(() => {
     // Get PB value based on selected metric
     const getPB = (runner: Runner) => {
-      return selectedMetric === 'last-3-years'
+      return selectedMetric === "last-3-years"
         ? runner.personalBestLast3Years || 0
-        : runner.personalBestAllTime || 0
-    }
+        : runner.personalBestAllTime || 0;
+    };
 
-    // Filter by gender
-    let filtered = runners.filter(runner => runner.gender === selectedGender)
-
-    // Filter by country
-    if (countryFilter !== 'all') {
-      filtered = filtered.filter(runner => runner.nationality === countryFilter)
-    }
-
-    // Filter by search query
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase()
-      filtered = filtered.filter(runner => {
-        const name = `${runner.firstname} ${runner.lastname}`.toLowerCase()
-        return name.includes(query)
-      })
-    }
+    // STEP 1: Filter by gender ONLY (not by country or search yet)
+    let genderFiltered = runners.filter(
+      (runner) => runner.gender === selectedGender
+    );
 
     // Separate matched (with DUV ID) and unmatched runners
-    const matched = filtered.filter(r => r.duvId !== null)
-    const unmatched = filtered.filter(r => r.duvId === null)
+    const matched = genderFiltered.filter((r) => r.duvId !== null);
+    const unmatched = genderFiltered.filter((r) => r.duvId === null);
 
     // Sort matched runners by PB (highest first) - includes both DNS and non-DNS
     const sortedMatched = matched.sort((a, b) => {
-      const aPB = getPB(a)
-      const bPB = getPB(b)
-      return bPB - aPB // Descending order (highest PB first)
-    })
+      const aPB = getPB(a);
+      const bPB = getPB(b);
+      return bPB - aPB; // Descending order (highest PB first)
+    });
 
     // Sort unmatched runners by name
     const sortedUnmatched = unmatched.sort((a, b) => {
-      const aName = `${a.lastname} ${a.firstname}`.toLowerCase()
-      const bName = `${b.lastname} ${b.firstname}`.toLowerCase()
-      return aName.localeCompare(bName)
-    })
+      const aName = `${a.lastname} ${a.firstname}`.toLowerCase();
+      const bName = `${b.lastname} ${b.firstname}`.toLowerCase();
+      return aName.localeCompare(bName);
+    });
 
-    // Assign rankings only to non-DNS runners with DUV ID
-    let currentRank = 1
+    // Assign rankings BEFORE country/search filtering (total gender rankings)
+    let currentRank = 1;
     const rankedMatched = sortedMatched.map((runner) => {
       if (runner.dns) {
         // DNS runner - no rank
-        return { ...runner, rank: undefined }
+        return { ...runner, rank: undefined };
       } else {
         // Active runner - assign rank
-        return { ...runner, rank: currentRank++ }
+        return { ...runner, rank: currentRank++ };
       }
-    })
+    });
 
     // Combine: ranked matched first (with DNS in natural position), then unmatched
-    return [...rankedMatched, ...sortedUnmatched]
-  }, [runners, selectedGender, selectedMetric, countryFilter, searchQuery])
+    let allRunnersWithRanks = [...rankedMatched, ...sortedUnmatched];
+
+    // STEP 2: NOW apply country and search filters (ranks are preserved)
+    if (countryFilter !== "all") {
+      allRunnersWithRanks = allRunnersWithRanks.filter(
+        (runner) => runner.nationality === countryFilter
+      );
+    }
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      allRunnersWithRanks = allRunnersWithRanks.filter((runner) => {
+        const name = `${runner.firstname} ${runner.lastname}`.toLowerCase();
+        return name.includes(query);
+      });
+    }
+
+    return allRunnersWithRanks;
+  }, [runners, selectedGender, selectedMetric, countryFilter, searchQuery]);
 
   if (loading) {
     return (
@@ -134,18 +159,20 @@ export function RunnersView({ initialGender = 'M', showHeader = true }: RunnersV
           <p className="text-muted-foreground">{t.runners.loadingRunners}</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
-          <p className="text-destructive mb-4">{t.common.error}: {error}</p>
+          <p className="text-destructive mb-4">
+            {t.common.error}: {error}
+          </p>
           <p className="text-muted-foreground">{t.runners.runBackendTools}</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -156,7 +183,7 @@ export function RunnersView({ initialGender = 'M', showHeader = true }: RunnersV
           {isAdmin && (
             <Button
               variant="outline"
-              onClick={() => router.push('/admin/runners/quick-edit')}
+              onClick={() => router.push("/admin/runners/quick-edit")}
             >
               <Edit3 className="h-4 w-4 mr-2" />
               Quick Edit
@@ -169,46 +196,54 @@ export function RunnersView({ initialGender = 'M', showHeader = true }: RunnersV
       <div className="mb-6 flex flex-col lg:flex-row gap-4">
         {/* Row 1: Gender and Metric toggles */}
         <div className="flex flex-wrap items-center gap-4">
-          <div className="inline-flex rounded-lg border border-input bg-background p-1" role="group">
+          <div
+            className="inline-flex rounded-lg border border-input bg-background p-1"
+            role="group"
+          >
             <Button
-              variant={selectedGender === 'M' ? 'default' : 'ghost'}
+              variant={selectedGender === "M" ? "default" : "ghost"}
               size="sm"
               onClick={() => {
-                setSelectedGender('M')
+                setSelectedGender("M");
               }}
-              className={selectedGender === 'M' ? '' : 'hover:bg-accent'}
+              className={selectedGender === "M" ? "" : "hover:bg-accent"}
             >
               {t.runners.men}
             </Button>
             <Button
-              variant={selectedGender === 'W' ? 'default' : 'ghost'}
+              variant={selectedGender === "W" ? "default" : "ghost"}
               size="sm"
               onClick={() => {
-                setSelectedGender('W')
+                setSelectedGender("W");
               }}
-              className={selectedGender === 'W' ? '' : 'hover:bg-accent'}
+              className={selectedGender === "W" ? "" : "hover:bg-accent"}
             >
               {t.runners.women}
             </Button>
           </div>
-          <div className="inline-flex rounded-lg border border-input bg-background p-1" role="group">
+          <div
+            className="inline-flex rounded-lg border border-input bg-background p-1"
+            role="group"
+          >
             <Button
-              variant={selectedMetric === 'last-3-years' ? 'default' : 'ghost'}
+              variant={selectedMetric === "last-3-years" ? "default" : "ghost"}
               size="sm"
               onClick={() => {
-                setSelectedMetric('last-3-years')
+                setSelectedMetric("last-3-years");
               }}
-              className={selectedMetric === 'last-3-years' ? '' : 'hover:bg-accent'}
+              className={
+                selectedMetric === "last-3-years" ? "" : "hover:bg-accent"
+              }
             >
               2023-2025
             </Button>
             <Button
-              variant={selectedMetric === 'all-time' ? 'default' : 'ghost'}
+              variant={selectedMetric === "all-time" ? "default" : "ghost"}
               size="sm"
               onClick={() => {
-                setSelectedMetric('all-time')
+                setSelectedMetric("all-time");
               }}
-              className={selectedMetric === 'all-time' ? '' : 'hover:bg-accent'}
+              className={selectedMetric === "all-time" ? "" : "hover:bg-accent"}
             >
               {t.runners.allTime}
             </Button>
@@ -221,11 +256,14 @@ export function RunnersView({ initialGender = 'M', showHeader = true }: RunnersV
             placeholder={t.runners.searchByName}
             value={searchQuery}
             onChange={(e) => {
-              setSearchQuery(e.target.value)
+              setSearchQuery(e.target.value);
             }}
             className="w-full sm:w-[200px]"
           />
-          <Popover open={countryComboboxOpen} onOpenChange={setCountryComboboxOpen}>
+          <Popover
+            open={countryComboboxOpen}
+            onOpenChange={setCountryComboboxOpen}
+          >
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
@@ -233,7 +271,7 @@ export function RunnersView({ initialGender = 'M', showHeader = true }: RunnersV
                 aria-expanded={countryComboboxOpen}
                 className="w-full sm:w-[200px] justify-between"
               >
-                {countryFilter === 'all' ? (
+                {countryFilter === "all" ? (
                   t.runners.allCountries
                 ) : (
                   <div className="flex items-center gap-2">
@@ -241,8 +279,8 @@ export function RunnersView({ initialGender = 'M', showHeader = true }: RunnersV
                       countryCode={getCountryCodeForFlag(countryFilter)}
                       svg
                       style={{
-                        width: '1.5em',
-                        height: '1em',
+                        width: "1.5em",
+                        height: "1em",
                       }}
                     />
                     <span>{countryFilter}</span>
@@ -260,33 +298,35 @@ export function RunnersView({ initialGender = 'M', showHeader = true }: RunnersV
                     <CommandItem
                       value="all"
                       onSelect={() => {
-                        setCountryFilter('all')
-                        setCountryComboboxOpen(false)
+                        setCountryFilter("all");
+                        setCountryComboboxOpen(false);
                       }}
                     >
                       <Check
                         className={cn(
                           "mr-2 h-4 w-4",
-                          countryFilter === 'all' ? "opacity-100" : "opacity-0"
+                          countryFilter === "all" ? "opacity-100" : "opacity-0"
                         )}
                       />
                       {t.runners.allCountries}
                     </CommandItem>
                     {uniqueCountries.map((country) => {
-                      const twoLetterCode = getCountryCodeForFlag(country)
+                      const twoLetterCode = getCountryCodeForFlag(country);
                       return (
                         <CommandItem
                           key={country}
                           value={country}
                           onSelect={(currentValue) => {
-                            setCountryFilter(currentValue.toUpperCase())
-                            setCountryComboboxOpen(false)
+                            setCountryFilter(currentValue.toUpperCase());
+                            setCountryComboboxOpen(false);
                           }}
                         >
                           <Check
                             className={cn(
                               "mr-2 h-4 w-4",
-                              countryFilter === country ? "opacity-100" : "opacity-0"
+                              countryFilter === country
+                                ? "opacity-100"
+                                : "opacity-0"
                             )}
                           />
                           <div className="flex items-center gap-2">
@@ -294,14 +334,14 @@ export function RunnersView({ initialGender = 'M', showHeader = true }: RunnersV
                               countryCode={twoLetterCode}
                               svg
                               style={{
-                                width: '1.5em',
-                                height: '1em',
+                                width: "1.5em",
+                                height: "1em",
                               }}
                             />
                             <span>{country}</span>
                           </div>
                         </CommandItem>
-                      )
+                      );
                     })}
                   </CommandGroup>
                 </CommandList>
@@ -315,12 +355,12 @@ export function RunnersView({ initialGender = 'M', showHeader = true }: RunnersV
         runners={runnersWithRankings}
         metric={selectedMetric}
         onManualMatch={(runner) => {
-          router.push('/match')
+          router.push("/match");
         }}
         onRowClick={(runnerId) => {
-          router.push(`/runners/${runnerId}`)
+          router.push(`/runners/${runnerId}`);
         }}
       />
     </div>
-  )
+  );
 }

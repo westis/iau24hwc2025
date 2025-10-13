@@ -1,6 +1,7 @@
-'use client'
+"use client";
 
-import * as React from 'react'
+import * as React from "react";
+import Image from "next/image";
 import {
   useReactTable,
   getCoreRowModel,
@@ -8,148 +9,238 @@ import {
   type ColumnDef,
   type SortingState,
   flexRender,
-} from '@tanstack/react-table'
-import ReactCountryFlag from 'react-country-flag'
-import { useAuth } from '@/lib/auth/auth-context'
-import { useLanguage } from '@/lib/i18n/LanguageContext'
-import type { Runner, Gender } from '@/types/runner'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Label } from '@/components/ui/label'
-import { Checkbox } from '@/components/ui/checkbox'
-import { ArrowUpDown, Pencil, ChevronDown, ChevronUp, MessageSquare } from 'lucide-react'
-import { getCountryCodeForFlag } from '@/lib/utils/country-codes'
-import { getCountryName } from '@/lib/utils/country-names'
-import { cn } from '@/lib/utils'
+} from "@tanstack/react-table";
+import ReactCountryFlag from "react-country-flag";
+import { useAuth } from "@/lib/auth/auth-context";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
+import type { Runner, Gender } from "@/types/runner";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  ArrowUpDown,
+  Pencil,
+  ChevronDown,
+  ChevronUp,
+  MessageSquare,
+} from "lucide-react";
+import { getCountryCodeForFlag } from "@/lib/utils/country-codes";
+import { getCountryName } from "@/lib/utils/country-names";
+import { cn } from "@/lib/utils";
 
 interface RunnerTableProps {
-  runners: Runner[]
-  metric: 'last-3-years' | 'all-time'
-  onManualMatch: (runner: Runner) => void
-  onRowClick: (runnerId: number) => void
+  runners: Runner[];
+  metric: "last-3-years" | "all-time";
+  onManualMatch: (runner: Runner) => void;
+  onRowClick: (runnerId: number) => void;
 }
 
-export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: RunnerTableProps) {
-  const { isAdmin } = useAuth()
-  const { t } = useLanguage()
-  const [sorting, setSorting] = React.useState<SortingState>([])
-  const [columnVisibility, setColumnVisibility] = React.useState<Record<string, boolean>>({
-    personalBestAllTime: metric === 'all-time',
-    personalBestLast3Years: metric === 'last-3-years',
-  })
-  const [editingRunner, setEditingRunner] = React.useState<Runner | null>(null)
+export function RunnerTable({
+  runners,
+  metric,
+  onManualMatch,
+  onRowClick,
+}: RunnerTableProps) {
+  const { isAdmin } = useAuth();
+  const { t } = useLanguage();
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [columnVisibility, setColumnVisibility] = React.useState<
+    Record<string, boolean>
+  >({
+    personalBestAllTime: metric === "all-time",
+    personalBestLast3Years: metric === "last-3-years",
+  });
+  const [editingRunner, setEditingRunner] = React.useState<Runner | null>(null);
   const [editForm, setEditForm] = React.useState({
-    firstname: '',
-    lastname: '',
-    nationality: '',
-    gender: '' as 'M' | 'W' | '',
-    dns: false
-  })
-  const [isSaving, setIsSaving] = React.useState(false)
-  const [expandedRows, setExpandedRows] = React.useState<Set<number>>(new Set())
+    firstname: "",
+    lastname: "",
+    nationality: "",
+    gender: "" as "M" | "W" | "",
+    dns: false,
+  });
+  const [isSaving, setIsSaving] = React.useState(false);
+  const [expandedRows, setExpandedRows] = React.useState<Set<number>>(
+    new Set()
+  );
 
   // Update column visibility when metric changes
   React.useEffect(() => {
     setColumnVisibility({
-      personalBestAllTime: metric === 'all-time',
-      personalBestLast3Years: metric === 'last-3-years',
-    })
-  }, [metric])
+      personalBestAllTime: metric === "all-time",
+      personalBestLast3Years: metric === "last-3-years",
+    });
+  }, [metric]);
 
   // Handle opening edit dialog
   function openEditDialog(runner: Runner) {
-    setEditingRunner(runner)
+    setEditingRunner(runner);
     setEditForm({
       firstname: runner.firstname,
       lastname: runner.lastname,
       nationality: runner.nationality,
       gender: runner.gender,
-      dns: runner.dns || false
-    })
+      dns: runner.dns || false,
+    });
   }
 
   // Handle closing edit dialog
   function closeEditDialog() {
-    setEditingRunner(null)
-    setEditForm({ firstname: '', lastname: '', nationality: '', gender: '', dns: false })
+    setEditingRunner(null);
+    setEditForm({
+      firstname: "",
+      lastname: "",
+      nationality: "",
+      gender: "",
+      dns: false,
+    });
   }
 
   // Handle saving edits
   async function saveEdit() {
-    if (!editingRunner) return
+    if (!editingRunner) return;
 
-    setIsSaving(true)
+    setIsSaving(true);
     try {
       const response = await fetch(`/api/runners/${editingRunner.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editForm)
-      })
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editForm),
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to update runner')
+        throw new Error("Failed to update runner");
       }
 
       // Reload the page to show updated data
-      window.location.reload()
+      window.location.reload();
     } catch (err) {
-      console.error('Error updating runner:', err)
-      alert(err instanceof Error ? err.message : 'Failed to update runner')
+      console.error("Error updating runner:", err);
+      alert(err instanceof Error ? err.message : "Failed to update runner");
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
   }
 
   // Toggle expanded row
   function toggleRow(runnerId: number) {
-    const newExpanded = new Set(expandedRows)
+    const newExpanded = new Set(expandedRows);
     if (newExpanded.has(runnerId)) {
-      newExpanded.delete(runnerId)
+      newExpanded.delete(runnerId);
     } else {
-      newExpanded.add(runnerId)
+      newExpanded.add(runnerId);
     }
-    setExpandedRows(newExpanded)
+    setExpandedRows(newExpanded);
   }
 
   const columns: ColumnDef<Runner>[] = React.useMemo(
     () => [
       {
-        accessorKey: 'rank',
+        accessorKey: "rank",
         header: t.runners.rank,
         cell: ({ row }) => {
           if (row.original.dns) {
-            return <div className="text-xs text-muted-foreground text-center w-12">DNS</div>
+            return (
+              <div className="text-xs text-muted-foreground text-center w-12">
+                DNS
+              </div>
+            );
           }
-          const rank = (row.original as any).rank
-          return rank ? <div className="font-bold text-center w-12">{rank}</div> : <div className="text-muted-foreground text-center w-12">-</div>
+          const rank = (row.original as any).rank;
+          return rank ? (
+            <div className="font-bold text-center w-12">{rank}</div>
+          ) : (
+            <div className="text-muted-foreground text-center w-12">-</div>
+          );
         },
         size: 60,
       },
       {
-        accessorKey: 'name',
+        accessorKey: "name",
         header: ({ column }) => {
           return (
             <Button
               variant="ghost"
-              onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
               className="h-8 px-2"
             >
               {t.runners.name}
               <ArrowUpDown className="ml-2 h-4 w-4" />
             </Button>
-          )
+          );
         },
         accessorFn: (row) => `${row.firstname} ${row.lastname}`,
         cell: ({ row }) => (
           <div className="flex items-center gap-2">
+            {/* Runner Avatar */}
+            {row.original.photoUrl ? (
+              <div className="relative w-10 h-10 rounded-full overflow-hidden border border-border flex-shrink-0">
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    transform: `scale(${row.original.photoZoom || 1.5})`,
+                    transformOrigin: `${row.original.photoFocalX || 50}% ${
+                      row.original.photoFocalY || 50
+                    }%`,
+                  }}
+                >
+                  <Image
+                    src={row.original.photoUrl}
+                    alt={`${row.original.firstname} ${row.original.lastname}`}
+                    fill
+                    className="object-cover"
+                    style={{
+                      objectPosition: `${row.original.photoFocalX || 50}% ${
+                        row.original.photoFocalY || 50
+                      }%`,
+                      imageRendering: "crisp-edges",
+                    }}
+                    sizes="40px"
+                    quality={95}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                <span className="text-xs font-medium text-muted-foreground">
+                  {row.original.firstname.charAt(0)}
+                  {row.original.lastname.charAt(0)}
+                </span>
+              </div>
+            )}
             <div className="font-medium">
               {row.original.firstname} {row.original.lastname}
             </div>
             {(row.original.noteCount ?? 0) > 0 && (
-              <div className="inline-flex items-center relative" title="Click to view notes">
+              <div
+                className="inline-flex items-center relative"
+                title="Click to view notes"
+              >
                 <MessageSquare className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 <span className="absolute -top-1 -right-1 bg-blue-600 dark:bg-blue-500 text-white text-[10px] font-semibold rounded-full h-3.5 w-3.5 flex items-center justify-center">
                   {row.original.noteCount}
@@ -159,168 +250,195 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
           </div>
         ),
         filterFn: (row, id, value) => {
-          const name = `${row.original.firstname} ${row.original.lastname}`.toLowerCase()
-          return name.includes(String(value).toLowerCase())
+          const name =
+            `${row.original.firstname} ${row.original.lastname}`.toLowerCase();
+          return name.includes(String(value).toLowerCase());
         },
       },
       {
-        accessorKey: 'nationality',
+        accessorKey: "nationality",
         header: ({ column }) => {
           return (
             <Button
               variant="ghost"
-              onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
               className="h-8 px-2"
             >
               {t.runners.nation}
               <ArrowUpDown className="ml-2 h-4 w-4" />
             </Button>
-          )
+          );
         },
         cell: ({ row }) => {
-          const threeLetterCode = row.getValue('nationality') as string
-          const twoLetterCode = getCountryCodeForFlag(threeLetterCode)
-          const countryName = getCountryName(threeLetterCode)
+          const threeLetterCode = row.getValue("nationality") as string;
+          const twoLetterCode = getCountryCodeForFlag(threeLetterCode);
+          const countryName = getCountryName(threeLetterCode);
           return (
             <div className="flex items-center gap-2" title={countryName}>
               <ReactCountryFlag
                 countryCode={twoLetterCode}
                 svg
                 style={{
-                  width: '2em',
-                  height: '1.5em',
+                  width: "2em",
+                  height: "1.5em",
                 }}
                 title={countryName}
               />
               <span className="text-sm font-medium">{threeLetterCode}</span>
             </div>
-          )
+          );
         },
         filterFn: (row, id, value) => {
-          if (value === 'all') return true
-          return row.getValue(id) === value
+          if (value === "all") return true;
+          return row.getValue(id) === value;
         },
       },
       {
-        accessorKey: 'personalBestAllTime',
+        accessorKey: "personalBestAllTime",
         header: ({ column }) => {
           return (
             <Button
               variant="ghost"
-              onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
               className="h-8 px-2"
             >
               {t.runners.pbAllTime}
               <ArrowUpDown className="ml-2 h-4 w-4" />
             </Button>
-          )
+          );
         },
         cell: ({ row }) => {
-          const pb = row.getValue('personalBestAllTime') as number | null
-          const pbYear = row.original.personalBestAllTimeYear
+          const pb = row.getValue("personalBestAllTime") as number | null;
+          const pbYear = row.original.personalBestAllTimeYear;
           return (
             <div className="text-right">
               {pb ? (
                 <>
-                  {pb.toFixed(3)} km{pbYear && <span className="text-muted-foreground text-xs ml-1">({pbYear})</span>}
+                  {pb.toFixed(3)} km
+                  {pbYear && (
+                    <span className="text-muted-foreground text-xs ml-1">
+                      ({pbYear})
+                    </span>
+                  )}
                 </>
-              ) : '-'}
+              ) : (
+                "-"
+              )}
             </div>
-          )
+          );
         },
       },
       {
-        accessorKey: 'personalBestLast3Years',
+        accessorKey: "personalBestLast3Years",
         header: ({ column }) => {
           return (
             <Button
               variant="ghost"
-              onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
               className="h-8 px-2"
             >
               {t.runners.pb20232025}
               <ArrowUpDown className="ml-2 h-4 w-4" />
             </Button>
-          )
+          );
         },
         cell: ({ row }) => {
-          const pb = row.getValue('personalBestLast3Years') as number | null
-          const pbYear = row.original.personalBestLast3YearsYear
+          const pb = row.getValue("personalBestLast3Years") as number | null;
+          const pbYear = row.original.personalBestLast3YearsYear;
           return (
             <div className="text-right">
               {pb ? (
                 <>
-                  {pb.toFixed(3)} km{pbYear && <span className="text-muted-foreground text-xs ml-1">({pbYear})</span>}
+                  {pb.toFixed(3)} km
+                  {pbYear && (
+                    <span className="text-muted-foreground text-xs ml-1">
+                      ({pbYear})
+                    </span>
+                  )}
                 </>
-              ) : '-'}
+              ) : (
+                "-"
+              )}
             </div>
-          )
+          );
         },
       },
       {
-        accessorKey: 'age',
+        accessorKey: "age",
         header: ({ column }) => {
           return (
             <Button
               variant="ghost"
-              onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
               className="h-8 px-2"
             >
               {t.runners.yob}
               <ArrowUpDown className="ml-2 h-4 w-4" />
             </Button>
-          )
+          );
         },
         cell: ({ row }) => {
-          const age = row.original.age
-          const dob = row.original.dateOfBirth
+          const age = row.original.age;
+          const dob = row.original.dateOfBirth;
           if (dob) {
-            const yob = new Date(dob).getFullYear()
-            return <div className="text-center">{yob}</div>
+            const yob = new Date(dob).getFullYear();
+            return <div className="text-center">{yob}</div>;
           }
-          return <div className="text-center text-muted-foreground">-</div>
+          return <div className="text-center text-muted-foreground">-</div>;
         },
       },
       // Only include actions column if admin
-      ...(isAdmin ? [{
-        id: 'actions' as const,
-        header: t.runners.actions,
-        cell: ({ row }: { row: any }) => {
-          const runner = row.original as Runner
-          return (
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  openEditDialog(runner)
-                }}
-                className="whitespace-nowrap"
-              >
-                <Pencil className="h-4 w-4 mr-1" />
-                {t.runners.edit}
-              </Button>
-              {runner.matchStatus === 'unmatched' && (
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onManualMatch(runner)
-                  }}
-                  className="whitespace-nowrap"
-                >
-                  {t.runners.manualMatch}
-                </Button>
-              )}
-            </div>
-          )
-        },
-      }] : []),
+      ...(isAdmin
+        ? [
+            {
+              id: "actions" as const,
+              header: t.runners.actions,
+              cell: ({ row }: { row: any }) => {
+                const runner = row.original as Runner;
+                return (
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openEditDialog(runner);
+                      }}
+                      className="whitespace-nowrap"
+                    >
+                      <Pencil className="h-4 w-4 mr-1" />
+                      {t.runners.edit}
+                    </Button>
+                    {runner.matchStatus === "unmatched" && (
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onManualMatch(runner);
+                        }}
+                        className="whitespace-nowrap"
+                      >
+                        {t.runners.manualMatch}
+                      </Button>
+                    )}
+                  </div>
+                );
+              },
+            },
+          ]
+        : []),
     ],
     [onManualMatch, isAdmin, t]
-  )
+  );
 
   const table = useReactTable({
     data: runners,
@@ -333,31 +451,48 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
       sorting,
       columnVisibility,
     },
-  })
+  });
 
   return (
     <div className="w-full space-y-4">
-
       {/* Mobile Card View */}
       <div className="md:hidden grid grid-cols-1 sm:grid-cols-2 gap-2">
         {table.getRowModel().rows?.length ? (
           table.getRowModel().rows.map((row) => {
-            const runner = row.original
-            const isExpanded = expandedRows.has(runner.id)
-            const threeLetterCode = runner.nationality
-            const twoLetterCode = getCountryCodeForFlag(threeLetterCode)
-            const countryName = getCountryName(threeLetterCode)
+            const runner = row.original;
+            const isExpanded = expandedRows.has(runner.id);
+            const threeLetterCode = runner.nationality;
+            const twoLetterCode = getCountryCodeForFlag(threeLetterCode);
+            const countryName = getCountryName(threeLetterCode);
 
             // Get selected and alternate PB values
-            const selectedPB = metric === 'last-3-years' ? runner.personalBestLast3Years : runner.personalBestAllTime
-            const selectedPBYear = metric === 'last-3-years' ? runner.personalBestLast3YearsYear : runner.personalBestAllTimeYear
-            const selectedLabel = metric === 'last-3-years' ? t.runners.last3Years : t.runners.allTime
+            const selectedPB =
+              metric === "last-3-years"
+                ? runner.personalBestLast3Years
+                : runner.personalBestAllTime;
+            const selectedPBYear =
+              metric === "last-3-years"
+                ? runner.personalBestLast3YearsYear
+                : runner.personalBestAllTimeYear;
+            const selectedLabel =
+              metric === "last-3-years"
+                ? t.runners.last3Years
+                : t.runners.allTime;
 
-            const alternatePB = metric === 'last-3-years' ? runner.personalBestAllTime : runner.personalBestLast3Years
-            const alternatePBYear = metric === 'last-3-years' ? runner.personalBestAllTimeYear : runner.personalBestLast3YearsYear
-            const alternateLabel = metric === 'last-3-years' ? t.runners.allTime : t.runners.last3Years
+            const alternatePB =
+              metric === "last-3-years"
+                ? runner.personalBestAllTime
+                : runner.personalBestLast3Years;
+            const alternatePBYear =
+              metric === "last-3-years"
+                ? runner.personalBestAllTimeYear
+                : runner.personalBestLast3YearsYear;
+            const alternateLabel =
+              metric === "last-3-years"
+                ? t.runners.allTime
+                : t.runners.last3Years;
 
-            const rank = (runner as any).rank
+            const rank = (runner as any).rank;
 
             return (
               <div key={row.id} className="border rounded-lg overflow-hidden">
@@ -380,6 +515,43 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
                     </div>
                   ) : null}
 
+                  {/* Avatar - spans both rows, same size and structure as individual runner page */}
+                  {runner.photoUrl ? (
+                    <div className="relative w-14 h-14 rounded-full overflow-hidden border border-border flex-shrink-0">
+                      <div
+                        className="absolute inset-0"
+                        style={{
+                          transform: `scale(${runner.photoZoom || 1.5})`,
+                          transformOrigin: `${runner.photoFocalX || 50}% ${
+                            runner.photoFocalY || 50
+                          }%`,
+                        }}
+                      >
+                        <Image
+                          src={runner.photoUrl}
+                          alt={`${runner.firstname} ${runner.lastname}`}
+                          fill
+                          className="object-cover"
+                          style={{
+                            objectPosition: `${runner.photoFocalX || 50}% ${
+                              runner.photoFocalY || 50
+                            }%`,
+                            imageRendering: "crisp-edges",
+                          }}
+                          sizes="56px"
+                          quality={95}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                      <span className="text-sm font-medium text-muted-foreground">
+                        {runner.firstname.charAt(0)}
+                        {runner.lastname.charAt(0)}
+                      </span>
+                    </div>
+                  )}
+
                   {/* Main content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2 mb-1">
@@ -388,7 +560,10 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
                           {runner.firstname} {runner.lastname}
                         </div>
                         {(runner.noteCount ?? 0) > 0 && (
-                          <div className="inline-flex items-center relative" title="Click to view notes">
+                          <div
+                            className="inline-flex items-center relative"
+                            title="Click to view notes"
+                          >
                             <MessageSquare className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                             <span className="absolute -top-1 -right-1 bg-blue-600 dark:bg-blue-500 text-white text-[10px] font-semibold rounded-full h-3.5 w-3.5 flex items-center justify-center">
                               {runner.noteCount}
@@ -398,12 +573,16 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
                       </div>
                       <button
                         onClick={(e) => {
-                          e.stopPropagation()
-                          toggleRow(runner.id)
+                          e.stopPropagation();
+                          toggleRow(runner.id);
                         }}
                         className="p-1 hover:bg-accent rounded-md flex-shrink-0"
                       >
-                        {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                        {isExpanded ? (
+                          <ChevronUp className="h-4 w-4" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4" />
+                        )}
                       </button>
                     </div>
                     <div className="flex items-center gap-1.5 text-xs text-muted-foreground flex-wrap">
@@ -411,8 +590,8 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
                         countryCode={twoLetterCode}
                         svg
                         style={{
-                          width: '1.2em',
-                          height: '0.8em',
+                          width: "1.2em",
+                          height: "0.8em",
                         }}
                         title={countryName}
                       />
@@ -422,9 +601,15 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
                         {selectedPB ? (
                           <>
                             {selectedPB.toFixed(3)}km
-                            {selectedPBYear && <span className="text-muted-foreground ml-0.5">({selectedPBYear})</span>}
+                            {selectedPBYear && (
+                              <span className="text-muted-foreground ml-0.5">
+                                ({selectedPBYear})
+                              </span>
+                            )}
                           </>
-                        ) : t.runners.noPB}
+                        ) : (
+                          t.runners.noPB
+                        )}
                       </span>
                     </div>
                   </div>
@@ -434,22 +619,32 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
                 {isExpanded && (
                   <div className="px-4 pb-4 space-y-3 bg-accent/20 border-t">
                     <div className="pt-3">
-                      <div className="text-xs text-muted-foreground">{t.runners.pb} {alternateLabel}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {t.runners.pb} {alternateLabel}
+                      </div>
                       <div className="text-sm font-medium">
                         {alternatePB ? (
                           <>
                             {alternatePB.toFixed(3)} km
                             {alternatePBYear && (
-                              <span className="text-xs text-muted-foreground ml-1">({alternatePBYear})</span>
+                              <span className="text-xs text-muted-foreground ml-1">
+                                ({alternatePBYear})
+                              </span>
                             )}
                           </>
-                        ) : '-'}
+                        ) : (
+                          "-"
+                        )}
                       </div>
                     </div>
                     {runner.dateOfBirth && (
                       <div>
-                        <div className="text-xs text-muted-foreground">{t.runners.yearOfBirth}</div>
-                        <div className="text-sm font-medium">{new Date(runner.dateOfBirth).getFullYear()}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {t.runners.yearOfBirth}
+                        </div>
+                        <div className="text-sm font-medium">
+                          {new Date(runner.dateOfBirth).getFullYear()}
+                        </div>
                       </div>
                     )}
                     {isAdmin && (
@@ -458,21 +653,21 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
                           variant="outline"
                           size="sm"
                           onClick={(e) => {
-                            e.stopPropagation()
-                            openEditDialog(runner)
+                            e.stopPropagation();
+                            openEditDialog(runner);
                           }}
                           className="flex-1"
                         >
                           <Pencil className="h-3 w-3 mr-1" />
                           {t.runners.edit}
                         </Button>
-                        {runner.matchStatus === 'unmatched' && (
+                        {runner.matchStatus === "unmatched" && (
                           <Button
                             variant="default"
                             size="sm"
                             onClick={(e) => {
-                              e.stopPropagation()
-                              onManualMatch(runner)
+                              e.stopPropagation();
+                              onManualMatch(runner);
                             }}
                             className="flex-1"
                           >
@@ -484,7 +679,7 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
                   </div>
                 )}
               </div>
-            )
+            );
           })
         ) : (
           <div className="col-span-full border rounded-lg p-8 text-center text-muted-foreground">
@@ -503,7 +698,10 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
                   <TableHead key={header.id} className="whitespace-nowrap">
                     {header.isPlaceholder
                       ? null
-                      : flexRender(header.column.columnDef.header, header.getContext())}
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                   </TableHead>
                 ))}
               </TableRow>
@@ -514,7 +712,7 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  data-state={row.getIsSelected() && 'selected'}
+                  data-state={row.getIsSelected() && "selected"}
                   onClick={() => onRowClick(row.original.id)}
                   className={cn(
                     "cursor-pointer hover:bg-muted/50",
@@ -523,14 +721,20 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} className="whitespace-nowrap">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
                     </TableCell>
                   ))}
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
                   {t.runners.noResults}
                 </TableCell>
               </TableRow>
@@ -541,17 +745,20 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
 
       {/* Results count */}
       <div className="text-sm text-muted-foreground">
-        {t.runners.showingRunners.replace('{count}', table.getRowModel().rows.length.toString()).replace('{total}', runners.length.toString())}
+        {t.runners.showingRunners
+          .replace("{count}", table.getRowModel().rows.length.toString())
+          .replace("{total}", runners.length.toString())}
       </div>
 
       {/* Edit Dialog */}
-      <Dialog open={!!editingRunner} onOpenChange={(open) => !open && closeEditDialog()}>
+      <Dialog
+        open={!!editingRunner}
+        onOpenChange={(open) => !open && closeEditDialog()}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t.runners.editRunner}</DialogTitle>
-            <DialogDescription>
-              {t.runners.editDescription}
-            </DialogDescription>
+            <DialogDescription>{t.runners.editDescription}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
@@ -561,7 +768,9 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
               <Input
                 id="firstname"
                 value={editForm.firstname}
-                onChange={(e) => setEditForm({ ...editForm, firstname: e.target.value })}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, firstname: e.target.value })
+                }
                 className="col-span-3"
               />
             </div>
@@ -572,7 +781,9 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
               <Input
                 id="lastname"
                 value={editForm.lastname}
-                onChange={(e) => setEditForm({ ...editForm, lastname: e.target.value })}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, lastname: e.target.value })
+                }
                 className="col-span-3"
               />
             </div>
@@ -583,7 +794,12 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
               <Input
                 id="nationality"
                 value={editForm.nationality}
-                onChange={(e) => setEditForm({ ...editForm, nationality: e.target.value.toUpperCase() })}
+                onChange={(e) =>
+                  setEditForm({
+                    ...editForm,
+                    nationality: e.target.value.toUpperCase(),
+                  })
+                }
                 className="col-span-3"
                 maxLength={3}
                 placeholder={t.runners.nationalityPlaceholder}
@@ -595,7 +811,9 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
               </Label>
               <Select
                 value={editForm.gender}
-                onValueChange={(value: 'M' | 'W') => setEditForm({ ...editForm, gender: value })}
+                onValueChange={(value: "M" | "W") =>
+                  setEditForm({ ...editForm, gender: value })
+                }
               >
                 <SelectTrigger className="col-span-3">
                   <SelectValue placeholder={t.runners.selectGender} />
@@ -614,7 +832,9 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
                 <Checkbox
                   id="dns"
                   checked={editForm.dns}
-                  onCheckedChange={(checked) => setEditForm({ ...editForm, dns: checked as boolean })}
+                  onCheckedChange={(checked) =>
+                    setEditForm({ ...editForm, dns: checked as boolean })
+                  }
                 />
                 <label
                   htmlFor="dns"
@@ -626,7 +846,11 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={closeEditDialog} disabled={isSaving}>
+            <Button
+              variant="outline"
+              onClick={closeEditDialog}
+              disabled={isSaving}
+            >
               {t.runners.cancel}
             </Button>
             <Button onClick={saveEdit} disabled={isSaving}>
@@ -636,5 +860,5 @@ export function RunnerTable({ runners, metric, onManualMatch, onRowClick }: Runn
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

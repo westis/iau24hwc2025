@@ -1,149 +1,146 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getDatabase } from '@/lib/db/database'
+import { NextRequest, NextResponse } from "next/server";
+import { getRunnerById, getDatabase } from "@/lib/db/database";
+import { revalidatePath } from "next/cache";
 
-export const dynamic = 'force-dynamic'
+// Enable ISR: revalidate every 60 seconds (same as /api/runners)
+export const revalidate = 60;
 
+// GET /api/runners/[id] - Get a single runner by ID
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params
-    const runnerId = parseInt(id)
+    const { id } = await params;
+    const runnerId = parseInt(id);
 
     if (isNaN(runnerId)) {
-      return NextResponse.json({ error: 'Invalid runner ID' }, { status: 400 })
+      return NextResponse.json({ error: "Invalid runner ID" }, { status: 400 });
     }
 
-    const db = getDatabase()
-
-    // Get runner details
-    const runnerResult = await db.query(`
-      SELECT * FROM runners WHERE id = $1
-    `, [runnerId])
-
-    const runner = runnerResult.rows[0]
+    const runner = await getRunnerById(runnerId);
 
     if (!runner) {
-      return NextResponse.json({ error: 'Runner not found' }, { status: 404 })
+      return NextResponse.json({ error: "Runner not found" }, { status: 404 });
     }
 
-    // Get performances for this runner
-    const performancesResult = await db.query(`
-      SELECT * FROM performances
-      WHERE runner_id = $1
-      ORDER BY event_date DESC
-    `, [runnerId])
-
-    // Transform to camelCase to match frontend expectations
-    const transformedRunner = {
-      id: runner.id,
-      entryId: runner.entry_id,
-      firstname: runner.firstname,
-      lastname: runner.lastname,
-      nationality: runner.nationality,
-      gender: runner.gender,
-      dns: runner.dns || false,
-      duvId: runner.duv_id,
-      matchStatus: runner.match_status,
-      matchConfidence: runner.match_confidence,
-      personalBestAllTime: runner.personal_best_all_time,
-      personalBestAllTimeYear: runner.personal_best_all_time_year,
-      personalBestLast3Years: runner.personal_best_last_2_years,
-      personalBestLast3YearsYear: runner.personal_best_last_2_years_year,
-      dateOfBirth: runner.date_of_birth,
-      age: runner.age,
-      allPBs: runner.all_pbs || [],
-      photoUrl: runner.photo_url,
-      photoFocalX: runner.photo_focal_x,
-      photoFocalY: runner.photo_focal_y,
-      photoZoom: runner.photo_zoom,
-      bio: runner.bio,
-      instagramUrl: runner.instagram_url,
-      stravaUrl: runner.strava_url,
-      performanceHistory: performancesResult.rows.map((perf: any) => ({
-        eventId: perf.event_id,
-        eventName: perf.event_name,
-        date: perf.event_date,
-        distance: perf.distance,
-        rank: perf.rank,
-        rankGender: perf.rank_gender,
-        eventType: perf.event_type,
-      }))
-    }
-
-    return NextResponse.json({
-      runner: transformedRunner
-    })
+    return NextResponse.json(runner, {
+      headers: {
+        // Cache for 60 seconds, serve stale for 2 minutes while revalidating
+        "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
+      },
+    });
   } catch (error) {
-    console.error('Error fetching runner profile:', error)
+    console.error("Error fetching runner:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch runner profile' },
+      { error: "Failed to fetch runner", details: String(error) },
       { status: 500 }
-    )
+    );
   }
 }
 
+// PATCH /api/runners/[id] - Update a runner (admin only)
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params
-    const body = await request.json()
-    const db = getDatabase()
+    const { id } = await params;
+    const runnerId = parseInt(id);
 
-    // Validate input
-    const allowedFields = ['firstname', 'lastname', 'nationality', 'gender', 'dns', 'photo_url', 'photo_focal_x', 'photo_focal_y', 'photo_zoom', 'bio', 'instagram_url', 'strava_url']
-    const updates: string[] = []
-    const values: any[] = []
-    let paramIndex = 1
+    if (isNaN(runnerId)) {
+      return NextResponse.json({ error: "Invalid runner ID" }, { status: 400 });
+    }
 
-    for (const field of allowedFields) {
-      if (body[field] !== undefined) {
-        updates.push(`${field} = $${paramIndex++}`)
-        values.push(body[field])
-      }
+    const body = await request.json();
+    const db = getDatabase();
+
+    // Build update query dynamically based on provided fields
+    const updates: string[] = [];
+    const values: any[] = [];
+    let paramIndex = 1;
+
+    if (body.firstname !== undefined) {
+      updates.push(`firstname = $${paramIndex++}`);
+      values.push(body.firstname);
+    }
+    if (body.lastname !== undefined) {
+      updates.push(`lastname = $${paramIndex++}`);
+      values.push(body.lastname);
+    }
+    if (body.nationality !== undefined) {
+      updates.push(`nationality = $${paramIndex++}`);
+      values.push(body.nationality);
+    }
+    if (body.gender !== undefined) {
+      updates.push(`gender = $${paramIndex++}`);
+      values.push(body.gender);
+    }
+    if (body.dns !== undefined) {
+      updates.push(`dns = $${paramIndex++}`);
+      values.push(body.dns);
+    }
+    if (body.photo_url !== undefined) {
+      updates.push(`photo_url = $${paramIndex++}`);
+      values.push(body.photo_url);
+    }
+    if (body.photo_focal_x !== undefined) {
+      updates.push(`photo_focal_x = $${paramIndex++}`);
+      values.push(body.photo_focal_x);
+    }
+    if (body.photo_focal_y !== undefined) {
+      updates.push(`photo_focal_y = $${paramIndex++}`);
+      values.push(body.photo_focal_y);
+    }
+    if (body.photo_zoom !== undefined) {
+      updates.push(`photo_zoom = $${paramIndex++}`);
+      values.push(body.photo_zoom);
+    }
+    if (body.bio !== undefined) {
+      updates.push(`bio = $${paramIndex++}`);
+      values.push(body.bio);
+    }
+    if (body.instagram_url !== undefined) {
+      updates.push(`instagram_url = $${paramIndex++}`);
+      values.push(body.instagram_url);
+    }
+    if (body.strava_url !== undefined) {
+      updates.push(`strava_url = $${paramIndex++}`);
+      values.push(body.strava_url);
     }
 
     if (updates.length === 0) {
       return NextResponse.json(
-        { error: 'No valid fields to update' },
+        { error: "No fields to update" },
         { status: 400 }
-      )
+      );
     }
 
-    // Add id to values for WHERE clause
-    values.push(id)
+    values.push(runnerId);
+    const result = await db.query(
+      `UPDATE runners SET ${updates.join(
+        ", "
+      )} WHERE id = $${paramIndex} RETURNING *`,
+      values
+    );
 
-    // Update runner
-    const result = await db.query(`
-      UPDATE runners
-      SET ${updates.join(', ')}
-      WHERE id = $${paramIndex}
-    `, values)
-
-    if (result.rowCount === 0) {
-      return NextResponse.json(
-        { error: 'Runner not found' },
-        { status: 404 }
-      )
+    if (result.rows.length === 0) {
+      return NextResponse.json({ error: "Runner not found" }, { status: 404 });
     }
 
-    // Return updated runner
-    const runnerResult = await db.query(`
-      SELECT * FROM runners WHERE id = $1
-    `, [id])
+    // 🔥 ON-DEMAND REVALIDATION - Immediately clear cache!
+    revalidatePath("/participants");
+    revalidatePath(`/runners/${id}`);
+    revalidatePath("/api/runners");
+    revalidatePath(`/api/runners/${id}`);
 
-    return NextResponse.json({
-      success: true,
-      runner: runnerResult.rows[0]
-    })
+    const updatedRunner = await getRunnerById(runnerId);
+    return NextResponse.json(updatedRunner);
   } catch (error) {
-    console.error('Error updating runner:', error)
+    console.error("Error updating runner:", error);
     return NextResponse.json(
-      { error: 'Failed to update runner' },
+      { error: "Failed to update runner", details: String(error) },
       { status: 500 }
-    )
+    );
   }
 }
