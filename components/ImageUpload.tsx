@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -64,6 +64,46 @@ export function ImageUpload({
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
+  // Handle dragging with document-level listeners for smooth dragging
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      // Calculate how much the mouse moved
+      const deltaX = e.clientX - dragStart.x;
+      const deltaY = e.clientY - dragStart.y;
+
+      // Update drag start for next movement
+      setDragStart({
+        x: e.clientX,
+        y: e.clientY,
+      });
+
+      // Convert pixel movement to focal point percentage change
+      // Moving mouse right should move focal point left (show left part of image)
+      const previewSize = 320;
+      const focalDeltaX = -(deltaX / (previewSize * zoom)) * 100;
+      const focalDeltaY = -(deltaY / (previewSize * zoom)) * 100;
+
+      setTempFocalPoint((prev) => ({
+        x: Math.max(0, Math.min(100, prev.x + focalDeltaX)),
+        y: Math.max(0, Math.min(100, prev.y + focalDeltaY)),
+      }));
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isDragging, dragStart, zoom]);
+
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -126,35 +166,6 @@ export function ImageUpload({
     });
   };
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isDragging || !imageRef.current) return;
-
-    // Calculate how much the mouse moved
-    const deltaX = e.clientX - dragStart.x;
-    const deltaY = e.clientY - dragStart.y;
-    
-    // Update drag start for next movement
-    setDragStart({
-      x: e.clientX,
-      y: e.clientY,
-    });
-
-    // Convert pixel movement to focal point percentage change
-    // Moving mouse right should move focal point left (show left part of image)
-    const previewSize = 320;
-    const focalDeltaX = -(deltaX / (previewSize * zoom)) * 100;
-    const focalDeltaY = -(deltaY / (previewSize * zoom)) * 100;
-
-    setTempFocalPoint({
-      x: Math.max(0, Math.min(100, tempFocalPoint.x + focalDeltaX)),
-      y: Math.max(0, Math.min(100, tempFocalPoint.y + focalDeltaY)),
-    });
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
   const handleZoomChange = (value: number[]) => {
     setZoom(value[0]);
   };
@@ -162,7 +173,7 @@ export function ImageUpload({
   const handleFocalPointConfirm = () => {
     if (!tempImageUrl) return;
 
-    console.log('Saving avatar crop settings:', {
+    console.log("Saving avatar crop settings:", {
       focalPoint: tempFocalPoint,
       zoom,
       tempImagePath,
@@ -213,8 +224,8 @@ export function ImageUpload({
     const currentZoomValue =
       typeof currentZoom === "number" ? currentZoom : 1.5;
     setZoom(currentZoomValue);
-    
-    console.log('Loading avatar crop settings:', {
+
+    console.log("Loading avatar crop settings:", {
       focalPoint,
       currentZoom: currentZoomValue,
       previewUrl,
@@ -350,9 +361,6 @@ export function ImageUpload({
                     ref={imageRef}
                     className="relative w-80 h-80 rounded-full overflow-hidden border-4 border-primary bg-black cursor-move select-none"
                     onMouseDown={handleMouseDown}
-                    onMouseMove={handleMouseMove}
-                    onMouseUp={handleMouseUp}
-                    onMouseLeave={handleMouseUp}
                   >
                     {tempImageUrl && (
                       <div
@@ -390,8 +398,8 @@ export function ImageUpload({
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground mt-3 text-center">
-                  This circular preview shows exactly how your 80x80px avatar will
-                  appear
+                  This circular preview shows exactly how your 80x80px avatar
+                  will appear
                 </p>
               </div>
             </div>
