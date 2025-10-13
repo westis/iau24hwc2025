@@ -43,6 +43,15 @@ export interface Runner {
     [distance: string]: DUVPersonalBest
   }>
 
+  // Profile data
+  photoUrl?: string | null                     // Photo URL from Supabase Storage
+  photoFocalX?: number                         // Focal point X coordinate (0-100%)
+  photoFocalY?: number                         // Focal point Y coordinate (0-100%)
+  photoZoom?: number                           // Photo zoom level (1.0-3.0)
+  bio?: string | null                          // Runner bio/description
+  instagramUrl?: string | null                 // Instagram profile URL
+  stravaUrl?: string | null                    // Strava profile URL
+
   // Notes (both standalone and news-linked)
   notes?: RunnerNote[]
   noteCount?: number  // Count of notes for efficient display in lists
