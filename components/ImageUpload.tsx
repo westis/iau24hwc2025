@@ -60,10 +60,9 @@ export function ImageUpload({
   );
   const imageRef = useRef<HTMLDivElement>(null);
 
-  // For drag-to-position - SIMPLE approach: just drag with translate
+  // For drag-to-position - manipulate focal point directly
   const [isDragging, setIsDragging] = useState(false);
-  const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
-  const dragStartRef = useRef({ x: 0, y: 0, startPosX: 0, startPosY: 0 });
+  const dragStartRef = useRef({ x: 0, y: 0, startFocalX: 50, startFocalY: 50 });
 
   // Handle dragging with document-level listeners for smooth dragging
   useEffect(() => {
@@ -73,9 +72,15 @@ export function ImageUpload({
       const deltaX = e.clientX - dragStartRef.current.x;
       const deltaY = e.clientY - dragStartRef.current.y;
 
-      setDragPosition({
-        x: dragStartRef.current.startPosX + deltaX,
-        y: dragStartRef.current.startPosY + deltaY,
+      // Convert pixel movement to focal point percentage
+      // Container is 320px, and we're zoomed
+      // Moving right means showing more of the left side (decrease focal X)
+      const focalDeltaX = -(deltaX / (320 * zoom)) * 100;
+      const focalDeltaY = -(deltaY / (320 * zoom)) * 100;
+
+      setTempFocalPoint({
+        x: Math.max(0, Math.min(100, dragStartRef.current.startFocalX + focalDeltaX)),
+        y: Math.max(0, Math.min(100, dragStartRef.current.startFocalY + focalDeltaY)),
       });
     };
 
@@ -90,7 +95,7 @@ export function ImageUpload({
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [isDragging]);
+  }, [isDragging, zoom]);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -134,9 +139,8 @@ export function ImageUpload({
       // Store temp data and show focal point selector
       setTempImageUrl(data.url);
       setTempImagePath(data.path);
-      setTempFocalPoint({ x: 50, y: 50 });
+      setTempFocalPoint({ x: 50, y: 50 }); // Start centered
       setZoom(1.5); // Start with some zoom
-      setDragPosition({ x: 0, y: 0 }); // Start centered
       setShowFocalPointModal(true);
     } catch (err) {
       console.error("Upload error:", err);
@@ -151,8 +155,8 @@ export function ImageUpload({
     dragStartRef.current = {
       x: e.clientX,
       y: e.clientY,
-      startPosX: dragPosition.x,
-      startPosY: dragPosition.y,
+      startFocalX: tempFocalPoint.x,
+      startFocalY: tempFocalPoint.y,
     };
     setIsDragging(true);
   };
@@ -164,34 +168,19 @@ export function ImageUpload({
   const handleFocalPointConfirm = () => {
     if (!tempImageUrl) return;
 
-    // Convert drag position to focal point percentage
-    // dragPosition represents how much the image was moved from center
-    // Positive X = dragged right = showing left part of image = focal point left of center
-    const previewSize = 320;
-    const calculatedFocalPoint = {
-      x: 50 - (dragPosition.x / (previewSize * zoom)) * 100,
-      y: 50 - (dragPosition.y / (previewSize * zoom)) * 100,
-    };
-    
-    // Clamp to 0-100
-    calculatedFocalPoint.x = Math.max(0, Math.min(100, calculatedFocalPoint.x));
-    calculatedFocalPoint.y = Math.max(0, Math.min(100, calculatedFocalPoint.y));
-
     console.log("Saving avatar crop settings:", {
-      dragPosition,
+      focalPoint: tempFocalPoint,
       zoom,
-      calculatedFocalPoint,
       tempImagePath,
       tempImageUrl,
     });
 
     setPreviewUrl(tempImageUrl);
-    setFocalPoint(calculatedFocalPoint);
-    setTempFocalPoint(calculatedFocalPoint);
+    setFocalPoint(tempFocalPoint);
 
     // If tempImagePath is null, we're just adjusting existing image, use current URL
     const pathToUse = tempImagePath || currentImageUrl || "";
-    onUploadComplete(tempImageUrl, pathToUse, calculatedFocalPoint, zoom);
+    onUploadComplete(tempImageUrl, pathToUse, tempFocalPoint, zoom);
 
     setShowFocalPointModal(false);
     setTempImageUrl(null);
@@ -231,16 +220,9 @@ export function ImageUpload({
       typeof currentZoom === "number" ? currentZoom : 1.5;
     setZoom(currentZoomValue);
 
-    // Convert focal point back to drag position
-    const previewSize = 320;
-    const dragX = (50 - focalPoint.x) * (previewSize * currentZoomValue) / 100;
-    const dragY = (50 - focalPoint.y) * (previewSize * currentZoomValue) / 100;
-    setDragPosition({ x: dragX, y: dragY });
-
     console.log("Loading avatar crop settings:", {
       focalPoint,
       currentZoom: currentZoomValue,
-      calculatedDragPosition: { x: dragX, y: dragY },
       previewUrl,
     });
 
@@ -376,21 +358,29 @@ export function ImageUpload({
                     onMouseDown={handleMouseDown}
                   >
                     {tempImageUrl && (
-                      <Image
-                        src={tempImageUrl}
-                        alt="Position your image"
-                        fill
-                        className="object-cover pointer-events-none"
+                      <div
+                        className="absolute inset-0"
                         style={{
-                          transform: `scale(${zoom}) translate(${dragPosition.x / zoom}px, ${dragPosition.y / zoom}px)`,
+                          transform: `scale(${zoom})`,
+                          transformOrigin: `${tempFocalPoint.x}% ${tempFocalPoint.y}%`,
                           transition: isDragging
                             ? "none"
                             : "transform 0.1s ease-out",
                         }}
-                        quality={100}
-                        priority
-                        draggable={false}
-                      />
+                      >
+                        <Image
+                          src={tempImageUrl}
+                          alt="Position your image"
+                          fill
+                          className="object-cover pointer-events-none"
+                          style={{
+                            objectPosition: `${tempFocalPoint.x}% ${tempFocalPoint.y}%`,
+                          }}
+                          quality={100}
+                          priority
+                          draggable={false}
+                        />
+                      </div>
                     )}
                     {/* Overlay hint */}
                     {!isDragging && (
