@@ -9,6 +9,7 @@ import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { useAuth } from "@/lib/auth/auth-context";
 import { RunnersView } from "@/components/participants/RunnersView";
 import { TeamsView } from "@/components/participants/TeamsView";
+import { SocialView } from "@/components/participants/SocialView";
 
 function ParticipantsPageContent() {
   const router = useRouter();
@@ -16,9 +17,13 @@ function ParticipantsPageContent() {
   const { t } = useLanguage();
   const { isAdmin } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<"individual" | "teams">(() => {
+  const [activeTab, setActiveTab] = useState<
+    "individual" | "teams" | "social"
+  >(() => {
     const v = searchParams.get("view");
-    return v === "teams" ? "teams" : "individual";
+    if (v === "teams") return "teams";
+    if (v === "social") return "social";
+    return "individual";
   });
 
   const [gender, setGender] = useState<"M" | "W">(() => {
@@ -42,7 +47,8 @@ function ParticipantsPageContent() {
     const c = searchParams.get("country");
     const m = searchParams.get("metric");
 
-    if (v === "teams" || v === "individual") setActiveTab(v);
+    if (v === "teams" || v === "individual" || v === "social")
+      setActiveTab(v);
     if (g === "W" || g === "M") setGender(g);
     if (c !== null) setCountry(c);
     if (m === "all-time" || m === "last-3-years") setMetric(m);
@@ -50,7 +56,7 @@ function ParticipantsPageContent() {
 
   // Update URL when parameters change
   const updateURL = (params: {
-    view?: "individual" | "teams";
+    view?: "individual" | "teams" | "social";
     gender?: "M" | "W";
     country?: string;
     metric?: "last-3-years" | "all-time";
@@ -71,7 +77,7 @@ function ParticipantsPageContent() {
   };
 
   const handleTabChange = (value: string) => {
-    const newTab = value as "individual" | "teams";
+    const newTab = value as "individual" | "teams" | "social";
     setActiveTab(newTab);
     updateURL({ view: newTab });
   };
@@ -112,11 +118,12 @@ function ParticipantsPageContent() {
           onValueChange={handleTabChange}
           className="w-full"
         >
-          <TabsList className="grid w-full max-w-md grid-cols-2 mb-6">
+          <TabsList className="grid w-full max-w-2xl grid-cols-3 mb-6">
             <TabsTrigger value="individual">
               {t.participants.individual}
             </TabsTrigger>
             <TabsTrigger value="teams">{t.participants.teams}</TabsTrigger>
+            <TabsTrigger value="social">Social</TabsTrigger>
           </TabsList>
 
           <TabsContent value="individual" className="mt-0">
@@ -137,6 +144,16 @@ function ParticipantsPageContent() {
               initialMetric={metric}
               onGenderChange={handleGenderChange}
               onMetricChange={handleMetricChange}
+              showHeader={false}
+            />
+          </TabsContent>
+
+          <TabsContent value="social" className="mt-0">
+            <SocialView
+              initialGender={gender}
+              initialCountry={country}
+              onGenderChange={handleGenderChange}
+              onCountryChange={handleCountryChange}
               showHeader={false}
             />
           </TabsContent>
