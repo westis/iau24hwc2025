@@ -39,7 +39,7 @@ export function ImageUpload({
     currentFocalPoint || { x: 50, y: 50 }
   )
   const [tempFocalPoint, setTempFocalPoint] = useState<{ x: number; y: number }>({ x: 50, y: 50 })
-  const [zoom, setZoom] = useState(1)
+  const [zoom, setZoom] = useState<number>(typeof currentZoom === 'number' ? currentZoom : 1.5)
   const imageRef = useRef<HTMLDivElement>(null)
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -147,7 +147,7 @@ export function ImageUpload({
     setTempImageUrl(previewUrl)
     setTempImagePath(null) // No new upload, just adjusting existing
     setTempFocalPoint({ x: focalPoint.x, y: focalPoint.y })
-    setZoom(currentZoom || 1.5)
+    setZoom(typeof currentZoom === 'number' ? currentZoom : 1.5)
     setShowFocalPointModal(true)
   }
 
@@ -312,7 +312,7 @@ export function ImageUpload({
                       <div
                         className="absolute inset-0"
                         style={{
-                          transform: `scale(${zoom})`,
+                          transform: `scale(${typeof zoom === 'number' ? zoom : 1.5})`,
                           transformOrigin: `${tempFocalPoint.x}% ${tempFocalPoint.y}%`
                         }}
                       >
@@ -340,11 +340,11 @@ export function ImageUpload({
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className="text-sm font-medium">Zoom</label>
-                <span className="text-xs text-muted-foreground">{zoom.toFixed(1)}x</span>
+                <span className="text-xs text-muted-foreground">{(typeof zoom === 'number' ? zoom : 1.5).toFixed(1)}x</span>
               </div>
               <Slider
-                value={[zoom]}
-                onValueChange={([value]) => setZoom(value)}
+                value={[typeof zoom === 'number' ? zoom : 1.5]}
+                onValueChange={([value]) => setZoom(typeof value === 'number' ? value : 1.5)}
                 min={1}
                 max={3}
                 step={0.1}
