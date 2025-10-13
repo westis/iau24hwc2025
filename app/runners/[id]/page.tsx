@@ -1273,16 +1273,22 @@ export default function RunnerProfilePage() {
               <div className="flex items-center justify-center p-8">
                 <div className="relative w-96 h-96 rounded-full overflow-hidden shadow-2xl">
                   <Image
-                    src={
-                      runner.avatarUrl
-                        ? runner.avatarUrl.replace(/\.jpg$/i, "@3x.jpg")
-                        : runner.photoUrl!
-                    }
+                    src={runner.avatarUrl || runner.photoUrl!}
                     alt={`${runner.firstname} ${runner.lastname}`}
                     fill
                     className="object-cover"
                     quality={100}
                     unoptimized
+                    onError={(e) => {
+                      console.error("Image load error:", e);
+                      // Try @3x fallback, then @2x, then regular
+                      const img = e.target as HTMLImageElement;
+                      if (img.src.includes("@3x")) {
+                        img.src = img.src.replace("@3x.jpg", "@2x.jpg");
+                      } else if (img.src.includes("@2x")) {
+                        img.src = img.src.replace("@2x.jpg", ".jpg");
+                      }
+                    }}
                   />
                 </div>
               </div>
