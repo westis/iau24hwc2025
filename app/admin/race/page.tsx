@@ -1,0 +1,389 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/auth/auth-context'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { ArrowLeft } from 'lucide-react'
+import type { RaceInfo } from '@/types/race'
+
+export default function AdminRacePage() {
+  const router = useRouter()
+  const { isAdmin, loading: authLoading } = useAuth()
+  const { t } = useLanguage()
+
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [raceInfo, setRaceInfo] = useState<RaceInfo | null>(null)
+  const [formData, setFormData] = useState({
+    raceNameEn: '',
+    raceNameSv: '',
+    descriptionEn: '',
+    descriptionSv: '',
+    startDate: '',
+    endDate: '',
+    locationName: '',
+    locationAddress: '',
+    liveResultsUrl: '',
+    registrationUrl: '',
+    officialWebsiteUrl: '',
+    courseMapUrl: '',
+    heroImageUrl: '',
+    rulesEn: '',
+    rulesSv: '',
+    contactEmail: '',
+    contactPhone: '',
+  })
+
+  useEffect(() => {
+    if (!authLoading && !isAdmin) {
+      router.push('/')
+      return
+    }
+
+    if (isAdmin) {
+      fetchRaceInfo()
+    }
+  }, [authLoading, isAdmin, router])
+
+  async function fetchRaceInfo() {
+    try {
+      const response = await fetch('/api/race')
+      if (response.ok) {
+        const data = await response.json()
+        setRaceInfo(data)
+        setFormData({
+          raceNameEn: data.raceNameEn || '',
+          raceNameSv: data.raceNameSv || '',
+          descriptionEn: data.descriptionEn || '',
+          descriptionSv: data.descriptionSv || '',
+          startDate: data.startDate ? data.startDate.slice(0, 16) : '',
+          endDate: data.endDate ? data.endDate.slice(0, 16) : '',
+          locationName: data.locationName || '',
+          locationAddress: data.locationAddress || '',
+          liveResultsUrl: data.liveResultsUrl || '',
+          registrationUrl: data.registrationUrl || '',
+          officialWebsiteUrl: data.officialWebsiteUrl || '',
+          courseMapUrl: data.courseMapUrl || '',
+          heroImageUrl: data.heroImageUrl || '',
+          rulesEn: data.rulesEn || '',
+          rulesSv: data.rulesSv || '',
+          contactEmail: data.contactEmail || '',
+          contactPhone: data.contactPhone || '',
+        })
+      }
+    } catch (error) {
+      console.error('Failed to fetch race info:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+
+    if (!raceInfo) return
+
+    setSaving(true)
+    try {
+      const response = await fetch(`/api/race/${raceInfo.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formData,
+          startDate: formData.startDate ? new Date(formData.startDate).toISOString() : null,
+          endDate: formData.endDate ? new Date(formData.endDate).toISOString() : null,
+        }),
+      })
+
+      if (response.ok) {
+        alert('Race information updated successfully!')
+        fetchRaceInfo()
+      } else {
+        alert('Failed to update race information')
+      }
+    } catch (error) {
+      console.error('Error updating race info:', error)
+      alert('Failed to update race information')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (authLoading || loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-foreground mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!isAdmin) {
+    return null
+  }
+
+  return (
+    <main className="min-h-screen py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mb-6">
+          <Button
+            variant="ghost"
+            onClick={() => router.push('/')}
+            className="mb-4"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Home
+          </Button>
+          <h1 className="text-3xl font-bold">Edit Race Information</h1>
+          <p className="text-muted-foreground">Manage race details for IAU 24h WC 2025</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Basic Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Basic Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="raceNameEn">Race Name (English)</Label>
+                  <Input
+                    id="raceNameEn"
+                    value={formData.raceNameEn}
+                    onChange={(e) => setFormData({ ...formData, raceNameEn: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="raceNameSv">Race Name (Swedish)</Label>
+                  <Input
+                    id="raceNameSv"
+                    value={formData.raceNameSv}
+                    onChange={(e) => setFormData({ ...formData, raceNameSv: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="descriptionEn">Description (English)</Label>
+                <Textarea
+                  id="descriptionEn"
+                  value={formData.descriptionEn}
+                  onChange={(e) => setFormData({ ...formData, descriptionEn: e.target.value })}
+                  rows={3}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="descriptionSv">Description (Swedish)</Label>
+                <Textarea
+                  id="descriptionSv"
+                  value={formData.descriptionSv}
+                  onChange={(e) => setFormData({ ...formData, descriptionSv: e.target.value })}
+                  rows={3}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Date & Location */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Date & Location</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="startDate">Start Date & Time</Label>
+                  <Input
+                    id="startDate"
+                    type="datetime-local"
+                    value={formData.startDate}
+                    onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="endDate">End Date & Time</Label>
+                  <Input
+                    id="endDate"
+                    type="datetime-local"
+                    value={formData.endDate}
+                    onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="locationName">Location Name</Label>
+                <Input
+                  id="locationName"
+                  value={formData.locationName}
+                  onChange={(e) => setFormData({ ...formData, locationName: e.target.value })}
+                  placeholder="e.g., Albi, France"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="locationAddress">Location Address</Label>
+                <Input
+                  id="locationAddress"
+                  value={formData.locationAddress}
+                  onChange={(e) => setFormData({ ...formData, locationAddress: e.target.value })}
+                  placeholder="Full address"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Links & Media */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Links & Media</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="liveResultsUrl">Live Results URL</Label>
+                <Input
+                  id="liveResultsUrl"
+                  type="url"
+                  value={formData.liveResultsUrl}
+                  onChange={(e) => setFormData({ ...formData, liveResultsUrl: e.target.value })}
+                  placeholder="https://..."
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="registrationUrl">Registration URL</Label>
+                <Input
+                  id="registrationUrl"
+                  type="url"
+                  value={formData.registrationUrl}
+                  onChange={(e) => setFormData({ ...formData, registrationUrl: e.target.value })}
+                  placeholder="https://..."
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="officialWebsiteUrl">Official Website URL</Label>
+                <Input
+                  id="officialWebsiteUrl"
+                  type="url"
+                  value={formData.officialWebsiteUrl}
+                  onChange={(e) => setFormData({ ...formData, officialWebsiteUrl: e.target.value })}
+                  placeholder="https://..."
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="courseMapUrl">Course Map URL</Label>
+                <Input
+                  id="courseMapUrl"
+                  type="url"
+                  value={formData.courseMapUrl}
+                  onChange={(e) => setFormData({ ...formData, courseMapUrl: e.target.value })}
+                  placeholder="https://... (image URL)"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="heroImageUrl">Hero Image URL</Label>
+                <Input
+                  id="heroImageUrl"
+                  type="url"
+                  value={formData.heroImageUrl}
+                  onChange={(e) => setFormData({ ...formData, heroImageUrl: e.target.value })}
+                  placeholder="https://... (image URL)"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Rules */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Rules & Regulations</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="rulesEn">Rules (English)</Label>
+                <Textarea
+                  id="rulesEn"
+                  value={formData.rulesEn}
+                  onChange={(e) => setFormData({ ...formData, rulesEn: e.target.value })}
+                  rows={6}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="rulesSv">Rules (Swedish)</Label>
+                <Textarea
+                  id="rulesSv"
+                  value={formData.rulesSv}
+                  onChange={(e) => setFormData({ ...formData, rulesSv: e.target.value })}
+                  rows={6}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Contact */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Contact Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="contactEmail">Contact Email</Label>
+                  <Input
+                    id="contactEmail"
+                    type="email"
+                    value={formData.contactEmail}
+                    onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })}
+                    placeholder="email@example.com"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="contactPhone">Contact Phone</Label>
+                  <Input
+                    id="contactPhone"
+                    type="tel"
+                    value={formData.contactPhone}
+                    onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })}
+                    placeholder="+1234567890"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="flex justify-end gap-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push('/')}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={saving}>
+              {saving ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </main>
+  )
+}
