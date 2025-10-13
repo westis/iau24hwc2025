@@ -48,6 +48,7 @@ export interface Runner {
   photoFocalX?: number                         // Focal point X coordinate (0-100%)
   photoFocalY?: number                         // Focal point Y coordinate (0-100%)
   photoZoom?: number                           // Photo zoom level (1.0-3.0)
+  avatarUrl?: string | null                    // Pre-cropped avatar URL (generated from photoUrl with focal point)
   bio?: string | null                          // Runner bio/description
   instagramUrl?: string | null                 // Instagram profile URL
   stravaUrl?: string | null                    // Strava profile URL

@@ -109,6 +109,63 @@ export async function PATCH(
       values.push(body.strava_url);
     }
 
+    // If photo settings changed, generate cropped avatar
+    if (
+      body.photo_url !== undefined ||
+      body.photo_focal_x !== undefined ||
+      body.photo_focal_y !== undefined ||
+      body.photo_zoom !== undefined
+    ) {
+      // Get current values to fill in any missing parameters
+      const currentRunner = await db.query(
+        "SELECT photo_url, photo_focal_x, photo_focal_y, photo_zoom FROM runners WHERE id = $1",
+        [runnerId]
+      );
+
+      if (currentRunner.rows.length > 0) {
+        const current = currentRunner.rows[0];
+        const photoUrl = body.photo_url ?? current.photo_url;
+        const focalX = body.photo_focal_x ?? current.photo_focal_x ?? 50;
+        const focalY = body.photo_focal_y ?? current.photo_focal_y ?? 50;
+        const zoom = body.photo_zoom ?? current.photo_zoom ?? 1.5;
+
+        // Only generate avatar if we have a photo URL
+        if (photoUrl) {
+          try {
+            const cropResponse = await fetch(
+              `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/api/upload/crop-avatar`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  imageUrl: photoUrl,
+                  focalX,
+                  focalY,
+                  zoom,
+                  bucket: "runner-photos",
+                }),
+              }
+            );
+
+            if (cropResponse.ok) {
+              const { avatarUrl } = await cropResponse.json();
+              updates.push(`avatar_url = $${paramIndex++}`);
+              values.push(avatarUrl);
+            } else {
+              console.error("Failed to generate avatar:", await cropResponse.text());
+            }
+          } catch (error) {
+            console.error("Error generating avatar:", error);
+            // Continue without avatar - not a critical failure
+          }
+        } else if (body.photo_url === null) {
+          // Photo was removed, clear avatar
+          updates.push(`avatar_url = $${paramIndex++}`);
+          values.push(null);
+        }
+      }
+    }
+
     if (updates.length === 0) {
       return NextResponse.json(
         { error: "No fields to update" },

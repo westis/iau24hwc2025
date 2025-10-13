@@ -122,34 +122,19 @@ export function RunnerTable({
         accessorFn: (row) => `${row.firstname} ${row.lastname}`,
         cell: ({ row }) => (
           <div className="flex items-center gap-2">
-            {/* Runner Avatar */}
-            {row.original.photoUrl ? (
-              <div className="relative w-10 h-10 rounded-full overflow-hidden border border-border flex-shrink-0">
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    transform: `scale(${row.original.photoZoom || 1.5})`,
-                    transformOrigin: `${row.original.photoFocalX || 50}% ${
-                      row.original.photoFocalY || 50
-                    }%`,
-                  }}
-                >
-                    <Image
-                      src={row.original.photoUrl}
-                      alt={`${row.original.firstname} ${row.original.lastname}`}
-                      fill
-                      className="object-cover"
-                      style={{
-                        objectPosition: `${row.original.photoFocalX || 50}% ${
-                          row.original.photoFocalY || 50
-                        }%`,
-                      }}
-                      sizes="40px"
-                      quality={100}
-                    />
+              {/* Runner Avatar */}
+              {(row.original.avatarUrl || row.original.photoUrl) ? (
+                <div className="relative w-10 h-10 rounded-full overflow-hidden border border-border flex-shrink-0">
+                  <Image
+                    src={row.original.avatarUrl || row.original.photoUrl!}
+                    alt={`${row.original.firstname} ${row.original.lastname}`}
+                    fill
+                    className="object-cover"
+                    sizes="40px"
+                    quality={100}
+                  />
                 </div>
-              </div>
-            ) : (
+              ) : (
               <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
                 <span className="text-xs font-medium text-muted-foreground">
                   {row.original.firstname.charAt(0)}
@@ -442,31 +427,16 @@ export function RunnerTable({
                   ) : null}
 
                   {/* Avatar - spans both rows, same size and structure as individual runner page */}
-                  {runner.photoUrl ? (
+                  {(runner.avatarUrl || runner.photoUrl) ? (
                     <div className="relative w-14 h-14 rounded-full overflow-hidden border border-border flex-shrink-0">
-                      <div
-                        className="absolute inset-0"
-                        style={{
-                          transform: `scale(${runner.photoZoom || 1.5})`,
-                          transformOrigin: `${runner.photoFocalX || 50}% ${
-                            runner.photoFocalY || 50
-                          }%`,
-                        }}
-                      >
-                        <Image
-                          src={runner.photoUrl}
-                          alt={`${runner.firstname} ${runner.lastname}`}
-                          fill
-                          className="object-cover"
-                          style={{
-                            objectPosition: `${runner.photoFocalX || 50}% ${
-                              runner.photoFocalY || 50
-                            }%`,
-                          }}
-                          sizes="56px"
-                          quality={100}
-                        />
-                      </div>
+                      <Image
+                        src={runner.avatarUrl || runner.photoUrl!}
+                        alt={`${runner.firstname} ${runner.lastname}`}
+                        fill
+                        className="object-cover"
+                        sizes="56px"
+                        quality={100}
+                      />
                     </div>
                   ) : (
                     <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
