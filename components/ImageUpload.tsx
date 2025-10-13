@@ -26,7 +26,8 @@ interface ImageUploadProps {
     path: string,
     focalPoint: { x: number; y: number },
     zoom: number,
-    cropPosition?: { x: number; y: number }
+    cropPosition?: { x: number; y: number },
+    cropAreaPixels?: Area | null
   ) => void;
   onDelete?: () => void;
   label?: string;
@@ -124,48 +125,23 @@ export function ImageUpload({
   const handleFocalPointConfirm = async () => {
     if (!tempImageUrl || !croppedArea || !croppedAreaPixels) return;
 
-    setIsUploading(true);
-    setError(null);
+    // Calculate focal point for backward compatibility
+    const focalPoint = {
+      x: croppedArea.x + croppedArea.width / 2,
+      y: croppedArea.y + croppedArea.height / 2,
+    };
 
-    try {
-      // Call the crop-avatar API with the exact crop area from react-easy-crop
-      const cropResponse = await fetch("/api/upload/crop-avatar", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          imageUrl: tempImageUrl,
-          cropAreaPixels: croppedAreaPixels,
-          bucket: bucket,
-        }),
-      });
+    setPreviewUrl(tempImageUrl);
 
-      if (!cropResponse.ok) {
-        throw new Error("Failed to crop avatar");
-      }
+    // If tempImagePath is null, we're just adjusting existing image, use current URL
+    const pathToUse = tempImagePath || currentImageUrl || "";
+    
+    // Pass cropAreaPixels to the parent - the API endpoint will handle cropping
+    onUploadComplete(tempImageUrl, pathToUse, focalPoint, zoom, crop, croppedAreaPixels);
 
-      const { avatarUrl } = await cropResponse.json();
-
-      // Calculate focal point for backward compatibility (still used for preview)
-      const focalPoint = {
-        x: croppedArea.x + croppedArea.width / 2,
-        y: croppedArea.y + croppedArea.height / 2,
-      };
-
-      setPreviewUrl(avatarUrl); // Use the cropped avatar URL for preview
-
-      // If tempImagePath is null, we're just adjusting existing image, use current URL
-      const pathToUse = tempImagePath || currentImageUrl || "";
-      onUploadComplete(tempImageUrl, pathToUse, focalPoint, zoom, crop);
-
-      setShowFocalPointModal(false);
-      setTempImageUrl(null);
-      setTempImagePath(null);
-    } catch (err) {
-      console.error("Crop error:", err);
-      setError(err instanceof Error ? err.message : "Failed to crop avatar");
-    } finally {
-      setIsUploading(false);
-    }
+    setShowFocalPointModal(false);
+    setTempImageUrl(null);
+    setTempImagePath(null);
   };
 
   const handleFocalPointCancel = () => {

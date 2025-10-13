@@ -56,6 +56,7 @@ export function EditRunnerModal({
     bio: "",
     instagram_url: "",
     strava_url: "",
+    crop_area_pixels: null as any,
   });
 
   // Load runner data when modal opens
