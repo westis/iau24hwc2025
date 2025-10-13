@@ -21,6 +21,7 @@ export function ImageUpload({
   bucket,
   currentImageUrl,
   currentFocalPoint,
+  currentZoom,
   onUploadComplete,
   onDelete,
   label = 'Upload Image'
