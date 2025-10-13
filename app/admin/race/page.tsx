@@ -14,7 +14,7 @@ import type { RaceInfo } from '@/types/race'
 
 export default function AdminRacePage() {
   const router = useRouter()
-  const { isAdmin, loading: authLoading } = useAuth()
+  const { isAdmin } = useAuth()
   const { t } = useLanguage()
 
   const [loading, setLoading] = useState(true)
@@ -41,15 +41,12 @@ export default function AdminRacePage() {
   })
 
   useEffect(() => {
-    if (!authLoading && !isAdmin) {
-      router.push('/')
-      return
-    }
-
     if (isAdmin) {
       fetchRaceInfo()
+    } else if (!isAdmin && typeof window !== 'undefined') {
+      router.push('/')
     }
-  }, [authLoading, isAdmin, router])
+  }, [isAdmin, router])
 
   async function fetchRaceInfo() {
     try {
@@ -117,7 +114,11 @@ export default function AdminRacePage() {
     }
   }
 
-  if (authLoading || loading) {
+  if (!isAdmin) {
+    return null
+  }
+
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -126,10 +127,6 @@ export default function AdminRacePage() {
         </div>
       </div>
     )
-  }
-
-  if (!isAdmin) {
-    return null
   }
 
   return (
