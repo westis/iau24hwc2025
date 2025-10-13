@@ -1,77 +1,95 @@
-'use client'
+"use client";
 
-import { useState, useEffect, Suspense } from 'react'
-import { useSearchParams, useRouter } from 'next/navigation'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Button } from '@/components/ui/button'
-import { Edit3 } from 'lucide-react'
-import { useLanguage } from '@/lib/i18n/LanguageContext'
-import { useAuth } from '@/lib/auth/auth-context'
-import { RunnersView } from '@/components/participants/RunnersView'
-import { TeamsView } from '@/components/participants/TeamsView'
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Edit3 } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { useAuth } from "@/lib/auth/auth-context";
+import { RunnersView } from "@/components/participants/RunnersView";
+import { TeamsView } from "@/components/participants/TeamsView";
 
 function ParticipantsPageContent() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const { t } = useLanguage()
-  const { isAdmin } = useAuth()
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { t } = useLanguage();
+  const { isAdmin } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<'individual' | 'teams'>(() => {
-    const v = searchParams.get('view')
-    return v === 'teams' ? 'teams' : 'individual'
-  })
+  const [activeTab, setActiveTab] = useState<"individual" | "teams">(() => {
+    const v = searchParams.get("view");
+    return v === "teams" ? "teams" : "individual";
+  });
 
-  const [gender, setGender] = useState<'M' | 'W'>(() => {
-    const g = searchParams.get('gender')
-    return g === 'W' ? 'W' : 'M'
-  })
+  const [gender, setGender] = useState<"M" | "W">(() => {
+    const g = searchParams.get("gender");
+    return g === "W" ? "W" : "M";
+  });
 
   const [country, setCountry] = useState<string>(() => {
-    return searchParams.get('country') || 'all'
-  })
+    return searchParams.get("country") || "all";
+  });
+
+  const [metric, setMetric] = useState<"last-3-years" | "all-time">(() => {
+    const m = searchParams.get("metric");
+    return m === "all-time" ? "all-time" : "last-3-years";
+  });
 
   // Sync state with URL changes
   useEffect(() => {
-    const v = searchParams.get('view')
-    const g = searchParams.get('gender')
-    const c = searchParams.get('country')
-    
-    if (v === 'teams' || v === 'individual') setActiveTab(v)
-    if (g === 'W' || g === 'M') setGender(g)
-    if (c !== null) setCountry(c)
-  }, [searchParams])
+    const v = searchParams.get("view");
+    const g = searchParams.get("gender");
+    const c = searchParams.get("country");
+    const m = searchParams.get("metric");
+
+    if (v === "teams" || v === "individual") setActiveTab(v);
+    if (g === "W" || g === "M") setGender(g);
+    if (c !== null) setCountry(c);
+    if (m === "all-time" || m === "last-3-years") setMetric(m);
+  }, [searchParams]);
 
   // Update URL when parameters change
   const updateURL = (params: {
-    view?: 'individual' | 'teams'
-    gender?: 'M' | 'W'
-    country?: string
+    view?: "individual" | "teams";
+    gender?: "M" | "W";
+    country?: string;
+    metric?: "last-3-years" | "all-time";
   }) => {
-    const newParams = new URLSearchParams()
-    newParams.set('view', params.view !== undefined ? params.view : activeTab)
-    newParams.set('gender', params.gender !== undefined ? params.gender : gender)
-    const newCountry = params.country !== undefined ? params.country : country
-    if (newCountry !== 'all') {
-      newParams.set('country', newCountry)
+    const newParams = new URLSearchParams();
+    newParams.set("view", params.view !== undefined ? params.view : activeTab);
+    newParams.set(
+      "gender",
+      params.gender !== undefined ? params.gender : gender
+    );
+    const newCountry = params.country !== undefined ? params.country : country;
+    if (newCountry !== "all") {
+      newParams.set("country", newCountry);
     }
-    router.push(`/participants?${newParams.toString()}`, { scroll: false })
-  }
+    const newMetric = params.metric !== undefined ? params.metric : metric;
+    newParams.set("metric", newMetric);
+    router.push(`/participants?${newParams.toString()}`, { scroll: false });
+  };
 
   const handleTabChange = (value: string) => {
-    const newTab = value as 'individual' | 'teams'
-    setActiveTab(newTab)
-    updateURL({ view: newTab })
-  }
+    const newTab = value as "individual" | "teams";
+    setActiveTab(newTab);
+    updateURL({ view: newTab });
+  };
 
-  const handleGenderChange = (newGender: 'M' | 'W') => {
-    setGender(newGender)
-    updateURL({ gender: newGender })
-  }
+  const handleGenderChange = (newGender: "M" | "W") => {
+    setGender(newGender);
+    updateURL({ gender: newGender });
+  };
 
   const handleCountryChange = (newCountry: string) => {
-    setCountry(newCountry)
-    updateURL({ country: newCountry })
-  }
+    setCountry(newCountry);
+    updateURL({ country: newCountry });
+  };
+
+  const handleMetricChange = (newMetric: "last-3-years" | "all-time") => {
+    setMetric(newMetric);
+    updateURL({ metric: newMetric });
+  };
 
   return (
     <main className="min-h-screen py-8">
@@ -81,7 +99,7 @@ function ParticipantsPageContent() {
           {isAdmin && (
             <Button
               variant="outline"
-              onClick={() => router.push('/admin/runners/quick-edit')}
+              onClick={() => router.push("/admin/runners/quick-edit")}
             >
               <Edit3 className="h-4 w-4 mr-2" />
               Quick Edit
@@ -89,33 +107,43 @@ function ParticipantsPageContent() {
           )}
         </div>
 
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+        <Tabs
+          value={activeTab}
+          onValueChange={handleTabChange}
+          className="w-full"
+        >
           <TabsList className="grid w-full max-w-md grid-cols-2 mb-6">
-            <TabsTrigger value="individual">{t.participants.individual}</TabsTrigger>
+            <TabsTrigger value="individual">
+              {t.participants.individual}
+            </TabsTrigger>
             <TabsTrigger value="teams">{t.participants.teams}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="individual" className="mt-0">
-            <RunnersView 
+            <RunnersView
               initialGender={gender}
               initialCountry={country}
+              initialMetric={metric}
               onGenderChange={handleGenderChange}
               onCountryChange={handleCountryChange}
-              showHeader={false} 
+              onMetricChange={handleMetricChange}
+              showHeader={false}
             />
           </TabsContent>
 
           <TabsContent value="teams" className="mt-0">
-            <TeamsView 
+            <TeamsView
               initialGender={gender}
+              initialMetric={metric}
               onGenderChange={handleGenderChange}
-              showHeader={false} 
+              onMetricChange={handleMetricChange}
+              showHeader={false}
             />
           </TabsContent>
         </Tabs>
       </div>
     </main>
-  )
+  );
 }
 
 function ParticipantsPageFallback() {
@@ -126,7 +154,7 @@ function ParticipantsPageFallback() {
         <p className="text-muted-foreground">Loading...</p>
       </div>
     </div>
-  )
+  );
 }
 
 export default function ParticipantsPage() {
@@ -134,5 +162,5 @@ export default function ParticipantsPage() {
     <Suspense fallback={<ParticipantsPageFallback />}>
       <ParticipantsPageContent />
     </Suspense>
-  )
+  );
 }

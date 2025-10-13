@@ -30,16 +30,20 @@ import type { Runner } from "@/types/runner";
 interface RunnersViewProps {
   initialGender?: "M" | "W";
   initialCountry?: string;
+  initialMetric?: "last-3-years" | "all-time";
   onGenderChange?: (gender: "M" | "W") => void;
   onCountryChange?: (country: string) => void;
+  onMetricChange?: (metric: "last-3-years" | "all-time") => void;
   showHeader?: boolean;
 }
 
 export function RunnersView({
   initialGender = "M",
   initialCountry = "all",
+  initialMetric = "last-3-years",
   onGenderChange,
   onCountryChange,
+  onMetricChange,
   showHeader = true,
 }: RunnersViewProps) {
   const router = useRouter();
@@ -53,7 +57,7 @@ export function RunnersView({
   );
   const [selectedMetric, setSelectedMetric] = useState<
     "last-3-years" | "all-time"
-  >("last-3-years");
+  >(initialMetric);
   const [searchQuery, setSearchQuery] = useState("");
   const [countryFilter, setCountryFilter] = useState<string>(initialCountry);
   const [countryComboboxOpen, setCountryComboboxOpen] = useState(false);
@@ -238,6 +242,7 @@ export function RunnersView({
               size="sm"
               onClick={() => {
                 setSelectedMetric("last-3-years");
+                onMetricChange?.("last-3-years");
               }}
               className={
                 selectedMetric === "last-3-years" ? "" : "hover:bg-accent"
@@ -250,6 +255,7 @@ export function RunnersView({
               size="sm"
               onClick={() => {
                 setSelectedMetric("all-time");
+                onMetricChange?.("all-time");
               }}
               className={selectedMetric === "all-time" ? "" : "hover:bg-accent"}
             >

@@ -9,14 +9,22 @@ import type { Runner, Gender } from '@/types/runner'
 
 interface TeamsViewProps {
   initialGender?: Gender
+  initialMetric?: 'all-time' | 'last-3-years'
   onGenderChange?: (gender: Gender) => void
+  onMetricChange?: (metric: 'all-time' | 'last-3-years') => void
   showHeader?: boolean
 }
 
-export function TeamsView({ initialGender = 'M', onGenderChange, showHeader = true }: TeamsViewProps) {
+export function TeamsView({ 
+  initialGender = 'M', 
+  initialMetric = 'last-3-years',
+  onGenderChange,
+  onMetricChange,
+  showHeader = true 
+}: TeamsViewProps) {
   const { t } = useLanguage()
   const [runners, setRunners] = useState<Runner[]>([])
-  const [metric, setMetric] = useState<'all-time' | 'last-3-years'>('last-3-years')
+  const [metric, setMetric] = useState<'all-time' | 'last-3-years'>(initialMetric)
   const [gender, setGender] = useState<Gender>(initialGender)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -151,7 +159,10 @@ export function TeamsView({ initialGender = 'M', onGenderChange, showHeader = tr
           <Button
             variant={gender === 'M' ? 'default' : 'ghost'}
             size="sm"
-            onClick={() => setGender('M')}
+            onClick={() => {
+              setGender('M')
+              onGenderChange?.('M')
+            }}
             className={gender === 'M' ? '' : 'hover:bg-accent'}
           >
             {t.teams.men}
@@ -159,7 +170,10 @@ export function TeamsView({ initialGender = 'M', onGenderChange, showHeader = tr
           <Button
             variant={gender === 'W' ? 'default' : 'ghost'}
             size="sm"
-            onClick={() => setGender('W')}
+            onClick={() => {
+              setGender('W')
+              onGenderChange?.('W')
+            }}
             className={gender === 'W' ? '' : 'hover:bg-accent'}
           >
             {t.teams.women}
@@ -171,7 +185,10 @@ export function TeamsView({ initialGender = 'M', onGenderChange, showHeader = tr
           <Button
             variant={metric === 'last-3-years' ? 'default' : 'ghost'}
             size="sm"
-            onClick={() => setMetric('last-3-years')}
+            onClick={() => {
+              setMetric('last-3-years')
+              onMetricChange?.('last-3-years')
+            }}
             className={metric === 'last-3-years' ? '' : 'hover:bg-accent'}
           >
             {t.teams.last3Years}
@@ -179,7 +196,10 @@ export function TeamsView({ initialGender = 'M', onGenderChange, showHeader = tr
           <Button
             variant={metric === 'all-time' ? 'default' : 'ghost'}
             size="sm"
-            onClick={() => setMetric('all-time')}
+            onClick={() => {
+              setMetric('all-time')
+              onMetricChange?.('all-time')
+            }}
             className={metric === 'all-time' ? '' : 'hover:bg-accent'}
           >
             {t.teams.allTime}
