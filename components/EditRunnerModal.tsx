@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ImageUpload } from "@/components/ImageUpload";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 
@@ -149,157 +150,168 @@ export function EditRunnerModal({
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground mx-auto"></div>
           </div>
         ) : (
-          <div className="grid gap-6 py-4">
-            {/* Basic Info */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-firstname">{t.runners.firstName}</Label>
-                <Input
-                  id="edit-firstname"
-                  value={editForm.firstname}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, firstname: e.target.value })
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-lastname">{t.runners.lastName}</Label>
-                <Input
-                  id="edit-lastname"
-                  value={editForm.lastname}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, lastname: e.target.value })
-                  }
-                />
-              </div>
-            </div>
+          <Tabs defaultValue="basic" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="basic">Basic Information</TabsTrigger>
+              <TabsTrigger value="profile">Profile & Social</TabsTrigger>
+            </TabsList>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-nationality">{t.runners.nationality}</Label>
-                <Input
-                  id="edit-nationality"
-                  value={editForm.nationality}
-                  onChange={(e) =>
-                    setEditForm({
-                      ...editForm,
-                      nationality: e.target.value.toUpperCase(),
-                    })
-                  }
-                  maxLength={3}
-                  placeholder={t.runners.nationalityPlaceholder}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-gender">{t.runners.gender}</Label>
-                <Select
-                  value={editForm.gender}
-                  onValueChange={(value: "M" | "W") =>
-                    setEditForm({ ...editForm, gender: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={t.runners.selectGender} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="M">M</SelectItem>
-                    <SelectItem value="W">W</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+            <div className="py-4">
+              <TabsContent value="basic" className="space-y-4 mt-0">
+                {/* Basic Info */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-firstname">{t.runners.firstName}</Label>
+                    <Input
+                      id="edit-firstname"
+                      value={editForm.firstname}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, firstname: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-lastname">{t.runners.lastName}</Label>
+                    <Input
+                      id="edit-lastname"
+                      value={editForm.lastname}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, lastname: e.target.value })
+                      }
+                    />
+                  </div>
+                </div>
 
-            {/* DNS Checkbox */}
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="edit-dns"
-                checked={editForm.dns}
-                onCheckedChange={(checked) =>
-                  setEditForm({ ...editForm, dns: checked as boolean })
-                }
-              />
-              <label
-                htmlFor="edit-dns"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                {t.runners.dnsDescription}
-              </label>
-            </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-nationality">{t.runners.nationality}</Label>
+                    <Input
+                      id="edit-nationality"
+                      value={editForm.nationality}
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          nationality: e.target.value.toUpperCase(),
+                        })
+                      }
+                      maxLength={3}
+                      placeholder={t.runners.nationalityPlaceholder}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-gender">{t.runners.gender}</Label>
+                    <Select
+                      value={editForm.gender}
+                      onValueChange={(value: "M" | "W") =>
+                        setEditForm({ ...editForm, gender: value })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={t.runners.selectGender} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="M">M</SelectItem>
+                        <SelectItem value="W">W</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
 
-            {/* Photo Upload */}
-            <div className="space-y-2">
-              <Label className="block">Runner Photo</Label>
-              <ImageUpload
-                bucket="runner-photos"
-                currentImageUrl={editForm.photo_url}
-                currentFocalPoint={{
-                  x: editForm.photo_focal_x,
-                  y: editForm.photo_focal_y,
-                }}
-                currentZoom={editForm.photo_zoom}
-                onUploadComplete={(url, path, focalPoint, zoom) => {
-                  setEditForm({
-                    ...editForm,
-                    photo_url: url,
-                    photo_focal_x: focalPoint.x,
-                    photo_focal_y: focalPoint.y,
-                    photo_zoom: zoom,
-                  });
-                }}
-                onDelete={() => {
-                  setEditForm({
-                    ...editForm,
-                    photo_url: null,
-                    photo_focal_x: 50,
-                    photo_focal_y: 50,
-                    photo_zoom: 1.5,
-                  });
-                }}
-              />
-            </div>
+                {/* DNS Checkbox */}
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="edit-dns"
+                    checked={editForm.dns}
+                    onCheckedChange={(checked) =>
+                      setEditForm({ ...editForm, dns: checked as boolean })
+                    }
+                  />
+                  <label
+                    htmlFor="edit-dns"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    {t.runners.dnsDescription}
+                  </label>
+                </div>
+              </TabsContent>
 
-            {/* Bio */}
-            <div className="space-y-2">
-              <Label htmlFor="edit-bio">Bio</Label>
-              <Textarea
-                id="edit-bio"
-                value={editForm.bio}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, bio: e.target.value })
-                }
-                rows={3}
-                placeholder="Runner bio..."
-              />
-            </div>
+              <TabsContent value="profile" className="space-y-4 mt-0">
+                {/* Photo Upload */}
+                <div className="space-y-2">
+                  <Label className="block">Runner Photo</Label>
+                  <ImageUpload
+                    bucket="runner-photos"
+                    currentImageUrl={editForm.photo_url}
+                    currentFocalPoint={{
+                      x: editForm.photo_focal_x,
+                      y: editForm.photo_focal_y,
+                    }}
+                    currentZoom={editForm.photo_zoom}
+                    onUploadComplete={(url, path, focalPoint, zoom) => {
+                      setEditForm({
+                        ...editForm,
+                        photo_url: url,
+                        photo_focal_x: focalPoint.x,
+                        photo_focal_y: focalPoint.y,
+                        photo_zoom: zoom,
+                      });
+                    }}
+                    onDelete={() => {
+                      setEditForm({
+                        ...editForm,
+                        photo_url: null,
+                        photo_focal_x: 50,
+                        photo_focal_y: 50,
+                        photo_zoom: 1.5,
+                      });
+                    }}
+                  />
+                </div>
 
-            {/* Social Links */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-instagram">Instagram URL</Label>
-                <Input
-                  id="edit-instagram"
-                  type="url"
-                  value={editForm.instagram_url}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, instagram_url: e.target.value })
-                  }
-                  placeholder="https://instagram.com/..."
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-strava">Strava URL</Label>
-                <Input
-                  id="edit-strava"
-                  type="url"
-                  value={editForm.strava_url}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, strava_url: e.target.value })
-                  }
-                  placeholder="https://strava.com/athletes/..."
-                />
-              </div>
+                {/* Bio */}
+                <div className="space-y-2">
+                  <Label htmlFor="edit-bio">Bio</Label>
+                  <Textarea
+                    id="edit-bio"
+                    value={editForm.bio}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, bio: e.target.value })
+                    }
+                    rows={3}
+                    placeholder="Runner bio..."
+                  />
+                </div>
+
+                {/* Social Links */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-instagram">Instagram URL</Label>
+                    <Input
+                      id="edit-instagram"
+                      type="url"
+                      value={editForm.instagram_url}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, instagram_url: e.target.value })
+                      }
+                      placeholder="https://instagram.com/..."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-strava">Strava URL</Label>
+                    <Input
+                      id="edit-strava"
+                      type="url"
+                      value={editForm.strava_url}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, strava_url: e.target.value })
+                      }
+                      placeholder="https://strava.com/athletes/..."
+                    />
+                  </div>
+                </div>
+              </TabsContent>
             </div>
-          </div>
+          </Tabs>
         )}
 
         <DialogFooter>
