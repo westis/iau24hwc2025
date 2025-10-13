@@ -39,22 +39,22 @@ export async function POST(request: NextRequest) {
     const originalHeight = metadata.height!;
 
     // Calculate the crop area based on focal point and zoom
-    // Zoom of 1.5 means we want to show 1/1.5 = 66.7% of the image
+    // Avatars must be square, so we use the smaller dimension
     const cropRatio = 1 / zoom;
-    const cropWidth = Math.round(originalWidth * cropRatio);
-    const cropHeight = Math.round(originalHeight * cropRatio);
+    const minDimension = Math.min(originalWidth, originalHeight);
+    const cropSize = Math.round(minDimension * cropRatio);
 
     // Calculate the top-left corner of the crop area
     // Focal point is in percentage (0-100)
     const focalXPx = (focalX / 100) * originalWidth;
     const focalYPx = (focalY / 100) * originalHeight;
 
-    let left = Math.round(focalXPx - cropWidth / 2);
-    let top = Math.round(focalYPx - cropHeight / 2);
+    let left = Math.round(focalXPx - cropSize / 2);
+    let top = Math.round(focalYPx - cropSize / 2);
 
     // Ensure crop area doesn't go out of bounds
-    left = Math.max(0, Math.min(left, originalWidth - cropWidth));
-    top = Math.max(0, Math.min(top, originalHeight - cropHeight));
+    left = Math.max(0, Math.min(left, originalWidth - cropSize));
+    top = Math.max(0, Math.min(top, originalHeight - cropSize));
 
     // Generate avatar sizes: 80px (1x), 160px (2x), 320px (3x for very high DPI)
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -70,8 +70,8 @@ export async function POST(request: NextRequest) {
         .extract({
           left,
           top,
-          width: cropWidth,
-          height: cropHeight,
+          width: cropSize,
+          height: cropSize,
         })
         .resize(size, size, {
           fit: "cover",
@@ -127,4 +127,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

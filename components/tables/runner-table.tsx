@@ -57,7 +57,9 @@ export function RunnerTable({
     personalBestAllTime: metric === "all-time",
     personalBestLast3Years: metric === "last-3-years",
   });
-  const [editingRunnerId, setEditingRunnerId] = React.useState<number | null>(null);
+  const [editingRunnerId, setEditingRunnerId] = React.useState<number | null>(
+    null
+  );
   const [expandedRows, setExpandedRows] = React.useState<Set<number>>(
     new Set()
   );
@@ -122,19 +124,19 @@ export function RunnerTable({
         accessorFn: (row) => `${row.firstname} ${row.lastname}`,
         cell: ({ row }) => (
           <div className="flex items-center gap-2">
-              {/* Runner Avatar */}
-              {(row.original.avatarUrl || row.original.photoUrl) ? (
-                <div className="relative w-10 h-10 rounded-full overflow-hidden border border-border flex-shrink-0">
-                  <Image
-                    src={row.original.avatarUrl || row.original.photoUrl!}
-                    alt={`${row.original.firstname} ${row.original.lastname}`}
-                    fill
-                    className="object-cover"
-                    sizes="40px"
-                    quality={100}
-                  />
-                </div>
-              ) : (
+            {/* Runner Avatar */}
+            {row.original.avatarUrl || row.original.photoUrl ? (
+              <div className="relative w-10 h-10 rounded-full overflow-hidden border border-border flex-shrink-0">
+                <Image
+                  src={row.original.avatarUrl || row.original.photoUrl!}
+                  alt={`${row.original.firstname} ${row.original.lastname}`}
+                  fill
+                  className="object-cover"
+                  sizes="40px"
+                  quality={100}
+                />
+              </div>
+            ) : (
               <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
                 <span className="text-xs font-medium text-muted-foreground">
                   {row.original.firstname.charAt(0)}
@@ -187,7 +189,10 @@ export function RunnerTable({
           const twoLetterCode = getCountryCodeForFlag(threeLetterCode);
           const countryName = getCountryName(threeLetterCode);
           return (
-            <div className="flex items-center justify-center gap-2" title={countryName}>
+            <div
+              className="flex items-center justify-center gap-2"
+              title={countryName}
+            >
               <ReactCountryFlag
                 countryCode={twoLetterCode}
                 svg
@@ -427,7 +432,7 @@ export function RunnerTable({
                   ) : null}
 
                   {/* Avatar - spans both rows, same size and structure as individual runner page */}
-                  {(runner.avatarUrl || runner.photoUrl) ? (
+                  {runner.avatarUrl || runner.photoUrl ? (
                     <div className="relative w-14 h-14 rounded-full overflow-hidden border border-border flex-shrink-0">
                       <Image
                         src={runner.avatarUrl || runner.photoUrl!}

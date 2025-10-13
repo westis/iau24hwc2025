@@ -133,7 +133,9 @@ export async function PATCH(
         if (photoUrl) {
           try {
             const cropResponse = await fetch(
-              `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/api/upload/crop-avatar`,
+              `${
+                process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+              }/api/upload/crop-avatar`,
               {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -152,7 +154,10 @@ export async function PATCH(
               updates.push(`avatar_url = $${paramIndex++}`);
               values.push(avatarUrl);
             } else {
-              console.error("Failed to generate avatar:", await cropResponse.text());
+              console.error(
+                "Failed to generate avatar:",
+                await cropResponse.text()
+              );
             }
           } catch (error) {
             console.error("Error generating avatar:", error);

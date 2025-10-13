@@ -161,7 +161,9 @@ export function EditRunnerModal({
                 {/* Basic Info */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="edit-firstname">{t.runners.firstName}</Label>
+                    <Label htmlFor="edit-firstname">
+                      {t.runners.firstName}
+                    </Label>
                     <Input
                       id="edit-firstname"
                       value={editForm.firstname}
@@ -184,7 +186,9 @@ export function EditRunnerModal({
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="edit-nationality">{t.runners.nationality}</Label>
+                    <Label htmlFor="edit-nationality">
+                      {t.runners.nationality}
+                    </Label>
                     <Input
                       id="edit-nationality"
                       value={editForm.nationality}
@@ -291,7 +295,10 @@ export function EditRunnerModal({
                       type="url"
                       value={editForm.instagram_url}
                       onChange={(e) =>
-                        setEditForm({ ...editForm, instagram_url: e.target.value })
+                        setEditForm({
+                          ...editForm,
+                          instagram_url: e.target.value,
+                        })
                       }
                       placeholder="https://instagram.com/..."
                     />
@@ -326,4 +333,3 @@ export function EditRunnerModal({
     </Dialog>
   );
 }
-
