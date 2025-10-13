@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ExternalLink, Users, Trophy, Newspaper } from 'lucide-react'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
+import { RaceCountdown } from '@/components/race/RaceCountdown'
 import type { NewsItem } from '@/types/news'
 
 export default function Home() {
@@ -42,9 +43,17 @@ export default function Home() {
             <h1 className="text-3xl md:text-5xl font-bold mb-3">
               {t.home.title}
             </h1>
-            <p className="text-lg md:text-2xl text-muted-foreground mb-6">
+            <p className="text-lg md:text-2xl text-muted-foreground mb-8">
               {t.home.subtitle}
             </p>
+
+            {/* Countdown */}
+            <div className="mb-8 p-6 bg-background/50 backdrop-blur-sm rounded-lg border border-border/50">
+              <RaceCountdown
+                targetDate="2025-10-18T10:00:00+02:00"
+                size="large"
+              />
+            </div>
 
             {/* Official Links */}
             <div className="flex flex-wrap justify-center gap-3 text-sm md:text-base mb-6">

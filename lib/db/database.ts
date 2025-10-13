@@ -5,6 +5,7 @@ import type { DUVSearchResult } from '@/types/match'
 import type { Team } from '@/types/team'
 import type { NewsItem, NewsItemCreate, NewsItemUpdate } from '@/types/news'
 import type { RunnerNote, RunnerNoteCreate, RunnerNoteUpdate } from '@/types/runner-note'
+import type { RaceInfo, RaceInfoCreate, RaceInfoUpdate, RaceDocument, RaceDocumentCreate } from '@/types/race'
 
 // PostgreSQL connection pool
 let pool: Pool | null = null
@@ -701,4 +702,355 @@ export async function getRunnerNoteCounts(): Promise<Map<number, number>> {
     noteCounts.set(row.runner_id, parseInt(row.note_count))
   }
   return noteCounts
+}
+
+// Race operations
+export async function getActiveRaceInfo(): Promise<RaceInfo | null> {
+  const db = getDatabase()
+  const result = await db.query(`
+    SELECT * FROM race_info WHERE is_active = true LIMIT 1
+  `)
+
+  if (result.rows.length === 0) return null
+
+  const row = result.rows[0]
+  return {
+    id: row.id,
+    raceNameEn: row.race_name_en,
+    raceNameSv: row.race_name_sv,
+    descriptionEn: row.description_en,
+    descriptionSv: row.description_sv,
+    startDate: row.start_date,
+    endDate: row.end_date,
+    locationName: row.location_name,
+    locationAddress: row.location_address,
+    locationLatitude: row.location_latitude,
+    locationLongitude: row.location_longitude,
+    liveResultsUrl: row.live_results_url,
+    registrationUrl: row.registration_url,
+    officialWebsiteUrl: row.official_website_url,
+    courseMapUrl: row.course_map_url,
+    heroImageUrl: row.hero_image_url,
+    rulesEn: row.rules_en,
+    rulesSv: row.rules_sv,
+    contactEmail: row.contact_email,
+    contactPhone: row.contact_phone,
+    metaDescriptionEn: row.meta_description_en,
+    metaDescriptionSv: row.meta_description_sv,
+    isActive: row.is_active,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
+export async function getRaceInfoById(id: number): Promise<RaceInfo | null> {
+  const db = getDatabase()
+  const result = await db.query('SELECT * FROM race_info WHERE id = $1', [id])
+
+  if (result.rows.length === 0) return null
+
+  const row = result.rows[0]
+  return {
+    id: row.id,
+    raceNameEn: row.race_name_en,
+    raceNameSv: row.race_name_sv,
+    descriptionEn: row.description_en,
+    descriptionSv: row.description_sv,
+    startDate: row.start_date,
+    endDate: row.end_date,
+    locationName: row.location_name,
+    locationAddress: row.location_address,
+    locationLatitude: row.location_latitude,
+    locationLongitude: row.location_longitude,
+    liveResultsUrl: row.live_results_url,
+    registrationUrl: row.registration_url,
+    officialWebsiteUrl: row.official_website_url,
+    courseMapUrl: row.course_map_url,
+    heroImageUrl: row.hero_image_url,
+    rulesEn: row.rules_en,
+    rulesSv: row.rules_sv,
+    contactEmail: row.contact_email,
+    contactPhone: row.contact_phone,
+    metaDescriptionEn: row.meta_description_en,
+    metaDescriptionSv: row.meta_description_sv,
+    isActive: row.is_active,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
+export async function createRaceInfo(race: RaceInfoCreate): Promise<RaceInfo> {
+  const db = getDatabase()
+
+  // Deactivate all other races first
+  await db.query('UPDATE race_info SET is_active = false')
+
+  const result = await db.query(`
+    INSERT INTO race_info (
+      race_name_en, race_name_sv, description_en, description_sv,
+      start_date, end_date, location_name, location_address,
+      location_latitude, location_longitude,
+      live_results_url, registration_url, official_website_url,
+      course_map_url, hero_image_url,
+      rules_en, rules_sv, contact_email, contact_phone,
+      meta_description_en, meta_description_sv, is_active
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, true)
+    RETURNING *
+  `, [
+    race.raceNameEn,
+    race.raceNameSv,
+    race.descriptionEn || null,
+    race.descriptionSv || null,
+    race.startDate,
+    race.endDate || null,
+    race.locationName || null,
+    race.locationAddress || null,
+    race.locationLatitude || null,
+    race.locationLongitude || null,
+    race.liveResultsUrl || null,
+    race.registrationUrl || null,
+    race.officialWebsiteUrl || null,
+    race.courseMapUrl || null,
+    race.heroImageUrl || null,
+    race.rulesEn || null,
+    race.rulesSv || null,
+    race.contactEmail || null,
+    race.contactPhone || null,
+    race.metaDescriptionEn || null,
+    race.metaDescriptionSv || null,
+  ])
+
+  const row = result.rows[0]
+  return {
+    id: row.id,
+    raceNameEn: row.race_name_en,
+    raceNameSv: row.race_name_sv,
+    descriptionEn: row.description_en,
+    descriptionSv: row.description_sv,
+    startDate: row.start_date,
+    endDate: row.end_date,
+    locationName: row.location_name,
+    locationAddress: row.location_address,
+    locationLatitude: row.location_latitude,
+    locationLongitude: row.location_longitude,
+    liveResultsUrl: row.live_results_url,
+    registrationUrl: row.registration_url,
+    officialWebsiteUrl: row.official_website_url,
+    courseMapUrl: row.course_map_url,
+    heroImageUrl: row.hero_image_url,
+    rulesEn: row.rules_en,
+    rulesSv: row.rules_sv,
+    contactEmail: row.contact_email,
+    contactPhone: row.contact_phone,
+    metaDescriptionEn: row.meta_description_en,
+    metaDescriptionSv: row.meta_description_sv,
+    isActive: row.is_active,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
+export async function updateRaceInfo(id: number, updates: RaceInfoUpdate): Promise<RaceInfo | null> {
+  const db = getDatabase()
+  const fields: string[] = []
+  const values: any[] = []
+  let paramIndex = 1
+
+  if (updates.raceNameEn !== undefined) {
+    fields.push(`race_name_en = $${paramIndex++}`)
+    values.push(updates.raceNameEn)
+  }
+  if (updates.raceNameSv !== undefined) {
+    fields.push(`race_name_sv = $${paramIndex++}`)
+    values.push(updates.raceNameSv)
+  }
+  if (updates.descriptionEn !== undefined) {
+    fields.push(`description_en = $${paramIndex++}`)
+    values.push(updates.descriptionEn)
+  }
+  if (updates.descriptionSv !== undefined) {
+    fields.push(`description_sv = $${paramIndex++}`)
+    values.push(updates.descriptionSv)
+  }
+  if (updates.startDate !== undefined) {
+    fields.push(`start_date = $${paramIndex++}`)
+    values.push(updates.startDate)
+  }
+  if (updates.endDate !== undefined) {
+    fields.push(`end_date = $${paramIndex++}`)
+    values.push(updates.endDate)
+  }
+  if (updates.locationName !== undefined) {
+    fields.push(`location_name = $${paramIndex++}`)
+    values.push(updates.locationName)
+  }
+  if (updates.locationAddress !== undefined) {
+    fields.push(`location_address = $${paramIndex++}`)
+    values.push(updates.locationAddress)
+  }
+  if (updates.locationLatitude !== undefined) {
+    fields.push(`location_latitude = $${paramIndex++}`)
+    values.push(updates.locationLatitude)
+  }
+  if (updates.locationLongitude !== undefined) {
+    fields.push(`location_longitude = $${paramIndex++}`)
+    values.push(updates.locationLongitude)
+  }
+  if (updates.liveResultsUrl !== undefined) {
+    fields.push(`live_results_url = $${paramIndex++}`)
+    values.push(updates.liveResultsUrl)
+  }
+  if (updates.registrationUrl !== undefined) {
+    fields.push(`registration_url = $${paramIndex++}`)
+    values.push(updates.registrationUrl)
+  }
+  if (updates.officialWebsiteUrl !== undefined) {
+    fields.push(`official_website_url = $${paramIndex++}`)
+    values.push(updates.officialWebsiteUrl)
+  }
+  if (updates.courseMapUrl !== undefined) {
+    fields.push(`course_map_url = $${paramIndex++}`)
+    values.push(updates.courseMapUrl)
+  }
+  if (updates.heroImageUrl !== undefined) {
+    fields.push(`hero_image_url = $${paramIndex++}`)
+    values.push(updates.heroImageUrl)
+  }
+  if (updates.rulesEn !== undefined) {
+    fields.push(`rules_en = $${paramIndex++}`)
+    values.push(updates.rulesEn)
+  }
+  if (updates.rulesSv !== undefined) {
+    fields.push(`rules_sv = $${paramIndex++}`)
+    values.push(updates.rulesSv)
+  }
+  if (updates.contactEmail !== undefined) {
+    fields.push(`contact_email = $${paramIndex++}`)
+    values.push(updates.contactEmail)
+  }
+  if (updates.contactPhone !== undefined) {
+    fields.push(`contact_phone = $${paramIndex++}`)
+    values.push(updates.contactPhone)
+  }
+  if (updates.metaDescriptionEn !== undefined) {
+    fields.push(`meta_description_en = $${paramIndex++}`)
+    values.push(updates.metaDescriptionEn)
+  }
+  if (updates.metaDescriptionSv !== undefined) {
+    fields.push(`meta_description_sv = $${paramIndex++}`)
+    values.push(updates.metaDescriptionSv)
+  }
+  if (updates.isActive !== undefined) {
+    // If setting this race as active, deactivate all others first
+    if (updates.isActive) {
+      await db.query('UPDATE race_info SET is_active = false WHERE id != $1', [id])
+    }
+    fields.push(`is_active = $${paramIndex++}`)
+    values.push(updates.isActive)
+  }
+
+  if (fields.length === 0) return await getRaceInfoById(id)
+
+  fields.push(`updated_at = CURRENT_TIMESTAMP`)
+  values.push(id)
+
+  const result = await db.query(`
+    UPDATE race_info SET ${fields.join(', ')} WHERE id = $${paramIndex}
+    RETURNING *
+  `, values)
+
+  if (result.rows.length === 0) return null
+
+  const row = result.rows[0]
+  return {
+    id: row.id,
+    raceNameEn: row.race_name_en,
+    raceNameSv: row.race_name_sv,
+    descriptionEn: row.description_en,
+    descriptionSv: row.description_sv,
+    startDate: row.start_date,
+    endDate: row.end_date,
+    locationName: row.location_name,
+    locationAddress: row.location_address,
+    locationLatitude: row.location_latitude,
+    locationLongitude: row.location_longitude,
+    liveResultsUrl: row.live_results_url,
+    registrationUrl: row.registration_url,
+    officialWebsiteUrl: row.official_website_url,
+    courseMapUrl: row.course_map_url,
+    heroImageUrl: row.hero_image_url,
+    rulesEn: row.rules_en,
+    rulesSv: row.rules_sv,
+    contactEmail: row.contact_email,
+    contactPhone: row.contact_phone,
+    metaDescriptionEn: row.meta_description_en,
+    metaDescriptionSv: row.meta_description_sv,
+    isActive: row.is_active,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
+// Race documents operations
+export async function getRaceDocuments(raceId: number): Promise<RaceDocument[]> {
+  const db = getDatabase()
+  const result = await db.query(`
+    SELECT * FROM race_documents WHERE race_id = $1 ORDER BY display_order
+  `, [raceId])
+
+  return result.rows.map(row => ({
+    id: row.id,
+    raceId: row.race_id,
+    titleEn: row.title_en,
+    titleSv: row.title_sv,
+    descriptionEn: row.description_en,
+    descriptionSv: row.description_sv,
+    documentUrl: row.document_url,
+    documentType: row.document_type,
+    fileSizeBytes: row.file_size_bytes,
+    displayOrder: row.display_order,
+    createdAt: row.created_at,
+  }))
+}
+
+export async function createRaceDocument(doc: RaceDocumentCreate): Promise<RaceDocument> {
+  const db = getDatabase()
+  const result = await db.query(`
+    INSERT INTO race_documents (
+      race_id, title_en, title_sv, description_en, description_sv,
+      document_url, document_type, file_size_bytes, display_order
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    RETURNING *
+  `, [
+    doc.raceId,
+    doc.titleEn,
+    doc.titleSv,
+    doc.descriptionEn || null,
+    doc.descriptionSv || null,
+    doc.documentUrl,
+    doc.documentType || null,
+    doc.fileSizeBytes || null,
+    doc.displayOrder || 0,
+  ])
+
+  const row = result.rows[0]
+  return {
+    id: row.id,
+    raceId: row.race_id,
+    titleEn: row.title_en,
+    titleSv: row.title_sv,
+    descriptionEn: row.description_en,
+    descriptionSv: row.description_sv,
+    documentUrl: row.document_url,
+    documentType: row.document_type,
+    fileSizeBytes: row.file_size_bytes,
+    displayOrder: row.display_order,
+    createdAt: row.created_at,
+  }
+}
+
+export async function deleteRaceDocument(id: number): Promise<boolean> {
+  const db = getDatabase()
+  const result = await db.query('DELETE FROM race_documents WHERE id = $1', [id])
+  return result.rowCount !== null && result.rowCount > 0
 }
