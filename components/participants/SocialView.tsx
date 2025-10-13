@@ -282,11 +282,6 @@ export function SocialView({
         </div>
       </div>
 
-      {/* Results count */}
-      <div className="mb-4 text-sm text-muted-foreground">
-        {filteredRunners.length} {t.runners.runners}
-      </div>
-
       {/* Photo Grid */}
       {filteredRunners.length === 0 ? (
         <div className="text-center py-12">
@@ -302,15 +297,33 @@ export function SocialView({
               className="group relative overflow-hidden rounded-lg border bg-card hover:shadow-lg transition-all duration-200"
             >
               {/* Photo */}
-              <div className="relative aspect-square w-full overflow-hidden bg-muted">
+              <div className="relative aspect-square w-full overflow-hidden bg-muted cursor-pointer"
+                onClick={() => router.push(`/runners/${runner.id}`)}
+              >
                 {runner.avatarUrl || runner.photoUrl ? (
                   <Image
-                    src={runner.avatarUrl || runner.photoUrl!}
+                    src={
+                      runner.avatarUrl
+                        ? runner.avatarUrl.replace(/\.jpg$/i, "@3x.jpg")
+                        : runner.photoUrl!
+                    }
                     alt={`${runner.firstname} ${runner.lastname}`}
                     fill
                     className="object-cover transition-transform duration-300 group-hover:scale-105"
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
-                    quality={90}
+                    quality={95}
+                    unoptimized
+                    onError={(e) => {
+                      // Fallback to @2x, then regular
+                      const img = e.target as HTMLImageElement;
+                      if (img.src.includes("@3x")) {
+                        img.src = img.src.replace("@3x.jpg", "@2x.jpg");
+                      } else if (img.src.includes("@2x")) {
+                        img.src = img.src.replace("@2x.jpg", ".jpg");
+                      } else if (runner.photoUrl) {
+                        img.src = runner.photoUrl;
+                      }
+                    }}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10">
@@ -320,7 +333,7 @@ export function SocialView({
                     </div>
                   </div>
                 )}
-                
+
                 {/* Overlay on hover */}
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200" />
               </div>
@@ -390,4 +403,3 @@ export function SocialView({
     </div>
   );
 }
-

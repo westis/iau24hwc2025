@@ -272,6 +272,7 @@ export const en: Translations = {
     title: 'Participants',
     individual: 'Individual',
     teams: 'Teams',
+    media: 'Media',
     men: 'Men',
     women: 'Women',
   },

@@ -272,6 +272,7 @@ export const sv: Translations = {
     title: 'Deltagare',
     individual: 'Individuellt',
     teams: 'Lag',
+    media: 'Media',
     men: 'Herrar',
     women: 'Damer',
   },

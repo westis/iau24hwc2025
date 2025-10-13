@@ -90,6 +90,7 @@ export function EditRunnerModal({
         bio: runner.bio || "",
         instagram_url: runner.instagramUrl || "",
         strava_url: runner.stravaUrl || "",
+        crop_area_pixels: null,
       });
     } catch (err) {
       console.error("Error loading runner:", err);

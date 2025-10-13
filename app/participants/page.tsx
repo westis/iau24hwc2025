@@ -17,14 +17,14 @@ function ParticipantsPageContent() {
   const { t } = useLanguage();
   const { isAdmin } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<
-    "individual" | "teams" | "social"
-  >(() => {
-    const v = searchParams.get("view");
-    if (v === "teams") return "teams";
-    if (v === "social") return "social";
-    return "individual";
-  });
+  const [activeTab, setActiveTab] = useState<"individual" | "teams" | "social">(
+    () => {
+      const v = searchParams.get("view");
+      if (v === "teams") return "teams";
+      if (v === "social") return "social";
+      return "individual";
+    }
+  );
 
   const [gender, setGender] = useState<"M" | "W">(() => {
     const g = searchParams.get("gender");
@@ -47,8 +47,7 @@ function ParticipantsPageContent() {
     const c = searchParams.get("country");
     const m = searchParams.get("metric");
 
-    if (v === "teams" || v === "individual" || v === "social")
-      setActiveTab(v);
+    if (v === "teams" || v === "individual" || v === "social") setActiveTab(v);
     if (g === "W" || g === "M") setGender(g);
     if (c !== null) setCountry(c);
     if (m === "all-time" || m === "last-3-years") setMetric(m);
@@ -123,7 +122,7 @@ function ParticipantsPageContent() {
               {t.participants.individual}
             </TabsTrigger>
             <TabsTrigger value="teams">{t.participants.teams}</TabsTrigger>
-            <TabsTrigger value="social">Social</TabsTrigger>
+            <TabsTrigger value="social">{t.participants.media}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="individual" className="mt-0">
