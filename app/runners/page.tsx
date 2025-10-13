@@ -9,16 +9,18 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
-import { Check, ChevronsUpDown } from 'lucide-react'
+import { Check, ChevronsUpDown, Edit3 } from 'lucide-react'
 import { getCountryCodeForFlag } from '@/lib/utils/country-codes'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
+import { useAuth } from '@/lib/auth/auth-context'
 import type { Runner } from '@/types/runner'
 
 function RunnersPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { t } = useLanguage()
+  const { isAdmin } = useAuth()
   const [runners, setRunners] = useState<Runner[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -167,8 +169,17 @@ function RunnersPageContent() {
   return (
     <main className="min-h-screen py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-6">
+        <div className="mb-6 flex items-center justify-between">
           <h1 className="text-3xl font-bold">{t.runners.title}</h1>
+          {isAdmin && (
+            <Button
+              variant="outline"
+              onClick={() => router.push('/admin/runners/quick-edit')}
+            >
+              <Edit3 className="h-4 w-4 mr-2" />
+              Quick Edit
+            </Button>
+          )}
         </div>
 
         {/* Filters - Responsive Layout */}
