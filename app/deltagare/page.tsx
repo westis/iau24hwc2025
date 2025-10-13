@@ -1,16 +1,17 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
-import { useSearchParams, useRouter } from 'next/navigation'
+import { useState, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
+import { RunnersView } from '@/components/participants/RunnersView'
+import { TeamsView } from '@/components/participants/TeamsView'
 
 function DeltagarePageContent() {
   const searchParams = useSearchParams()
-  const router = useRouter()
   const { t } = useLanguage()
 
-  const [view, setView] = useState<'individual' | 'teams'>(() => {
+  const [activeTab, setActiveTab] = useState<'individual' | 'teams'>(() => {
     const v = searchParams.get('view')
     return v === 'teams' ? 'teams' : 'individual'
   })
@@ -20,20 +21,28 @@ function DeltagarePageContent() {
     return g === 'W' ? 'W' : 'M'
   })
 
-  // Redirect to the appropriate existing page
-  useEffect(() => {
-    const targetPath = view === 'individual' ? '/runners' : '/teams'
-    const params = new URLSearchParams()
-    params.set('gender', gender)
-
-    router.push(`${targetPath}?${params.toString()}`)
-  }, [view, gender, router])
-
   return (
-    <main className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-foreground mx-auto mb-4"></div>
-        <p className="text-muted-foreground">{t.common.loading}</p>
+    <main className="min-h-screen py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold mb-2">{t.participants.title}</h1>
+          <p className="text-muted-foreground">IAU 24h WC 2025</p>
+        </div>
+
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'individual' | 'teams')} className="w-full">
+          <TabsList className="grid w-full max-w-md grid-cols-2 mb-6">
+            <TabsTrigger value="individual">{t.participants.individual}</TabsTrigger>
+            <TabsTrigger value="teams">{t.participants.teams}</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="individual" className="mt-0">
+            <RunnersView initialGender={gender} showHeader={false} />
+          </TabsContent>
+
+          <TabsContent value="teams" className="mt-0">
+            <TeamsView initialGender={gender} showHeader={false} />
+          </TabsContent>
+        </Tabs>
       </div>
     </main>
   )
