@@ -160,7 +160,7 @@ export function RunnerTable({
     () => [
       {
         accessorKey: "rank",
-        header: t.runners.rank,
+        header: "#",
         cell: ({ row }) => {
           if (row.original.dns) {
             return (
@@ -176,7 +176,7 @@ export function RunnerTable({
             <div className="text-muted-foreground text-center w-12">-</div>
           );
         },
-        size: 60,
+        size: 50,
       },
       {
         accessorKey: "name",
@@ -506,11 +506,11 @@ export function RunnerTable({
                 >
                   {/* Rank - spans both rows */}
                   {runner.dns ? (
-                    <div className="flex items-center justify-center w-8 text-xs text-muted-foreground">
+                    <div className="flex items-center justify-center w-6 text-xs text-muted-foreground">
                       DNS
                     </div>
                   ) : rank ? (
-                    <div className="flex items-center justify-center w-8 font-bold text-lg text-primary">
+                    <div className="flex items-center justify-center w-6 font-bold text-base text-primary">
                       {rank}
                     </div>
                   ) : null}
