@@ -63,7 +63,6 @@ export function ImageUpload({
   // For drag-to-position
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [imagePosition, setImagePosition] = useState({ x: 0, y: 0 });
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -109,7 +108,6 @@ export function ImageUpload({
       setTempImagePath(data.path);
       setTempFocalPoint({ x: 50, y: 50 });
       setZoom(1.5); // Start with some zoom
-      setImagePosition({ x: 0, y: 0 }); // Center the image
       setShowFocalPointModal(true);
     } catch (err) {
       console.error("Upload error:", err);
@@ -123,17 +121,33 @@ export function ImageUpload({
     e.preventDefault();
     setIsDragging(true);
     setDragStart({
-      x: e.clientX - imagePosition.x,
-      y: e.clientY - imagePosition.y,
+      x: e.clientX,
+      y: e.clientY,
     });
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isDragging) return;
+    if (!isDragging || !imageRef.current) return;
 
-    setImagePosition({
-      x: e.clientX - dragStart.x,
-      y: e.clientY - dragStart.y,
+    // Calculate how much the mouse moved
+    const deltaX = e.clientX - dragStart.x;
+    const deltaY = e.clientY - dragStart.y;
+    
+    // Update drag start for next movement
+    setDragStart({
+      x: e.clientX,
+      y: e.clientY,
+    });
+
+    // Convert pixel movement to focal point percentage change
+    // Moving mouse right should move focal point left (show left part of image)
+    const previewSize = 320;
+    const focalDeltaX = -(deltaX / (previewSize * zoom)) * 100;
+    const focalDeltaY = -(deltaY / (previewSize * zoom)) * 100;
+
+    setTempFocalPoint({
+      x: Math.max(0, Math.min(100, tempFocalPoint.x + focalDeltaX)),
+      y: Math.max(0, Math.min(100, tempFocalPoint.y + focalDeltaY)),
     });
   };
 
@@ -148,33 +162,19 @@ export function ImageUpload({
   const handleFocalPointConfirm = () => {
     if (!tempImageUrl) return;
 
-    // Convert drag position + zoom to focal point percentage
-    // The visible area's center is the focal point
-    const previewSize = 320; // Container size
-    const calculatedFocalPoint = {
-      x: 50 - (imagePosition.x / (previewSize * zoom)) * 100,
-      y: 50 - (imagePosition.y / (previewSize * zoom)) * 100,
-    };
-    
-    // Clamp to 0-100
-    calculatedFocalPoint.x = Math.max(0, Math.min(100, calculatedFocalPoint.x));
-    calculatedFocalPoint.y = Math.max(0, Math.min(100, calculatedFocalPoint.y));
-
     console.log('Saving avatar crop settings:', {
-      imagePosition,
+      focalPoint: tempFocalPoint,
       zoom,
-      calculatedFocalPoint,
       tempImagePath,
       tempImageUrl,
     });
 
     setPreviewUrl(tempImageUrl);
-    setFocalPoint(calculatedFocalPoint);
-    setTempFocalPoint(calculatedFocalPoint);
+    setFocalPoint(tempFocalPoint);
 
     // If tempImagePath is null, we're just adjusting existing image, use current URL
     const pathToUse = tempImagePath || currentImageUrl || "";
-    onUploadComplete(tempImageUrl, pathToUse, calculatedFocalPoint, zoom);
+    onUploadComplete(tempImageUrl, pathToUse, tempFocalPoint, zoom);
 
     setShowFocalPointModal(false);
     setTempImageUrl(null);
@@ -213,22 +213,12 @@ export function ImageUpload({
     const currentZoomValue =
       typeof currentZoom === "number" ? currentZoom : 1.5;
     setZoom(currentZoomValue);
-
-    // Convert focal point percentage to drag position
-    const previewSize = 320;
-    const dragX =
-      ((50 - focalPoint.x) * (previewSize * currentZoomValue)) / 100;
-    const dragY =
-      ((50 - focalPoint.y) * (previewSize * currentZoomValue)) / 100;
     
     console.log('Loading avatar crop settings:', {
       focalPoint,
       currentZoom: currentZoomValue,
-      calculatedDragPosition: { x: dragX, y: dragY },
       previewUrl,
     });
-    
-    setImagePosition({ x: dragX, y: dragY });
 
     setShowFocalPointModal(true);
   };
@@ -366,12 +356,10 @@ export function ImageUpload({
                   >
                     {tempImageUrl && (
                       <div
+                        className="absolute inset-0"
                         style={{
-                          position: "absolute",
-                          width: "100%",
-                          height: "100%",
-                          transform: `translate(${imagePosition.x}px, ${imagePosition.y}px) scale(${zoom})`,
-                          transformOrigin: "center center",
+                          transform: `scale(${zoom})`,
+                          transformOrigin: `${tempFocalPoint.x}% ${tempFocalPoint.y}%`,
                           transition: isDragging
                             ? "none"
                             : "transform 0.1s ease-out",
@@ -382,6 +370,9 @@ export function ImageUpload({
                           alt="Position your image"
                           fill
                           className="object-cover pointer-events-none"
+                          style={{
+                            objectPosition: `${tempFocalPoint.x}% ${tempFocalPoint.y}%`,
+                          }}
                           quality={100}
                           priority
                           draggable={false}
