@@ -50,17 +50,20 @@ export function ImageUpload({
   const [showFocalPointModal, setShowFocalPointModal] = useState(false);
   const [tempImageUrl, setTempImageUrl] = useState<string | null>(null);
   const [tempImagePath, setTempImagePath] = useState<string | null>(null);
-  
+
   // react-easy-crop state
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1.5);
   const [croppedArea, setCroppedArea] = useState<Area | null>(null);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
 
-  const onCropComplete = useCallback((croppedArea: Area, croppedAreaPixels: Area) => {
-    setCroppedArea(croppedArea);
-    setCroppedAreaPixels(croppedAreaPixels);
-  }, []);
+  const onCropComplete = useCallback(
+    (croppedArea: Area, croppedAreaPixels: Area) => {
+      setCroppedArea(croppedArea);
+      setCroppedAreaPixels(croppedAreaPixels);
+    },
+    []
+  );
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -116,24 +119,50 @@ export function ImageUpload({
   };
 
   const handleFocalPointConfirm = async () => {
-    if (!tempImageUrl || !croppedArea) return;
+    if (!tempImageUrl || !croppedArea || !croppedAreaPixels) return;
 
-    // The croppedArea is already in percentages!
-    // The focal point is the center of the cropped area
-    const focalPoint = {
-      x: croppedArea.x + (croppedArea.width / 2),
-      y: croppedArea.y + (croppedArea.height / 2),
-    };
+    setIsUploading(true);
+    setError(null);
 
-    setPreviewUrl(tempImageUrl);
+    try {
+      // Call the crop-avatar API with the exact crop area from react-easy-crop
+      const cropResponse = await fetch("/api/upload/crop-avatar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          imageUrl: tempImageUrl,
+          cropAreaPixels: croppedAreaPixels,
+          bucket: bucket,
+        }),
+      });
 
-    // If tempImagePath is null, we're just adjusting existing image, use current URL
-    const pathToUse = tempImagePath || currentImageUrl || "";
-    onUploadComplete(tempImageUrl, pathToUse, focalPoint, zoom);
+      if (!cropResponse.ok) {
+        throw new Error("Failed to crop avatar");
+      }
 
-    setShowFocalPointModal(false);
-    setTempImageUrl(null);
-    setTempImagePath(null);
+      const { avatarUrl } = await cropResponse.json();
+
+      // Calculate focal point for backward compatibility (still used for preview)
+      const focalPoint = {
+        x: croppedArea.x + croppedArea.width / 2,
+        y: croppedArea.y + croppedArea.height / 2,
+      };
+
+      setPreviewUrl(avatarUrl); // Use the cropped avatar URL for preview
+
+      // If tempImagePath is null, we're just adjusting existing image, use current URL
+      const pathToUse = tempImagePath || currentImageUrl || "";
+      onUploadComplete(tempImageUrl, pathToUse, focalPoint, zoom);
+
+      setShowFocalPointModal(false);
+      setTempImageUrl(null);
+      setTempImagePath(null);
+    } catch (err) {
+      console.error("Crop error:", err);
+      setError(err instanceof Error ? err.message : "Failed to crop avatar");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleFocalPointCancel = () => {
@@ -163,9 +192,11 @@ export function ImageUpload({
     setTempImageUrl(previewUrl);
     setTempImagePath(null);
     setCrop({ x: 0, y: 0 });
-    
+
     const currentZoomValue =
-      typeof currentZoom === "number" && !isNaN(currentZoom) ? currentZoom : 1.5;
+      typeof currentZoom === "number" && !isNaN(currentZoom)
+        ? currentZoom
+        : 1.5;
     setZoom(currentZoomValue);
 
     setShowFocalPointModal(true);
@@ -322,7 +353,8 @@ export function ImageUpload({
 
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-3">
               <p className="text-xs text-blue-700 dark:text-blue-300">
-                <strong>Tip:</strong> Drag the image to center your face, then zoom in/out for the perfect crop!
+                <strong>Tip:</strong> Drag the image to center your face, then
+                zoom in/out for the perfect crop!
               </p>
             </div>
           </div>
@@ -331,9 +363,7 @@ export function ImageUpload({
             <Button variant="outline" onClick={handleFocalPointCancel}>
               Cancel
             </Button>
-            <Button onClick={handleFocalPointConfirm}>
-              Confirm Crop
-            </Button>
+            <Button onClick={handleFocalPointConfirm}>Confirm Crop</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -15,6 +15,7 @@ export async function POST(request: NextRequest) {
       focalX = 50,
       focalY = 50,
       zoom = 1.5,
+      cropAreaPixels, // New: exact crop area from react-easy-crop
       bucket = "runner-photos",
     } = body;
 
@@ -33,28 +34,41 @@ export async function POST(request: NextRequest) {
 
     const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
 
-    // Get image metadata to calculate crop area
+    // Get image metadata
     const metadata = await sharp(imageBuffer).metadata();
     const originalWidth = metadata.width!;
     const originalHeight = metadata.height!;
 
-    // Calculate the crop area based on focal point and zoom
-    // Avatars must be square, so we use the smaller dimension
-    const cropRatio = 1 / zoom;
-    const minDimension = Math.min(originalWidth, originalHeight);
-    const cropSize = Math.round(minDimension * cropRatio);
+    let left: number, top: number, cropSize: number;
 
-    // Calculate the top-left corner of the crop area
-    // Focal point is in percentage (0-100)
-    const focalXPx = (focalX / 100) * originalWidth;
-    const focalYPx = (focalY / 100) * originalHeight;
+    // If we have exact crop area from react-easy-crop, use it directly
+    if (cropAreaPixels) {
+      left = Math.round(cropAreaPixels.x);
+      top = Math.round(cropAreaPixels.y);
+      // Use the smaller of width/height to ensure square crop
+      cropSize = Math.round(Math.min(cropAreaPixels.width, cropAreaPixels.height));
+      
+      // Ensure crop area doesn't go out of bounds
+      left = Math.max(0, Math.min(left, originalWidth - cropSize));
+      top = Math.max(0, Math.min(top, originalHeight - cropSize));
+    } else {
+      // Fallback: Calculate the crop area based on focal point and zoom (old method)
+      const cropRatio = 1 / zoom;
+      const minDimension = Math.min(originalWidth, originalHeight);
+      cropSize = Math.round(minDimension * cropRatio);
 
-    let left = Math.round(focalXPx - cropSize / 2);
-    let top = Math.round(focalYPx - cropSize / 2);
+      // Calculate the top-left corner of the crop area
+      // Focal point is in percentage (0-100)
+      const focalXPx = (focalX / 100) * originalWidth;
+      const focalYPx = (focalY / 100) * originalHeight;
 
-    // Ensure crop area doesn't go out of bounds
-    left = Math.max(0, Math.min(left, originalWidth - cropSize));
-    top = Math.max(0, Math.min(top, originalHeight - cropSize));
+      left = Math.round(focalXPx - cropSize / 2);
+      top = Math.round(focalYPx - cropSize / 2);
+
+      // Ensure crop area doesn't go out of bounds
+      left = Math.max(0, Math.min(left, originalWidth - cropSize));
+      top = Math.max(0, Math.min(top, originalHeight - cropSize));
+    }
 
     // Generate avatar sizes: 80px (1x), 160px (2x), 320px (3x for very high DPI)
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
