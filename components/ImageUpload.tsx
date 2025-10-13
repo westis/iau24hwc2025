@@ -63,6 +63,12 @@ export function ImageUpload({
   // For drag-to-position - manipulate focal point directly
   const [isDragging, setIsDragging] = useState(false);
   const dragStartRef = useRef({ x: 0, y: 0, startFocalX: 50, startFocalY: 50 });
+  const zoomRef = useRef(1.5);
+
+  // Keep zoom ref in sync
+  useEffect(() => {
+    zoomRef.current = zoom;
+  }, [zoom]);
 
   // Handle dragging with document-level listeners for smooth dragging
   useEffect(() => {
@@ -75,12 +81,18 @@ export function ImageUpload({
       // Convert pixel movement to focal point percentage
       // Container is 320px, and we're zoomed
       // Moving right means showing more of the left side (decrease focal X)
-      const focalDeltaX = -(deltaX / (320 * zoom)) * 100;
-      const focalDeltaY = -(deltaY / (320 * zoom)) * 100;
+      const focalDeltaX = -(deltaX / (320 * zoomRef.current)) * 100;
+      const focalDeltaY = -(deltaY / (320 * zoomRef.current)) * 100;
 
       setTempFocalPoint({
-        x: Math.max(0, Math.min(100, dragStartRef.current.startFocalX + focalDeltaX)),
-        y: Math.max(0, Math.min(100, dragStartRef.current.startFocalY + focalDeltaY)),
+        x: Math.max(
+          0,
+          Math.min(100, dragStartRef.current.startFocalX + focalDeltaX)
+        ),
+        y: Math.max(
+          0,
+          Math.min(100, dragStartRef.current.startFocalY + focalDeltaY)
+        ),
       });
     };
 
@@ -95,7 +107,7 @@ export function ImageUpload({
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [isDragging, zoom]);
+  }, [isDragging]);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
