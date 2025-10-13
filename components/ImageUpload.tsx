@@ -59,12 +59,11 @@ export function ImageUpload({
     typeof currentZoom === "number" ? currentZoom : 1.5
   );
   const imageRef = useRef<HTMLDivElement>(null);
-  const [imageDisplayInfo, setImageDisplayInfo] = useState<{
-    displayedWidth: number;
-    displayedHeight: number;
-    offsetX: number;
-    offsetY: number;
-  } | null>(null);
+  
+  // For drag-to-position
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [imagePosition, setImagePosition] = useState({ x: 0, y: 0 });
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -110,6 +109,7 @@ export function ImageUpload({
       setTempImagePath(data.path);
       setTempFocalPoint({ x: 50, y: 50 });
       setZoom(1.5); // Start with some zoom
+      setImagePosition({ x: 0, y: 0 }); // Center the image
       setShowFocalPointModal(true);
     } catch (err) {
       console.error("Upload error:", err);
@@ -119,82 +119,54 @@ export function ImageUpload({
     }
   };
 
-  const handleImageClick = async (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!imageRef.current || !tempImageUrl) return;
-
-    const container = imageRef.current.getBoundingClientRect();
-
-    // Get the actual image element to determine its natural dimensions
-    const imgElement = imageRef.current.querySelector("img");
-    if (!imgElement) return;
-
-    const naturalWidth = imgElement.naturalWidth;
-    const naturalHeight = imgElement.naturalHeight;
-
-    if (!naturalWidth || !naturalHeight) return;
-
-    // Calculate the displayed image dimensions with object-fit: contain
-    const containerAspect = container.width / container.height;
-    const imageAspect = naturalWidth / naturalHeight;
-
-    let displayedWidth: number;
-    let displayedHeight: number;
-    let offsetX: number;
-    let offsetY: number;
-
-    if (imageAspect > containerAspect) {
-      // Image is wider - will have letterboxing on top/bottom
-      displayedWidth = container.width;
-      displayedHeight = container.width / imageAspect;
-      offsetX = 0;
-      offsetY = (container.height - displayedHeight) / 2;
-    } else {
-      // Image is taller - will have letterboxing on left/right
-      displayedHeight = container.height;
-      displayedWidth = container.height * imageAspect;
-      offsetX = (container.width - displayedWidth) / 2;
-      offsetY = 0;
-    }
-
-    // Calculate click position relative to the container
-    const clickX = e.clientX - container.left;
-    const clickY = e.clientY - container.top;
-
-    // Check if click is within the actual image bounds
-    if (
-      clickX < offsetX ||
-      clickX > offsetX + displayedWidth ||
-      clickY < offsetY ||
-      clickY > offsetY + displayedHeight
-    ) {
-      // Click was in the letterbox area, ignore it
-      return;
-    }
-
-    // Calculate the percentage within the actual image
-    const x = ((clickX - offsetX) / displayedWidth) * 100;
-    const y = ((clickY - offsetY) / displayedHeight) * 100;
-
-    // Store display info for positioning the marker correctly
-    setImageDisplayInfo({
-      displayedWidth,
-      displayedHeight,
-      offsetX,
-      offsetY,
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(true);
+    setDragStart({
+      x: e.clientX - imagePosition.x,
+      y: e.clientY - imagePosition.y,
     });
+  };
 
-    setTempFocalPoint({ x, y });
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDragging) return;
+    
+    setImagePosition({
+      x: e.clientX - dragStart.x,
+      y: e.clientY - dragStart.y,
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleZoomChange = (value: number[]) => {
+    setZoom(value[0]);
   };
 
   const handleFocalPointConfirm = () => {
     if (!tempImageUrl) return;
 
+    // Convert drag position + zoom to focal point percentage
+    // The visible area's center is the focal point
+    const previewSize = 320; // Container size
+    const calculatedFocalPoint = {
+      x: 50 - (imagePosition.x / (previewSize * zoom)) * 100,
+      y: 50 - (imagePosition.y / (previewSize * zoom)) * 100,
+    };
+    
+    // Clamp to 0-100
+    calculatedFocalPoint.x = Math.max(0, Math.min(100, calculatedFocalPoint.x));
+    calculatedFocalPoint.y = Math.max(0, Math.min(100, calculatedFocalPoint.y));
+
     setPreviewUrl(tempImageUrl);
-    setFocalPoint(tempFocalPoint);
+    setFocalPoint(calculatedFocalPoint);
+    setTempFocalPoint(calculatedFocalPoint);
 
     // If tempImagePath is null, we're just adjusting existing image, use current URL
     const pathToUse = tempImagePath || currentImageUrl || "";
-    onUploadComplete(tempImageUrl, pathToUse, tempFocalPoint, zoom);
+    onUploadComplete(tempImageUrl, pathToUse, calculatedFocalPoint, zoom);
 
     setShowFocalPointModal(false);
     setTempImageUrl(null);
@@ -229,49 +201,17 @@ export function ImageUpload({
     setTempImageUrl(previewUrl);
     setTempImagePath(null); // No new upload, just adjusting existing
     setTempFocalPoint({ x: focalPoint.x, y: focalPoint.y });
-    setZoom(typeof currentZoom === "number" ? currentZoom : 1.5);
-    setImageDisplayInfo(null); // Reset display info, will be calculated on first click
+    
+    const currentZoomValue = typeof currentZoom === "number" ? currentZoom : 1.5;
+    setZoom(currentZoomValue);
+    
+    // Convert focal point percentage to drag position
+    const previewSize = 320;
+    const dragX = (50 - focalPoint.x) * (previewSize * currentZoomValue) / 100;
+    const dragY = (50 - focalPoint.y) * (previewSize * currentZoomValue) / 100;
+    setImagePosition({ x: dragX, y: dragY });
+    
     setShowFocalPointModal(true);
-  };
-
-  // Calculate display info when modal opens or image changes
-  const calculateImageDisplayInfo = () => {
-    if (!imageRef.current || !tempImageUrl) return;
-
-    const container = imageRef.current.getBoundingClientRect();
-    const imgElement = imageRef.current.querySelector("img");
-    if (!imgElement) return;
-
-    const naturalWidth = imgElement.naturalWidth;
-    const naturalHeight = imgElement.naturalHeight;
-    if (!naturalWidth || !naturalHeight) return;
-
-    const containerAspect = container.width / container.height;
-    const imageAspect = naturalWidth / naturalHeight;
-
-    let displayedWidth: number;
-    let displayedHeight: number;
-    let offsetX: number;
-    let offsetY: number;
-
-    if (imageAspect > containerAspect) {
-      displayedWidth = container.width;
-      displayedHeight = container.width / imageAspect;
-      offsetX = 0;
-      offsetY = (container.height - displayedHeight) / 2;
-    } else {
-      displayedHeight = container.height;
-      displayedWidth = container.height * imageAspect;
-      offsetX = (container.width - displayedWidth) / 2;
-      offsetY = 0;
-    }
-
-    setImageDisplayInfo({
-      displayedWidth,
-      displayedHeight,
-      offsetX,
-      offsetY,
-    });
   };
 
   return (
@@ -391,103 +331,54 @@ export function ImageUpload({
               </div>
             )}
 
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Image with focal point */}
+            <div className="space-y-6">
               <div>
-                <h3 className="text-sm font-medium mb-2">
-                  Click on the face or important area
-                </h3>
-                <div
-                  ref={imageRef}
-                  className="relative w-full h-64 bg-black rounded-lg overflow-hidden cursor-crosshair border-2 border-border"
-                  onClick={handleImageClick}
-                >
-                  {tempImageUrl && (
-                    <>
-                      <Image
-                        src={tempImageUrl}
-                        alt="Set focal point"
-                        fill
-                        className="object-contain"
-                        quality={100}
-                        priority
-                        onLoad={calculateImageDisplayInfo}
-                      />
-                      {/* Focal point marker */}
-                      <div
-                        className="absolute w-6 h-6 pointer-events-none"
-                        style={{
-                          left: imageDisplayInfo
-                            ? `${imageDisplayInfo.offsetX + (tempFocalPoint.x / 100) * imageDisplayInfo.displayedWidth}px`
-                            : `${tempFocalPoint.x}%`,
-                          top: imageDisplayInfo
-                            ? `${imageDisplayInfo.offsetY + (tempFocalPoint.y / 100) * imageDisplayInfo.displayedHeight}px`
-                            : `${tempFocalPoint.y}%`,
-                          transform: "translate(-50%, -50%)",
-                        }}
-                      >
-                        {/* Center dot */}
-                        <div
-                          className="absolute left-1/2 top-1/2 w-3 h-3 bg-blue-500 border-2 border-white rounded-full shadow-lg"
-                          style={{ transform: "translate(-50%, -50%)" }}
-                        />
-                        {/* Crosshair */}
-                        <div
-                          className="absolute left-1/2 top-0 w-0.5 h-2 bg-blue-500 shadow-lg"
-                          style={{ transform: "translateX(-50%)" }}
-                        />
-                        <div
-                          className="absolute left-1/2 bottom-0 w-0.5 h-2 bg-blue-500 shadow-lg"
-                          style={{ transform: "translateX(-50%)" }}
-                        />
-                        <div
-                          className="absolute top-1/2 left-0 h-0.5 w-2 bg-blue-500 shadow-lg"
-                          style={{ transform: "translateY(-50%)" }}
-                        />
-                        <div
-                          className="absolute top-1/2 right-0 h-0.5 w-2 bg-blue-500 shadow-lg"
-                          style={{ transform: "translateY(-50%)" }}
-                        />
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* Circular avatar preview */}
-              <div>
-                <h3 className="text-sm font-medium mb-2">
-                  Avatar preview (80x80px)
+                <h3 className="text-sm font-medium mb-2 text-center">
+                  Drag the image to position it. What you see is what you get!
                 </h3>
                 <div className="flex justify-center">
-                  <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-border bg-black">
+                  <div
+                    ref={imageRef}
+                    className="relative w-80 h-80 rounded-lg overflow-hidden border-4 border-primary bg-black cursor-move select-none"
+                    onMouseDown={handleMouseDown}
+                    onMouseMove={handleMouseMove}
+                    onMouseUp={handleMouseUp}
+                    onMouseLeave={handleMouseUp}
+                  >
                     {tempImageUrl && (
                       <div
-                        className="absolute inset-0"
                         style={{
-                          transform: `scale(${
-                            typeof zoom === "number" ? zoom : 1.5
-                          })`,
-                          transformOrigin: `${tempFocalPoint.x}% ${tempFocalPoint.y}%`,
+                          position: 'absolute',
+                          width: '100%',
+                          height: '100%',
+                          transform: `translate(${imagePosition.x}px, ${imagePosition.y}px) scale(${zoom})`,
+                          transformOrigin: 'center center',
+                          transition: isDragging ? 'none' : 'transform 0.1s ease-out',
                         }}
                       >
                         <Image
                           src={tempImageUrl}
-                          alt="Avatar preview"
+                          alt="Position your image"
                           fill
-                          className="object-cover"
-                          style={{
-                            objectPosition: `${tempFocalPoint.x}% ${tempFocalPoint.y}%`,
-                          }}
+                          className="object-cover pointer-events-none"
                           quality={100}
                           priority
+                          draggable={false}
                         />
+                      </div>
+                    )}
+                    {/* Overlay hint */}
+                    {!isDragging && (
+                      <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                        <div className="bg-black/70 text-white px-4 py-2 rounded-full text-sm">
+                          Drag to reposition
+                        </div>
                       </div>
                     )}
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground mt-3 text-center">
-                  This is how the avatar will appear on the profile
+                  This square preview shows exactly how your 80x80px avatar will appear
                 </p>
               </div>
             </div>
@@ -502,21 +393,20 @@ export function ImageUpload({
               </div>
               <Slider
                 value={[typeof zoom === "number" ? zoom : 1.5]}
-                onValueChange={([value]) =>
-                  setZoom(typeof value === "number" ? value : 1.5)
-                }
+                onValueChange={handleZoomChange}
                 min={1}
                 max={3}
                 step={0.1}
                 className="w-full"
               />
+              <p className="text-xs text-muted-foreground text-center">
+                Use the slider to zoom in/out
+              </p>
             </div>
 
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-3">
               <p className="text-xs text-blue-700 dark:text-blue-300">
-                <strong>Tip:</strong> Click on the person&apos;s face, then
-                adjust the zoom slider until the face fills the circular preview
-                nicely.
+                <strong>Tip:</strong> Drag the image to center the face in the square, then use the zoom slider to get the perfect crop. The exact area you see will be your avatar!
               </p>
             </div>
           </div>
