@@ -2,6 +2,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getActiveRaceInfo } from '@/lib/db/database'
 
+// Enable ISR: revalidate every 5 minutes (race info changes less frequently)
+export const revalidate = 300
+
 // GET /api/race - Get active race information
 export async function GET(request: NextRequest) {
   try {
@@ -14,7 +17,12 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    return NextResponse.json(raceInfo)
+    return NextResponse.json(raceInfo, {
+      headers: {
+        // Cache for 5 minutes, serve stale for 10 minutes while revalidating
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+      },
+    })
   } catch (error) {
     console.error('Error fetching race info:', error)
     return NextResponse.json(

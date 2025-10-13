@@ -80,6 +80,15 @@ export default function AdminNewsPage() {
           await sendPushNotification(formData.title, formData.content, data.newsItem.id)
         }
 
+        // Trigger cache revalidation
+        await fetch('/api/revalidate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            paths: ['/', '/news'],
+          }),
+        })
+
         setCreating(false)
         setFormData({ title: '', content: '', published: false, runnerIds: [], sendNotification: false })
         setRunnerSearch('')
@@ -104,6 +113,15 @@ export default function AdminNewsPage() {
           await sendPushNotification(formData.title, formData.content, id)
         }
 
+        // Trigger cache revalidation
+        await fetch('/api/revalidate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            paths: ['/', '/news'],
+          }),
+        })
+
         setEditing(null)
         setFormData({ title: '', content: '', published: false, runnerIds: [], sendNotification: false })
         setRunnerSearch('')
@@ -123,6 +141,15 @@ export default function AdminNewsPage() {
       })
 
       if (response.ok) {
+        // Trigger cache revalidation
+        await fetch('/api/revalidate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            paths: ['/', '/news'],
+          }),
+        })
+
         await fetchNews()
       }
     } catch (error) {

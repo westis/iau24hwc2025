@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getNews, createNews, linkRunnersToNews, getRunnersByNewsId } from '@/lib/db/database'
 import type { NewsItemCreate } from '@/types/news'
 
-export const dynamic = 'force-dynamic'
+// Enable ISR: revalidate every 2 minutes
+export const revalidate = 120
 
 // GET /api/news - Get all news (published only by default, or all for admins)
 export async function GET(request: NextRequest) {
@@ -20,10 +21,18 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({
-      news,
-      count: news.length,
-    })
+    return NextResponse.json(
+      {
+        news,
+        count: news.length,
+      },
+      {
+        headers: {
+          // Cache for 2 minutes, serve stale for 4 minutes while revalidating
+          'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=240',
+        },
+      }
+    )
   } catch (error) {
     console.error('Get news error:', error)
     return NextResponse.json(

@@ -101,6 +101,15 @@ export default function AdminRacePage() {
       })
 
       if (response.ok) {
+        // Trigger cache revalidation
+        await fetch('/api/revalidate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            paths: ['/', '/loppet', '/participants'],
+          }),
+        })
+
         alert('Race information updated successfully!')
         fetchRaceInfo()
       } else {
