@@ -41,7 +41,7 @@ USING ( bucket_id = 'race-photos' );
 CREATE POLICY "Authenticated users can upload"
 ON storage.objects FOR INSERT
 WITH CHECK (
-  bucket_id = 'race-photos' 
+  bucket_id = 'race-photos'
   AND auth.role() = 'authenticated'
 );
 ```

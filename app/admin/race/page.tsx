@@ -347,9 +347,7 @@ export default function AdminRacePage() {
               </div>
 
               <div>
-                <Label htmlFor="officialWebsiteUrl">
-                  Official Website URL
-                </Label>
+                <Label htmlFor="officialWebsiteUrl">Official Website URL</Label>
                 <Input
                   id="officialWebsiteUrl"
                   type="url"
