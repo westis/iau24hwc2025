@@ -1,49 +1,52 @@
-'use client'
+"use client";
 
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { useAuth } from '@/lib/auth/auth-context'
-import { useLanguage } from '@/lib/i18n/LanguageContext'
-import { ThemeToggle } from '@/components/theme-toggle'
-import { LanguageSwitcher } from '@/components/LanguageSwitcher'
-import { NotificationButton } from '@/components/NotificationButton'
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useAuth } from "@/lib/auth/auth-context";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { NotificationButton } from "@/components/NotificationButton";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu'
-import { Menu, X, ChevronDown } from 'lucide-react'
-import { useState } from 'react'
+} from "@/components/ui/dropdown-menu";
+import { Menu, X, ChevronDown } from "lucide-react";
+import { useState } from "react";
 
 export function Navbar() {
-  const pathname = usePathname()
-  const { isAdmin, logout } = useAuth()
-  const { t } = useLanguage()
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const pathname = usePathname();
+  const { isAdmin, logout } = useAuth();
+  const { t } = useLanguage();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const publicNavItems = [
-    { href: '/', label: t.common.home },
-    { href: '/loppet', label: t.common.loppet },
-    { href: '/participants', label: t.common.participants },
-    { href: '/news', label: t.common.news },
-    { href: '/stats', label: t.common.stats },
-  ]
+    { href: "/", label: t.common.home },
+    { href: "/loppet", label: t.common.loppet },
+    { href: "/participants", label: t.common.participants },
+    { href: "/news", label: t.common.news },
+    { href: "/stats", label: t.common.stats },
+  ];
 
   const adminNavItems = [
-    { href: '/match', label: t.common.match },
-    { href: '/admin/news', label: t.common.manageNews },
-    { href: '/admin/race', label: 'Edit Race Info' },
-    { href: '/admin/notifications', label: 'Send Notifications' },
-  ]
+    { href: "/match", label: t.common.match },
+    { href: "/admin/news", label: t.common.manageNews },
+    { href: "/admin/race", label: "Edit Race Info" },
+    { href: "/admin/notifications", label: "Send Notifications" },
+  ];
 
   return (
     <nav className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4">
         <div className="flex h-14 md:h-16 items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="text-base sm:text-lg lg:text-xl font-semibold tracking-tight">
+          <Link
+            href="/"
+            className="text-base sm:text-lg lg:text-xl font-semibold tracking-tight"
+          >
             IAU 24h WC 2025
           </Link>
 
@@ -55,8 +58,8 @@ export function Navbar() {
                 href={item.href}
                 className={`text-sm lg:text-base font-medium transition-colors ${
                   pathname === item.href
-                    ? 'text-foreground'
-                    : 'text-muted-foreground hover:text-foreground'
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {item.label}
@@ -97,7 +100,11 @@ export function Navbar() {
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="inline-flex items-center justify-center rounded-md p-2 hover:bg-accent"
             >
-              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              {mobileMenuOpen ? (
+                <X className="h-5 w-5" />
+              ) : (
+                <Menu className="h-5 w-5" />
+              )}
             </button>
           </div>
         </div>
@@ -113,8 +120,8 @@ export function Navbar() {
                   onClick={() => setMobileMenuOpen(false)}
                   className={`text-sm font-medium transition-colors ${
                     pathname === item.href
-                      ? 'text-foreground'
-                      : 'text-muted-foreground hover:text-foreground'
+                      ? "text-foreground"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   {item.label}
@@ -132,8 +139,8 @@ export function Navbar() {
                       onClick={() => setMobileMenuOpen(false)}
                       className={`text-sm font-medium transition-colors pl-4 ${
                         pathname === item.href
-                          ? 'text-foreground'
-                          : 'text-muted-foreground hover:text-foreground'
+                          ? "text-foreground"
+                          : "text-muted-foreground hover:text-foreground"
                       }`}
                     >
                       {item.label}
@@ -141,8 +148,8 @@ export function Navbar() {
                   ))}
                   <button
                     onClick={() => {
-                      logout()
-                      setMobileMenuOpen(false)
+                      logout();
+                      setMobileMenuOpen(false);
                     }}
                     className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors text-left pl-4"
                   >
@@ -155,5 +162,5 @@ export function Navbar() {
         )}
       </div>
     </nav>
-  )
+  );
 }

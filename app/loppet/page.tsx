@@ -2,10 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
-import { RaceCountdown } from '@/components/race/RaceCountdown'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Calendar, MapPin, ExternalLink, Clock } from 'lucide-react'
+import { Calendar, MapPin, ExternalLink } from 'lucide-react'
 import type { RaceInfo } from '@/types/race'
 
 export default function LoppetPage() {
@@ -70,16 +69,6 @@ export default function LoppetPage() {
             </p>
           )}
         </div>
-
-        {/* Countdown */}
-        <Card className="mb-8">
-          <CardContent className="pt-6">
-            <RaceCountdown
-              targetDate={raceInfo.startDate}
-              size="large"
-            />
-          </CardContent>
-        </Card>
 
         {/* Race Information Grid */}
         <div className="grid md:grid-cols-2 gap-6 mb-8">

@@ -79,9 +79,13 @@ export function RichTextEditor({
       <div className="flex flex-wrap gap-1 p-2 border-b bg-muted/50">
         <Button
           type="button"
-          variant={editor.isActive("heading", { level: 2 }) ? "default" : "ghost"}
+          variant={
+            editor.isActive("heading", { level: 2 }) ? "default" : "ghost"
+          }
           size="sm"
-          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+          onClick={() =>
+            editor.chain().focus().toggleHeading({ level: 2 }).run()
+          }
         >
           <Heading2 className="h-4 w-4" />
         </Button>
@@ -154,4 +158,3 @@ export function RichTextEditor({
     </div>
   );
 }
-
