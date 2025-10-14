@@ -77,7 +77,7 @@ export default function AdminNewsPage() {
 
         // Send push notification if requested
         if (formData.sendNotification && formData.published) {
-          await sendPushNotification(formData.title, formData.content, data.newsItem.id)
+          await sendPushNotification(formData.title, formData.content, data.id)
         }
 
         // Trigger cache revalidation
