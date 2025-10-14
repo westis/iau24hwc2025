@@ -624,13 +624,29 @@ export async function getNewsById(id: number): Promise<NewsItem | null> {
 
 export async function createNews(news: NewsItemCreate): Promise<NewsItem> {
   const db = getDatabase();
+  
+  // If marking as preview, unmark any other articles
+  if (news.is_preview_men) {
+    await db.query(`UPDATE news SET is_preview_men = FALSE WHERE is_preview_men = TRUE`);
+  }
+  if (news.is_preview_women) {
+    await db.query(`UPDATE news SET is_preview_women = FALSE WHERE is_preview_women = TRUE`);
+  }
+  
   const result = await db.query(
     `
-    INSERT INTO news (title, content, published)
-    VALUES ($1, $2, $3)
+    INSERT INTO news (title, content, published, is_preview_men, is_preview_women, preview_url)
+    VALUES ($1, $2, $3, $4, $5, $6)
     RETURNING *
   `,
-    [news.title, news.content, news.published || false]
+    [
+      news.title,
+      news.content,
+      news.published || false,
+      news.is_preview_men || false,
+      news.is_preview_women || false,
+      news.preview_url || null
+    ]
   );
 
   const row = result.rows[0];
@@ -639,6 +655,8 @@ export async function createNews(news: NewsItemCreate): Promise<NewsItem> {
     title: row.title,
     content: row.content,
     published: row.published,
+    is_preview_men: row.is_preview_men,
+    is_preview_women: row.is_preview_women,
     created_at: row.created_at,
     updated_at: row.updated_at,
   };
@@ -653,6 +671,14 @@ export async function updateNews(
   const values: any[] = [];
   let paramIndex = 1;
 
+  // If marking as preview, unmark any other articles first
+  if (updates.is_preview_men) {
+    await db.query(`UPDATE news SET is_preview_men = FALSE WHERE is_preview_men = TRUE AND id != $1`, [id]);
+  }
+  if (updates.is_preview_women) {
+    await db.query(`UPDATE news SET is_preview_women = FALSE WHERE is_preview_women = TRUE AND id != $1`, [id]);
+  }
+  
   if (updates.title !== undefined) {
     fields.push(`title = $${paramIndex++}`);
     values.push(updates.title);
@@ -664,6 +690,18 @@ export async function updateNews(
   if (updates.published !== undefined) {
     fields.push(`published = $${paramIndex++}`);
     values.push(updates.published);
+  }
+  if (updates.is_preview_men !== undefined) {
+    fields.push(`is_preview_men = $${paramIndex++}`);
+    values.push(updates.is_preview_men);
+  }
+  if (updates.is_preview_women !== undefined) {
+    fields.push(`is_preview_women = $${paramIndex++}`);
+    values.push(updates.is_preview_women);
+  }
+  if (updates.preview_url !== undefined) {
+    fields.push(`preview_url = $${paramIndex++}`);
+    values.push(updates.preview_url || null);
   }
 
   if (fields.length === 0) return await getNewsById(id);

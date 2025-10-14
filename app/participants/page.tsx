@@ -10,7 +10,6 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { RunnersView } from "@/components/participants/RunnersView";
 import { TeamsView } from "@/components/participants/TeamsView";
 import { SocialView } from "@/components/participants/SocialView";
-import Link from "next/link";
 
 function ParticipantsPageContent() {
   const router = useRouter();
@@ -97,17 +96,32 @@ function ParticipantsPageContent() {
     updateURL({ metric: newMetric });
   };
 
-  // Preview article links - configure these to match your news article IDs
-  const previewLinks = {
-    men: "/news/1", // Replace with actual men's preview article ID
-    women: "/news/2", // Replace with actual women's preview article ID
-  };
+  // Fetch preview articles
+  const [previews, setPreviews] = useState<{
+    men?: { title: string; preview_url: string } | null;
+    women?: { title: string; preview_url: string } | null;
+  }>({});
+
+  useEffect(() => {
+    async function fetchPreviews() {
+      try {
+        const response = await fetch("/api/news/previews");
+        const data = await response.json();
+        setPreviews(data);
+      } catch (error) {
+        console.error("Failed to fetch previews:", error);
+      }
+    }
+    fetchPreviews();
+  }, []);
 
   return (
     <main className="min-h-screen py-6 sm:py-8 lg:py-10">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
         <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold">{t.participants.title}</h1>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold">
+            {t.participants.title}
+          </h1>
           {isAdmin && (
             <Button
               variant="outline"
@@ -119,29 +133,46 @@ function ParticipantsPageContent() {
           )}
         </div>
 
-        {/* Preview Article Banner */}
+        {/* Preview Article Banner - Only shows if preview exists */}
         {activeTab === "individual" && (
-          <Link
-            href={gender === "M" ? previewLinks.men : previewLinks.women}
-            className="block mb-6"
-          >
-            <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 rounded-lg p-4 hover:border-primary/40 transition-all hover:shadow-md group">
-              <div className="flex items-center gap-3">
-                <div className="flex-shrink-0 p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
-                  <Newspaper className="h-5 w-5 text-primary" />
+          <>
+            {gender === "M" && previews.men?.preview_url && (
+              <a
+                href={previews.men.preview_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block mb-4"
+              >
+                <div className="bg-gradient-to-r from-primary/10 to-transparent border border-primary/20 rounded-lg p-3 hover:border-primary/40 transition-all hover:shadow-sm group">
+                  <div className="flex items-center gap-2.5">
+                    <Newspaper className="h-4 w-4 text-primary flex-shrink-0" />
+                    <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors flex-1">
+                      {previews.men.title}
+                    </p>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
-                    {gender === "M" ? t.participants.previewMen : t.participants.previewWomen}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {t.participants.readPreview}
-                  </p>
+              </a>
+            )}
+            {gender === "W" && previews.women?.preview_url && (
+              <a
+                href={previews.women.preview_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block mb-4"
+              >
+                <div className="bg-gradient-to-r from-primary/10 to-transparent border border-primary/20 rounded-lg p-3 hover:border-primary/40 transition-all hover:shadow-sm group">
+                  <div className="flex items-center gap-2.5">
+                    <Newspaper className="h-4 w-4 text-primary flex-shrink-0" />
+                    <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors flex-1">
+                      {previews.women.title}
+                    </p>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+                  </div>
                 </div>
-                <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all flex-shrink-0" />
-              </div>
-            </div>
-          </Link>
+              </a>
+            )}
+          </>
         )}
 
         <Tabs

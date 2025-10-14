@@ -28,6 +28,9 @@ export default function AdminNewsPage() {
     published: false,
     runnerIds: [] as number[],
     sendNotification: false,
+    isPreviewMen: false,
+    isPreviewWomen: false,
+    previewUrl: "",
   });
   const [runners, setRunners] = useState<Runner[]>([]);
   const [runnerSearch, setRunnerSearch] = useState("");
@@ -247,6 +250,9 @@ export default function AdminNewsPage() {
       published: item.published,
       runnerIds: item.linkedRunnerIds || [],
       sendNotification: false,
+      isPreviewMen: item.is_preview_men || false,
+      isPreviewWomen: item.is_preview_women || false,
+      previewUrl: item.preview_url || "",
     });
     setRunnerSearch("");
     setCreating(false);
@@ -261,6 +267,9 @@ export default function AdminNewsPage() {
       published: false,
       runnerIds: [],
       sendNotification: false,
+      isPreviewMen: false,
+      isPreviewWomen: false,
+      previewUrl: "",
     });
     setRunnerSearch("");
   }
@@ -274,6 +283,9 @@ export default function AdminNewsPage() {
       published: false,
       runnerIds: [],
       sendNotification: false,
+      isPreviewMen: false,
+      isPreviewWomen: false,
+      previewUrl: "",
     });
     setRunnerSearch("");
   }
@@ -378,6 +390,76 @@ export default function AdminNewsPage() {
                   Send push notification (only when published)
                 </label>
               </div>
+            </div>
+
+            {/* Preview Articles Section */}
+            <div className="border-t pt-4 space-y-3">
+              <label className="block text-sm font-medium">
+                Preview Article Settings
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="isPreviewMen"
+                  checked={formData.isPreviewMen || false}
+                  onChange={(e) => {
+                    setFormData({
+                      ...formData,
+                      isPreviewMen: e.target.checked,
+                      // Uncheck women's preview if checking men's
+                      isPreviewWomen: e.target.checked ? false : formData.isPreviewWomen,
+                    });
+                  }}
+                  className="w-4 h-4"
+                />
+                <label
+                  htmlFor="isPreviewMen"
+                  className="text-sm font-medium cursor-pointer"
+                >
+                  Men's Race Preview (only one article can be marked)
+                </label>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="isPreviewWomen"
+                  checked={formData.isPreviewWomen || false}
+                  onChange={(e) => {
+                    setFormData({
+                      ...formData,
+                      isPreviewWomen: e.target.checked,
+                      // Uncheck men's preview if checking women's
+                      isPreviewMen: e.target.checked ? false : formData.isPreviewMen,
+                    });
+                  }}
+                  className="w-4 h-4"
+                />
+                <label
+                  htmlFor="isPreviewWomen"
+                  className="text-sm font-medium cursor-pointer"
+                >
+                  Women's Race Preview (only one article can be marked)
+                </label>
+              </div>
+              {(formData.isPreviewMen || formData.isPreviewWomen) && (
+                <div className="space-y-1.5">
+                  <label htmlFor="previewUrl" className="text-sm font-medium">
+                    Preview Article URL (e.g., ultramarathon.se)
+                  </label>
+                  <Input
+                    id="previewUrl"
+                    type="url"
+                    placeholder="https://ultramarathon.se/article..."
+                    value={formData.previewUrl || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, previewUrl: e.target.value })
+                    }
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    This link will appear on the Participants page
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Runner Linking */}

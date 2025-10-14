@@ -280,8 +280,8 @@ export const sv: Translations = {
     media: "Media",
     men: "Herrar",
     women: "Damer",
-    previewMen: "Herrförhandsvisning",
-    previewWomen: "Damförhandsvisning",
+    previewMen: "Förhandsartikel herrar",
+    previewWomen: "Förhandsartikel damer",
     readPreview: "Läs förhandsvisningen",
   },
   chat: {
