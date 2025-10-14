@@ -3,8 +3,18 @@
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
-import { Bold, Italic, List, ListOrdered, Link2, Heading1, Heading2, Heading3 } from 'lucide-react'
+import Image from '@tiptap/extension-image'
+import { Bold, Italic, List, ListOrdered, Link2, Heading1, Heading2, Heading3, ImageIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useState } from 'react'
+import { ImageUpload } from '@/components/ImageUpload'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 
 interface RichTextEditorProps {
   value: string
@@ -13,6 +23,8 @@ interface RichTextEditorProps {
 }
 
 export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
+  const [showImageDialog, setShowImageDialog] = useState(false)
+  
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -20,6 +32,11 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
         openOnClick: false,
         HTMLAttributes: {
           class: 'text-primary underline',
+        },
+      }),
+      Image.configure({
+        HTMLAttributes: {
+          class: 'max-w-full h-auto rounded-lg my-4',
         },
       }),
     ],
@@ -30,7 +47,7 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-sm max-w-none min-h-[200px] px-3 py-2 focus:outline-none',
+        class: 'prose prose-sm dark:prose-invert max-w-none min-h-[200px] px-3 py-2 focus:outline-none [&_h1]:text-foreground [&_h2]:text-foreground [&_h3]:text-foreground [&_p]:text-foreground',
       },
     },
   })
@@ -46,10 +63,16 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
     }
   }
 
+  const handleImageUpload = (url: string) => {
+    editor.chain().focus().setImage({ src: url }).run()
+    setShowImageDialog(false)
+  }
+
   return (
-    <div className="border border-border rounded-md">
-      {/* Toolbar */}
-      <div className="flex flex-wrap gap-1 p-2 border-b border-border bg-muted/30">
+    <>
+      <div className="border border-border rounded-md">
+        {/* Toolbar */}
+        <div className="flex flex-wrap gap-1 p-2 border-b border-border bg-muted/30">
         <Button
           type="button"
           size="sm"
@@ -117,10 +140,37 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
         >
           <Link2 className="h-4 w-4" />
         </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          onClick={() => setShowImageDialog(true)}
+        >
+          <ImageIcon className="h-4 w-4" />
+        </Button>
       </div>
 
       {/* Editor */}
       <EditorContent editor={editor} />
     </div>
+
+    {/* Image Upload Dialog */}
+    <Dialog open={showImageDialog} onOpenChange={setShowImageDialog}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Ladda upp bild</DialogTitle>
+          <DialogDescription>
+            Välj en bild att ladda upp och infoga i texten
+          </DialogDescription>
+        </DialogHeader>
+        <ImageUpload
+          bucket="news-images"
+          currentImageUrl=""
+          onUploadComplete={handleImageUpload}
+          hidePreview
+        />
+      </DialogContent>
+    </Dialog>
+  </>
   )
 }

@@ -18,12 +18,12 @@ export async function POST(request: NextRequest) {
 
     if (
       !bucket ||
-      !["runner-photos", "team-photos", "race-photos", "chat-avatars"].includes(bucket)
+      !["runner-photos", "team-photos", "race-photos", "chat-avatars", "news-images"].includes(bucket)
     ) {
       return NextResponse.json(
         {
           error:
-            "Invalid bucket. Must be runner-photos, team-photos, race-photos, or chat-avatars",
+            "Invalid bucket. Must be runner-photos, team-photos, race-photos, chat-avatars, or news-images",
         },
         { status: 400 }
       );
@@ -109,7 +109,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    if (!["runner-photos", "team-photos", "race-photos", "chat-avatars"].includes(bucket)) {
+    if (!["runner-photos", "team-photos", "race-photos", "chat-avatars", "news-images"].includes(bucket)) {
       return NextResponse.json({ error: "Invalid bucket" }, { status: 400 });
     }
 
