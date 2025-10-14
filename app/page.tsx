@@ -1,37 +1,37 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import Link from 'next/link'
-import Image from 'next/image'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ExternalLink, Users, Trophy, Newspaper } from 'lucide-react'
-import { useLanguage } from '@/lib/i18n/LanguageContext'
-import { RaceCountdown } from '@/components/race/RaceCountdown'
-import type { NewsItem } from '@/types/news'
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ExternalLink, Users, Trophy, Newspaper } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { RaceCountdown } from "@/components/race/RaceCountdown";
+import type { NewsItem } from "@/types/news";
 
 export default function Home() {
-  const [news, setNews] = useState<NewsItem[]>([])
-  const [loadingNews, setLoadingNews] = useState(true)
+  const [news, setNews] = useState<NewsItem[]>([]);
+  const [loadingNews, setLoadingNews] = useState(true);
 
-  const { t, language } = useLanguage()
+  const { t, language } = useLanguage();
 
   useEffect(() => {
     async function fetchNews() {
       try {
-        const response = await fetch('/api/news')
-        const data = await response.json()
+        const response = await fetch("/api/news");
+        const data = await response.json();
         // Get only the 3 most recent news items
-        setNews(data.news.slice(0, 3))
+        setNews(data.news.slice(0, 3));
       } catch (error) {
-        console.error('Failed to fetch news:', error)
+        console.error("Failed to fetch news:", error);
       } finally {
-        setLoadingNews(false)
+        setLoadingNews(false);
       }
     }
 
-    fetchNews()
-  }, [])
+    fetchNews();
+  }, []);
 
   return (
     <main className="min-h-screen">
@@ -103,24 +103,39 @@ export default function Home() {
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Newspaper className="w-5 h-5 lg:w-6 lg:h-6 text-primary" />
-                <h2 className="text-xl sm:text-2xl lg:text-3xl font-semibold">{t.home.latestNews}</h2>
+                <h2 className="text-xl sm:text-2xl lg:text-3xl font-semibold">
+                  {t.home.latestNews}
+                </h2>
               </div>
               <Link href="/news">
-                <Button variant="ghost" size="sm" className="text-sm sm:text-base">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-sm sm:text-base"
+                >
                   {t.home.viewAllNews} →
                 </Button>
               </Link>
             </div>
             <div className="space-y-1">
               {news.map((item) => (
-                <div key={item.id} className="flex items-center gap-3 py-2 px-3 hover:bg-accent rounded-md transition-colors">
+                <div
+                  key={item.id}
+                  className="flex items-center gap-3 py-2 px-3 hover:bg-accent rounded-md transition-colors"
+                >
                   <span className="text-xs sm:text-sm lg:text-base text-muted-foreground min-w-[70px] sm:min-w-[90px]">
-                    {new Date(item.created_at).toLocaleDateString(language === 'sv' ? 'sv-SE' : 'en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                    })}
+                    {new Date(item.created_at).toLocaleDateString(
+                      language === "sv" ? "sv-SE" : "en-US",
+                      {
+                        month: "short",
+                        day: "numeric",
+                      }
+                    )}
                   </span>
-                  <Link href="/news" className="text-sm sm:text-base lg:text-lg hover:underline flex-1">
+                  <Link
+                    href="/news"
+                    className="text-sm sm:text-base lg:text-lg hover:underline flex-1"
+                  >
                     {item.title}
                   </Link>
                 </div>
@@ -130,5 +145,5 @@ export default function Home() {
         )}
       </div>
     </main>
-  )
+  );
 }

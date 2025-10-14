@@ -41,19 +41,19 @@ export function Navbar() {
   return (
     <nav className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4">
-        <div className="flex h-14 items-center justify-between">
+        <div className="flex h-14 md:h-16 items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="text-lg font-semibold tracking-tight">
+          <Link href="/" className="text-base sm:text-lg lg:text-xl font-semibold tracking-tight">
             IAU 24h WC 2025
           </Link>
 
           {/* Desktop Nav */}
-          <div className="hidden md:flex md:items-center md:gap-6">
+          <div className="hidden md:flex md:items-center md:gap-4 lg:gap-6">
             {publicNavItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`text-sm font-medium transition-colors ${
+                className={`text-sm lg:text-base font-medium transition-colors ${
                   pathname === item.href
                     ? 'text-foreground'
                     : 'text-muted-foreground hover:text-foreground'
@@ -64,9 +64,9 @@ export function Navbar() {
             ))}
             {isAdmin && (
               <DropdownMenu>
-                <DropdownMenuTrigger className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1">
+                <DropdownMenuTrigger className="text-sm lg:text-base font-medium text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1">
                   {t.common.admin}
-                  <ChevronDown className="h-3 w-3" />
+                  <ChevronDown className="h-3 w-3 lg:h-4 lg:w-4" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   {adminNavItems.map((item) => (
