@@ -134,7 +134,7 @@ function ParticipantsPageContent() {
         </div>
 
         {/* Preview Article Banner - Only shows if preview exists */}
-        {activeTab === "individual" && (
+        {(activeTab === "individual" || activeTab === "teams") && (
           <>
             {gender === "M" && previews.men?.preview_url && (
               <a
