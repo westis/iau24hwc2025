@@ -86,9 +86,12 @@ export default function AdminNewsPage() {
       if (response.ok) {
         const data = await response.json();
 
-        // Send push notification if requested
+        // Send notifications if requested
         if (formData.sendNotification && formData.published) {
-          await sendPushNotification(formData.title, formData.content, data.id);
+          const notifResults = await sendNotifications(formData.title, formData.content, data.id);
+          if (notifResults) {
+            alert(`Notifications sent!\nPush: ${notifResults.push}\nEmail: ${notifResults.email}`);
+          }
         }
 
         // Trigger cache revalidation
@@ -138,9 +141,12 @@ export default function AdminNewsPage() {
       });
 
       if (response.ok) {
-        // Send push notification if requested
+        // Send notifications if requested
         if (formData.sendNotification && formData.published) {
-          await sendPushNotification(formData.title, formData.content, id);
+          const notifResults = await sendNotifications(formData.title, formData.content, id);
+          if (notifResults) {
+            alert(`Notifications sent!\nPush: ${notifResults.push}\nEmail: ${notifResults.email}`);
+          }
         }
 
         // Trigger cache revalidation
@@ -216,18 +222,24 @@ export default function AdminNewsPage() {
     }
   }
 
-  async function sendPushNotification(
+  async function sendNotifications(
     title: string,
     content: string,
     newsId: number
   ) {
-    try {
-      // Strip HTML tags and truncate content for notification
-      const plainText =
-        content.replace(/<[^>]*>/g, "").substring(0, 150) +
-        (content.length > 150 ? "..." : "");
+    const results = {
+      push: "Not sent",
+      email: "Not sent",
+    };
 
-      const response = await fetch("/api/notifications/send", {
+    // Strip HTML tags for plain text
+    const plainText =
+      content.replace(/<[^>]*>/g, "").substring(0, 150) +
+      (content.length > 150 ? "..." : "");
+
+    // Send push notification
+    try {
+      const pushResponse = await fetch("/api/notifications/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -237,15 +249,45 @@ export default function AdminNewsPage() {
         }),
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        console.error("Failed to send notification:", error);
-        alert("Failed to send push notification: " + error.error);
+      if (pushResponse.ok) {
+        const pushData = await pushResponse.json();
+        results.push = `Sent to ${pushData.recipients || 0} subscribers`;
+      } else {
+        const error = await pushResponse.json();
+        results.push = `Failed: ${error.error}`;
+        console.error("Push notification error:", error);
       }
     } catch (error) {
-      console.error("Error sending notification:", error);
-      alert("Error sending push notification");
+      results.push = "Error occurred";
+      console.error("Error sending push:", error);
     }
+
+    // Send email notification
+    try {
+      const emailResponse = await fetch("/api/notifications/email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          content,
+          newsId,
+        }),
+      });
+
+      if (emailResponse.ok) {
+        const emailData = await emailResponse.json();
+        results.email = `Sent to ${emailData.recipients || 0} subscribers`;
+      } else {
+        const error = await emailResponse.json();
+        results.email = `Failed: ${error.error}`;
+        console.error("Email notification error:", error);
+      }
+    } catch (error) {
+      results.email = "Error occurred";
+      console.error("Error sending email:", error);
+    }
+
+    return results;
   }
 
   function startEdit(item: NewsItem) {
