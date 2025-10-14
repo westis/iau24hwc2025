@@ -233,7 +233,7 @@ export function RunnersView({
               {t.runners.women}
             </Button>
           </div>
-          
+
           {/* Time period toggle */}
           <div
             className="inline-flex rounded-lg border border-input bg-background p-1"
@@ -274,7 +274,7 @@ export function RunnersView({
             }}
             className="flex-1 min-w-[180px] max-w-[300px]"
           />
-          
+
           {/* Country dropdown */}
           <Popover
             open={countryComboboxOpen}

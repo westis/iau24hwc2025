@@ -107,6 +107,9 @@ export default function AdminNewsPage() {
           published: false,
           runnerIds: [],
           sendNotification: false,
+          is_preview_men: false,
+          is_preview_women: false,
+          preview_url: "",
         });
         setRunnerSearch("");
         await fetchNews();
@@ -156,6 +159,9 @@ export default function AdminNewsPage() {
           published: false,
           runnerIds: [],
           sendNotification: false,
+          is_preview_men: false,
+          is_preview_women: false,
+          preview_url: "",
         });
         setRunnerSearch("");
         await fetchNews();
