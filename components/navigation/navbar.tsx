@@ -36,6 +36,7 @@ export function Navbar() {
     { href: "/admin/news", label: t.common.manageNews },
     { href: "/admin/race", label: "Edit Race Info" },
     { href: "/admin/notifications", label: "Send Notifications" },
+    { href: "/admin/chat", label: "Chat Admin" },
   ];
 
   return (
