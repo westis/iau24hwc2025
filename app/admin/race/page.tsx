@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
+import { RichTextEditor } from "@/components/editors/RichTextEditor";
 import type { RaceInfo } from "@/types/race";
 
 export default function AdminRacePage() {
@@ -251,25 +252,23 @@ export default function AdminRacePage() {
 
               <div>
                 <Label htmlFor="descriptionEn">Description (English)</Label>
-                <Textarea
-                  id="descriptionEn"
-                  value={formData.descriptionEn}
-                  onChange={(e) =>
-                    setFormData({ ...formData, descriptionEn: e.target.value })
+                <RichTextEditor
+                  content={formData.descriptionEn}
+                  onChange={(content) =>
+                    setFormData({ ...formData, descriptionEn: content })
                   }
-                  rows={3}
+                  placeholder="Enter course description, add images, and links..."
                 />
               </div>
 
               <div>
                 <Label htmlFor="descriptionSv">Description (Swedish)</Label>
-                <Textarea
-                  id="descriptionSv"
-                  value={formData.descriptionSv}
-                  onChange={(e) =>
-                    setFormData({ ...formData, descriptionSv: e.target.value })
+                <RichTextEditor
+                  content={formData.descriptionSv}
+                  onChange={(content) =>
+                    setFormData({ ...formData, descriptionSv: content })
                   }
-                  rows={3}
+                  placeholder="Ange banebeskrivning, lägg till bilder och länkar..."
                 />
               </div>
             </CardContent>
