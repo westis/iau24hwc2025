@@ -624,15 +624,19 @@ export async function getNewsById(id: number): Promise<NewsItem | null> {
 
 export async function createNews(news: NewsItemCreate): Promise<NewsItem> {
   const db = getDatabase();
-  
+
   // If marking as preview, unmark any other articles
   if (news.is_preview_men) {
-    await db.query(`UPDATE news SET is_preview_men = FALSE WHERE is_preview_men = TRUE`);
+    await db.query(
+      `UPDATE news SET is_preview_men = FALSE WHERE is_preview_men = TRUE`
+    );
   }
   if (news.is_preview_women) {
-    await db.query(`UPDATE news SET is_preview_women = FALSE WHERE is_preview_women = TRUE`);
+    await db.query(
+      `UPDATE news SET is_preview_women = FALSE WHERE is_preview_women = TRUE`
+    );
   }
-  
+
   const result = await db.query(
     `
     INSERT INTO news (title, content, published, is_preview_men, is_preview_women, preview_url)
@@ -645,7 +649,7 @@ export async function createNews(news: NewsItemCreate): Promise<NewsItem> {
       news.published || false,
       news.is_preview_men || false,
       news.is_preview_women || false,
-      news.preview_url || null
+      news.preview_url || null,
     ]
   );
 
@@ -673,12 +677,18 @@ export async function updateNews(
 
   // If marking as preview, unmark any other articles first
   if (updates.is_preview_men) {
-    await db.query(`UPDATE news SET is_preview_men = FALSE WHERE is_preview_men = TRUE AND id != $1`, [id]);
+    await db.query(
+      `UPDATE news SET is_preview_men = FALSE WHERE is_preview_men = TRUE AND id != $1`,
+      [id]
+    );
   }
   if (updates.is_preview_women) {
-    await db.query(`UPDATE news SET is_preview_women = FALSE WHERE is_preview_women = TRUE AND id != $1`, [id]);
+    await db.query(
+      `UPDATE news SET is_preview_women = FALSE WHERE is_preview_women = TRUE AND id != $1`,
+      [id]
+    );
   }
-  
+
   if (updates.title !== undefined) {
     fields.push(`title = $${paramIndex++}`);
     values.push(updates.title);
