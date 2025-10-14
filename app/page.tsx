@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ExternalLink, Users, Trophy, Newspaper } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { RaceCountdown } from "@/components/race/RaceCountdown";
-import { NotificationBanner } from "@/components/NotificationBanner";
 import type { NewsItem } from "@/types/news";
 
 export default function Home() {
