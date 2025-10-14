@@ -85,8 +85,8 @@ export function ChatWidget() {
 
   // Expanded state
   return (
-    <div className="fixed bottom-4 right-4 z-50">
-      <Card className="w-[400px] h-[600px] flex flex-col shadow-2xl">
+    <div className="fixed bottom-4 right-4 left-4 md:left-auto z-50">
+      <Card className="w-full md:w-[400px] h-[600px] max-h-[calc(100vh-2rem)] flex flex-col shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b bg-primary text-primary-foreground">
           <div className="flex items-center gap-2">
