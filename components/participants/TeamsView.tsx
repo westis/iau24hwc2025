@@ -29,13 +29,19 @@ export function TeamsView({
   );
   const [gender, setGender] = useState<Gender>(initialGender);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Fetch pre-computed teams from API (server-side computation)
     async function fetchTeams() {
       try {
-        setLoading(true);
+        // Only show full loading spinner on initial load
+        if (teams.length === 0) {
+          setLoading(true);
+        } else {
+          setIsRefreshing(true);
+        }
 
         const params = new URLSearchParams({
           gender,
@@ -49,11 +55,13 @@ export function TeamsView({
 
         const data = await response.json();
         setTeams(data.teams);
+        setError(null);
       } catch (err) {
         console.error("Error loading teams from API:", err);
         setError(err instanceof Error ? err.message : "Failed to load teams");
       } finally {
         setLoading(false);
+        setIsRefreshing(false);
       }
     }
 
@@ -88,7 +96,14 @@ export function TeamsView({
   }
 
   return (
-    <div>
+    <div className="relative">
+      {/* Subtle loading indicator when refreshing */}
+      {isRefreshing && (
+        <div className="absolute top-0 left-0 right-0 h-1 bg-primary/20 overflow-hidden z-10">
+          <div className="h-full bg-primary animate-pulse" />
+        </div>
+      )}
+
       {showHeader && (
         <div className="mb-6">
           <h1 className="text-2xl font-bold tracking-tight">{t.teams.title}</h1>
@@ -157,7 +172,7 @@ export function TeamsView({
       </div>
 
       {/* Teams */}
-      <div className="mb-8">
+      <div className={`mb-8 transition-opacity duration-200 ${isRefreshing ? "opacity-60" : "opacity-100"}`}>
         <h2 className="text-lg font-semibold mb-3">
           {gender === "M" ? t.teams.men : t.teams.women} ({teams.length})
         </h2>

@@ -51,6 +51,7 @@ export function RunnersView({
   const { isAdmin } = useAuth();
   const [runners, setRunners] = useState<Runner[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedGender, setSelectedGender] = useState<"M" | "W">(
     initialGender
@@ -74,7 +75,12 @@ export function RunnersView({
     // Fetch filtered runners from API (server-side computation)
     async function fetchRunners() {
       try {
-        setLoading(true);
+        // Only show full loading spinner on initial load
+        if (runners.length === 0) {
+          setLoading(true);
+        } else {
+          setIsRefreshing(true);
+        }
 
         const params = new URLSearchParams({
           gender: selectedGender,
@@ -90,11 +96,13 @@ export function RunnersView({
 
         const data = await response.json();
         setRunners(data.runners);
+        setError(null);
       } catch (err) {
         console.error("Error loading runners from API:", err);
         setError(err instanceof Error ? err.message : "Failed to load runners");
       } finally {
         setLoading(false);
+        setIsRefreshing(false);
       }
     }
 
@@ -129,7 +137,14 @@ export function RunnersView({
   }
 
   return (
-    <div>
+    <div className="relative">
+      {/* Subtle loading indicator when refreshing */}
+      {isRefreshing && (
+        <div className="absolute top-0 left-0 right-0 h-1 bg-primary/20 overflow-hidden z-10">
+          <div className="h-full bg-primary animate-pulse" />
+        </div>
+      )}
+      
       {showHeader && (
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-3xl font-bold">{t.runners.title}</h1>
@@ -313,16 +328,18 @@ export function RunnersView({
         </div>
       </div>
 
-      <RunnerTable
-        runners={runners}
-        metric={selectedMetric}
-        onManualMatch={(runner) => {
-          router.push("/match");
-        }}
-        onRowClick={(runnerId) => {
-          router.push(`/runners/${runnerId}`);
-        }}
-      />
+      <div className={`transition-opacity duration-200 ${isRefreshing ? "opacity-60" : "opacity-100"}`}>
+        <RunnerTable
+          runners={runners}
+          metric={selectedMetric}
+          onManualMatch={(runner) => {
+            router.push("/match");
+          }}
+          onRowClick={(runnerId) => {
+            router.push(`/runners/${runnerId}`);
+          }}
+        />
+      </div>
     </div>
   );
 }
