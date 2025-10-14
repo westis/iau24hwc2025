@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import { RichTextEditor } from "@/components/editors/RichTextEditor";
+import { ImageUpload } from "@/components/ImageUpload";
 import type { RaceInfo } from "@/types/race";
 
 export default function AdminRacePage() {
@@ -364,29 +365,43 @@ export default function AdminRacePage() {
               </div>
 
               <div>
-                <Label htmlFor="courseMapUrl">Course Map URL</Label>
-                <Input
-                  id="courseMapUrl"
-                  type="url"
-                  value={formData.courseMapUrl}
-                  onChange={(e) =>
-                    setFormData({ ...formData, courseMapUrl: e.target.value })
-                  }
-                  placeholder="https://... (image URL)"
+                <Label>Course Map Image</Label>
+                <ImageUpload
+                  bucket="race-photos"
+                  currentImageUrl={formData.courseMapUrl}
+                  onUploadComplete={(url) => {
+                    setFormData({ ...formData, courseMapUrl: url });
+                  }}
+                  onDelete={() => {
+                    setFormData({ ...formData, courseMapUrl: "" });
+                  }}
+                  label="Upload Course Map"
+                  aspectRatio={16 / 9}
+                  cropShape="rect"
                 />
+                <p className="text-xs text-muted-foreground mt-2">
+                  Upload an image showing the race course/route
+                </p>
               </div>
 
               <div>
-                <Label htmlFor="heroImageUrl">Hero Image URL</Label>
-                <Input
-                  id="heroImageUrl"
-                  type="url"
-                  value={formData.heroImageUrl}
-                  onChange={(e) =>
-                    setFormData({ ...formData, heroImageUrl: e.target.value })
-                  }
-                  placeholder="https://... (image URL)"
+                <Label>Hero Image</Label>
+                <ImageUpload
+                  bucket="race-photos"
+                  currentImageUrl={formData.heroImageUrl}
+                  onUploadComplete={(url) => {
+                    setFormData({ ...formData, heroImageUrl: url });
+                  }}
+                  onDelete={() => {
+                    setFormData({ ...formData, heroImageUrl: "" });
+                  }}
+                  label="Upload Hero Image"
+                  aspectRatio={16 / 9}
+                  cropShape="rect"
                 />
+                <p className="text-xs text-muted-foreground mt-2">
+                  Upload a featured image for the race
+                </p>
               </div>
             </CardContent>
           </Card>

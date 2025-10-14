@@ -16,7 +16,7 @@ import Cropper from "react-easy-crop";
 import { Area } from "react-easy-crop";
 
 interface ImageUploadProps {
-  bucket: "runner-photos" | "team-photos";
+  bucket: "runner-photos" | "team-photos" | "race-photos";
   currentImageUrl?: string | null;
   currentFocalPoint?: { x: number; y: number } | null;
   currentZoom?: number | null;
@@ -31,6 +31,8 @@ interface ImageUploadProps {
   ) => void;
   onDelete?: () => void;
   label?: string;
+  aspectRatio?: number;
+  cropShape?: "rect" | "round";
 }
 
 export function ImageUpload({
@@ -42,6 +44,8 @@ export function ImageUpload({
   onUploadComplete,
   onDelete,
   label = "Upload Image",
+  aspectRatio = 1,
+  cropShape = "round",
 }: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(
@@ -287,7 +291,9 @@ export function ImageUpload({
       >
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>Crop Avatar</DialogTitle>
+            <DialogTitle>
+              {cropShape === "round" ? "Crop Avatar" : "Crop Image"}
+            </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
@@ -302,7 +308,9 @@ export function ImageUpload({
             <div className="space-y-6">
               <div>
                 <h3 className="text-sm font-medium mb-2 text-center">
-                  Drag and zoom to crop your avatar
+                  {cropShape === "round"
+                    ? "Drag and zoom to crop your avatar"
+                    : "Drag and zoom to crop your image"}
                 </h3>
                 <div
                   className="relative w-full h-96 bg-black rounded-lg overflow-hidden"
@@ -313,9 +321,9 @@ export function ImageUpload({
                       image={tempImageUrl}
                       crop={crop}
                       zoom={zoom}
-                      aspect={1}
-                      cropShape="round"
-                      showGrid={false}
+                      aspect={aspectRatio}
+                      cropShape={cropShape}
+                      showGrid={cropShape === "rect"}
                       onCropChange={setCrop}
                       onZoomChange={setZoom}
                       onCropComplete={onCropComplete}
@@ -350,8 +358,10 @@ export function ImageUpload({
 
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-3">
               <p className="text-xs text-blue-700 dark:text-blue-300">
-                <strong>Tip:</strong> Drag the image to center your face, then
-                zoom in/out for the perfect crop!
+                <strong>Tip:</strong>{" "}
+                {cropShape === "round"
+                  ? "Drag the image to center your face, then zoom in/out for the perfect crop!"
+                  : "Drag the image to adjust the framing, then zoom in/out for the perfect crop!"}
               </p>
             </div>
           </div>

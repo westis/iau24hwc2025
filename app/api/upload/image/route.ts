@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData()
     const file = formData.get('file') as File
-    const bucket = formData.get('bucket') as string // 'runner-photos' or 'team-photos'
+    const bucket = formData.get('bucket') as string // 'runner-photos', 'team-photos', or 'race-photos'
 
     if (!file) {
       return NextResponse.json(
@@ -17,9 +17,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!bucket || !['runner-photos', 'team-photos'].includes(bucket)) {
+    if (!bucket || !['runner-photos', 'team-photos', 'race-photos'].includes(bucket)) {
       return NextResponse.json(
-        { error: 'Invalid bucket. Must be runner-photos or team-photos' },
+        { error: 'Invalid bucket. Must be runner-photos, team-photos, or race-photos' },
         { status: 400 }
       )
     }
@@ -103,7 +103,7 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    if (!['runner-photos', 'team-photos'].includes(bucket)) {
+    if (!['runner-photos', 'team-photos', 'race-photos'].includes(bucket)) {
       return NextResponse.json(
         { error: 'Invalid bucket' },
         { status: 400 }

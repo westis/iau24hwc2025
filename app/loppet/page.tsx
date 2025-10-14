@@ -1,14 +1,14 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from 'react'
-import { useLanguage } from '@/lib/i18n/LanguageContext'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { useEffect, useState } from "react";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 // Import Clock icon along with other icons.
-import { Calendar, MapPin, ExternalLink, Clock } from 'lucide-react'
-import type { RaceInfo } from '@/types/race'
+import { Calendar, MapPin, ExternalLink, Clock } from "lucide-react";
+import type { RaceInfo } from "@/types/race";
 // Import Next.js Image component to optimize images instead of using <img>.
-import Image from 'next/image'
+import Image from "next/image";
 
 export default function LoppetPage() {
   const { t, language } = useLanguage();
@@ -163,7 +163,11 @@ export default function LoppetPage() {
                 {/* Use Next.js Image component instead of a bare <img> tag. */}
                 <Image
                   src={raceInfo.courseMapUrl}
-                  alt={typeof t.race.courseMap === 'string' ? t.race.courseMap : 'Course Map'}
+                  alt={
+                    typeof t.race.courseMap === "string"
+                      ? t.race.courseMap
+                      : "Course Map"
+                  }
                   fill
                   className="object-contain"
                   priority
