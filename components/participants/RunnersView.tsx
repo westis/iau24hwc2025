@@ -202,10 +202,10 @@ export function RunnersView({
         </div>
       )}
 
-      {/* Filters - Compact Responsive Layout */}
-      <div className="mb-6 space-y-2.5">
-        {/* Row 1: Gender and Metric toggles - always on same row */}
+      {/* Filters - All on one row when space allows */}
+      <div className="mb-6">
         <div className="flex flex-wrap items-center gap-2">
+          {/* Gender toggle */}
           <div
             className="inline-flex rounded-lg border border-input bg-background p-1"
             role="group"
@@ -233,6 +233,8 @@ export function RunnersView({
               {t.runners.women}
             </Button>
           </div>
+          
+          {/* Time period toggle */}
           <div
             className="inline-flex rounded-lg border border-input bg-background p-1"
             role="group"
@@ -262,10 +264,8 @@ export function RunnersView({
               {t.runners.allTime}
             </Button>
           </div>
-        </div>
 
-        {/* Row 2: Search and Country filter - always on same row */}
-        <div className="flex flex-wrap gap-2">
+          {/* Search input */}
           <Input
             placeholder={t.runners.searchByName}
             value={searchQuery}
@@ -274,6 +274,8 @@ export function RunnersView({
             }}
             className="flex-1 min-w-[180px] max-w-[300px]"
           />
+          
+          {/* Country dropdown */}
           <Popover
             open={countryComboboxOpen}
             onOpenChange={setCountryComboboxOpen}
