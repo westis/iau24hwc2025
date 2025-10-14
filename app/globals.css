@@ -6,6 +6,7 @@
   :root {
     --background: 0 0% 100%;
     --foreground: 0 0% 3.9%;
+    --h2: 0 0% 9%;      /* near-black for light */
     --card: 0 0% 100%;
     --card-foreground: 0 0% 3.9%;
     --popover: 0 0% 100%;
@@ -29,6 +30,7 @@
   .dark {
     --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;
+    --h2: 0 0% 98%;     /* near-white for dark */
     --card: 0 0% 3.9%;
     --card-foreground: 0 0% 98%;
     --popover: 0 0% 3.9%;
@@ -110,6 +112,7 @@
 }
 
 .prose h2 {
+  color: hsl(var(--h2));
   @apply text-xl font-bold mb-3 mt-5;
 }
 
