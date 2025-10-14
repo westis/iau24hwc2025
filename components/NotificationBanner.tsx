@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Bell, Mail, X, Check } from "lucide-react";
+import { Mail, X, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
@@ -15,8 +15,6 @@ export function NotificationBanner() {
     "idle" | "success" | "error" | "pending_confirmation"
   >("idle");
   const [errorMessage, setErrorMessage] = useState("");
-  const [isPushSupported, setIsPushSupported] = useState(false);
-  const [isPushSubscribed, setIsPushSubscribed] = useState(false);
 
   useEffect(() => {
     // Check if user has dismissed the banner
@@ -42,22 +40,6 @@ export function NotificationBanner() {
 
     // Show banner after 3 seconds
     setTimeout(() => setShowBanner(true), 3000);
-
-    // Check push notification support
-    if (typeof window !== "undefined" && window.OneSignalDeferred) {
-      window.OneSignalDeferred.push(async function (OneSignal: any) {
-        try {
-          const supported = OneSignal.Notifications.isPushSupported();
-          setIsPushSupported(supported);
-          if (supported) {
-            const permission = OneSignal.Notifications.permission;
-            setIsPushSubscribed(permission);
-          }
-        } catch (error) {
-          console.error("Error checking push support:", error);
-        }
-      });
-    }
   }, []);
 
   const handleEmailSubscribe = async () => {
@@ -104,66 +86,6 @@ export function NotificationBanner() {
     }
   };
 
-  const handlePushSubscribe = async () => {
-    if (typeof window === "undefined" || !window.OneSignalDeferred) {
-      alert("Push-notiser är inte tillgängliga. Fortsätt med e-post istället.");
-      return;
-    }
-
-    window.OneSignalDeferred.push(async function (OneSignal: any) {
-      try {
-        // Check if push is supported
-        const isPushSupported = OneSignal.Notifications.isPushSupported();
-        if (!isPushSupported) {
-          alert(
-            "Push-notiser stöds inte i din webbläsare. Använd e-post istället."
-          );
-          return;
-        }
-
-        // Check current permission state
-        const currentPermission = OneSignal.Notifications.permission;
-
-        if (currentPermission === false) {
-          // Permission previously denied
-          alert(
-            "Du har tidigare blockerat push-notiser.\n\n" +
-              "Så här aktiverar du dem i Chrome:\n" +
-              "1. Öppna Chrome-inställningar (tre punkter högst upp)\n" +
-              "2. Sekretess och säkerhet → Webbplatsinställningar\n" +
-              "3. Notiser → Sök efter denna webbplats\n" +
-              "4. Ändra till 'Tillåt'\n\n" +
-              "Enklare: Använd e-post istället! Fungerar direkt utan krångel."
-          );
-          return;
-        }
-
-        // Show the permission prompt
-        await OneSignal.Slidedown.promptPush();
-
-        // Wait a bit for user to respond
-        await new Promise((resolve) => setTimeout(resolve, 500));
-
-        // Check the new permission state
-        const newPermission = OneSignal.Notifications.permission;
-        setIsPushSubscribed(newPermission);
-
-        if (newPermission) {
-          alert(
-            "Push-notiser aktiverade! Du får nu notiser även när webbläsaren är stängd."
-          );
-        } else {
-          alert(
-            "Du behöver tillåta notiser i popup-fönstret för att aktivera push-notiser."
-          );
-        }
-      } catch (error) {
-        console.error("Error subscribing to push:", error);
-        alert("Något gick fel. Försök igen eller använd e-post istället.");
-      }
-    });
-  };
-
   const handleDismiss = () => {
     setShowBanner(false);
     // Store timestamp so we can show again after 7 days
@@ -185,7 +107,7 @@ export function NotificationBanner() {
 
         <div className="flex items-start gap-3 mb-4">
           <div className="bg-primary-foreground/20 dark:bg-primary/20 p-2 rounded-lg">
-            <Bell className="h-5 w-5" />
+            <Mail className="h-5 w-5" />
           </div>
           <div className="flex-1">
             <h3 className="font-bold text-lg mb-1">
@@ -224,7 +146,7 @@ export function NotificationBanner() {
             <div className="space-y-2">
               <label className="text-sm font-medium flex items-center gap-2">
                 <Mail className="h-4 w-4" />
-                E-post (rekommenderas)
+                Din e-postadress
               </label>
               <div className="flex gap-2">
                 <Input
@@ -252,24 +174,6 @@ export function NotificationBanner() {
                 </p>
               )}
             </div>
-
-            {/* Push Notification Option */}
-            {isPushSupported && !isPushSubscribed && (
-              <div className="pt-2 border-t border-primary-foreground/20 dark:border-border">
-                <p className="text-xs opacity-70 mb-2 text-center">
-                  Valfritt: Lägg även till push-notiser
-                </p>
-                <Button
-                  onClick={handlePushSubscribe}
-                  variant="ghost"
-                  size="sm"
-                  className="w-full hover:bg-primary-foreground/10 dark:hover:bg-accent gap-2"
-                >
-                  <Bell className="h-4 w-4" />
-                  Push-notiser (desktop/Android)
-                </Button>
-              </div>
-            )}
 
             <p className="text-xs opacity-70">
               Fungerar på alla enheter. Avprenumerera när som helst.

@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, Check, X, Mail } from "lucide-react";
 
-export default function ConfirmSubscriptionPage() {
+function ConfirmSubscriptionContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const token = searchParams.get("token");
@@ -173,6 +173,27 @@ export default function ConfirmSubscriptionPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function ConfirmSubscriptionPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-gray-800">
+          <Card className="w-full max-w-md text-center shadow-xl">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-center gap-2 text-2xl">
+                <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                <span>Laddar...</span>
+              </CardTitle>
+            </CardHeader>
+          </Card>
+        </div>
+      }
+    >
+      <ConfirmSubscriptionContent />
+    </Suspense>
   );
 }
 
