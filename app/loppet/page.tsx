@@ -1,37 +1,39 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { useLanguage } from '@/lib/i18n/LanguageContext'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Calendar, MapPin, ExternalLink } from 'lucide-react'
-import type { RaceInfo } from '@/types/race'
+import { useEffect, useState } from "react";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Calendar, MapPin, ExternalLink, Clock } from "lucide-react";
+import type { RaceInfo } from "@/types/race";
 
 export default function LoppetPage() {
-  const { t, language } = useLanguage()
-  const [raceInfo, setRaceInfo] = useState<RaceInfo | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { t, language } = useLanguage();
+  const [raceInfo, setRaceInfo] = useState<RaceInfo | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchRaceInfo() {
       try {
-        const response = await fetch('/api/race')
+        const response = await fetch("/api/race");
         if (!response.ok) {
-          throw new Error('Failed to fetch race information')
+          throw new Error("Failed to fetch race information");
         }
-        const data = await response.json()
-        setRaceInfo(data)
+        const data = await response.json();
+        setRaceInfo(data);
       } catch (err) {
-        console.error('Error fetching race info:', err)
-        setError(err instanceof Error ? err.message : 'Failed to load race information')
+        console.error("Error fetching race info:", err);
+        setError(
+          err instanceof Error ? err.message : "Failed to load race information"
+        );
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
 
-    fetchRaceInfo()
-  }, [])
+    fetchRaceInfo();
+  }, []);
 
   if (loading) {
     return (
@@ -41,21 +43,25 @@ export default function LoppetPage() {
           <p className="text-muted-foreground">{t.common.loading}</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (error || !raceInfo) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <p className="text-destructive mb-4">{t.common.error}: {error || 'No race information available'}</p>
+          <p className="text-destructive mb-4">
+            {t.common.error}: {error || "No race information available"}
+          </p>
         </div>
       </div>
-    )
+    );
   }
 
-  const raceName = language === 'sv' ? raceInfo.raceNameSv : raceInfo.raceNameEn
-  const description = language === 'sv' ? raceInfo.descriptionSv : raceInfo.descriptionEn
+  const raceName =
+    language === "sv" ? raceInfo.raceNameSv : raceInfo.raceNameEn;
+  const description =
+    language === "sv" ? raceInfo.descriptionSv : raceInfo.descriptionEn;
 
   return (
     <main className="min-h-screen py-8">
@@ -82,19 +88,25 @@ export default function LoppetPage() {
             </CardHeader>
             <CardContent>
               <p className="text-lg font-semibold">
-                {new Date(raceInfo.startDate).toLocaleDateString(language === 'sv' ? 'sv-SE' : 'en-US', {
-                  weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                })}
+                {new Date(raceInfo.startDate).toLocaleDateString(
+                  language === "sv" ? "sv-SE" : "en-US",
+                  {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  }
+                )}
               </p>
               <p className="text-muted-foreground flex items-center gap-2 mt-2">
                 <Clock className="h-4 w-4" />
-                {new Date(raceInfo.startDate).toLocaleTimeString(language === 'sv' ? 'sv-SE' : 'en-US', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
+                {new Date(raceInfo.startDate).toLocaleTimeString(
+                  language === "sv" ? "sv-SE" : "en-US",
+                  {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  }
+                )}
               </p>
             </CardContent>
           </Card>
@@ -110,7 +122,9 @@ export default function LoppetPage() {
             <CardContent>
               <p className="text-lg font-semibold">{raceInfo.locationName}</p>
               {raceInfo.locationAddress && (
-                <p className="text-muted-foreground mt-2">{raceInfo.locationAddress}</p>
+                <p className="text-muted-foreground mt-2">
+                  {raceInfo.locationAddress}
+                </p>
               )}
             </CardContent>
           </Card>
@@ -154,7 +168,7 @@ export default function LoppetPage() {
         )}
 
         {/* Rules & Description */}
-        {(language === 'sv' ? raceInfo.rulesSv : raceInfo.rulesEn) && (
+        {(language === "sv" ? raceInfo.rulesSv : raceInfo.rulesEn) && (
           <Card className="mb-8">
             <CardHeader>
               <CardTitle>{t.race.rules}</CardTitle>
@@ -162,7 +176,7 @@ export default function LoppetPage() {
             <CardContent>
               <div className="prose prose-sm max-w-none dark:prose-invert">
                 <p className="whitespace-pre-wrap">
-                  {language === 'sv' ? raceInfo.rulesSv : raceInfo.rulesEn}
+                  {language === "sv" ? raceInfo.rulesSv : raceInfo.rulesEn}
                 </p>
               </div>
             </CardContent>
@@ -178,16 +192,22 @@ export default function LoppetPage() {
             <CardContent>
               {raceInfo.contactEmail && (
                 <p className="mb-2">
-                  <span className="font-medium">Email:</span>{' '}
-                  <a href={`mailto:${raceInfo.contactEmail}`} className="text-primary hover:underline">
+                  <span className="font-medium">Email:</span>{" "}
+                  <a
+                    href={`mailto:${raceInfo.contactEmail}`}
+                    className="text-primary hover:underline"
+                  >
                     {raceInfo.contactEmail}
                   </a>
                 </p>
               )}
               {raceInfo.contactPhone && (
                 <p>
-                  <span className="font-medium">Phone:</span>{' '}
-                  <a href={`tel:${raceInfo.contactPhone}`} className="text-primary hover:underline">
+                  <span className="font-medium">Phone:</span>{" "}
+                  <a
+                    href={`tel:${raceInfo.contactPhone}`}
+                    className="text-primary hover:underline"
+                  >
                     {raceInfo.contactPhone}
                   </a>
                 </p>
@@ -197,5 +217,5 @@ export default function LoppetPage() {
         )}
       </div>
     </main>
-  )
+  );
 }
