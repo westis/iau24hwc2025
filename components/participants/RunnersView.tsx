@@ -202,10 +202,10 @@ export function RunnersView({
         </div>
       )}
 
-      {/* Filters - Responsive Layout */}
-      <div className="mb-6 flex flex-col lg:flex-row gap-4">
-        {/* Row 1: Gender and Metric toggles */}
-        <div className="flex flex-wrap items-center gap-4">
+      {/* Filters - Compact Responsive Layout */}
+      <div className="mb-6 space-y-2.5">
+        {/* Row 1: Gender and Metric toggles - always on same row */}
+        <div className="flex flex-wrap items-center gap-2">
           <div
             className="inline-flex rounded-lg border border-input bg-background p-1"
             role="group"
@@ -264,15 +264,15 @@ export function RunnersView({
           </div>
         </div>
 
-        {/* Row 2: Search and Country filter */}
-        <div className="flex flex-col sm:flex-row gap-4 lg:ml-auto">
+        {/* Row 2: Search and Country filter - always on same row */}
+        <div className="flex flex-wrap gap-2">
           <Input
             placeholder={t.runners.searchByName}
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
             }}
-            className="w-full sm:w-[200px]"
+            className="flex-1 min-w-[180px] max-w-[300px]"
           />
           <Popover
             open={countryComboboxOpen}
@@ -283,7 +283,7 @@ export function RunnersView({
                 variant="outline"
                 role="combobox"
                 aria-expanded={countryComboboxOpen}
-                className="w-full sm:w-[200px] justify-between"
+                className="min-w-[160px] justify-between"
               >
                 {countryFilter === "all" ? (
                   t.runners.allCountries
