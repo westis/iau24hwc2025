@@ -115,7 +115,11 @@ export default function AdminNewsPage() {
       }
     } catch (error) {
       console.error("Failed to create news:", error);
-      alert(`Error creating news: ${error instanceof Error ? error.message : "Unknown error"}`);
+      alert(
+        `Error creating news: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     }
   }
 
@@ -160,7 +164,11 @@ export default function AdminNewsPage() {
       }
     } catch (error) {
       console.error("Failed to update news:", error);
-      alert(`Error updating news: ${error instanceof Error ? error.message : "Unknown error"}`);
+      alert(
+        `Error updating news: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     }
   }
 
@@ -191,7 +199,11 @@ export default function AdminNewsPage() {
       }
     } catch (error) {
       console.error("Failed to delete news:", error);
-      alert(`Error deleting news: ${error instanceof Error ? error.message : "Unknown error"}`);
+      alert(
+        `Error deleting news: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     }
   }
 

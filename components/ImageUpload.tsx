@@ -16,7 +16,7 @@ import Cropper from "react-easy-crop";
 import { Area } from "react-easy-crop";
 
 interface ImageUploadProps {
-  bucket: "runner-photos" | "team-photos" | "race-photos";
+  bucket: "runner-photos" | "team-photos" | "race-photos" | "chat-avatars";
   currentImageUrl?: string | null;
   currentFocalPoint?: { x: number; y: number } | null;
   currentZoom?: number | null;
@@ -33,6 +33,7 @@ interface ImageUploadProps {
   label?: string;
   aspectRatio?: number;
   cropShape?: "rect" | "round";
+  hidePreview?: boolean;
 }
 
 export function ImageUpload({
@@ -46,6 +47,7 @@ export function ImageUpload({
   label = "Upload Image",
   aspectRatio = 1,
   cropShape = "round",
+  hidePreview = false,
 }: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(
@@ -262,7 +264,7 @@ export function ImageUpload({
           <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
         )}
 
-        {previewUrl && (
+        {!hidePreview && previewUrl && (
           <div className="relative w-full max-w-md aspect-video rounded-lg overflow-hidden border border-border bg-muted">
             <Image
               src={previewUrl}
@@ -274,7 +276,7 @@ export function ImageUpload({
           </div>
         )}
 
-        {!previewUrl && (
+        {!hidePreview && !previewUrl && (
           <div className="relative w-full max-w-md aspect-video rounded-lg overflow-hidden border border-dashed border-border bg-muted flex items-center justify-center">
             <div className="text-center">
               <ImageIcon className="mx-auto h-12 w-12 text-muted-foreground mb-2" />

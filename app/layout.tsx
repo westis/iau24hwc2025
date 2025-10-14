@@ -1,21 +1,24 @@
-import type { Metadata } from 'next'
-import Script from 'next/script'
-import './globals.css'
-import { Navbar } from '@/components/navigation/navbar'
-import { ThemeProvider } from '@/components/theme-provider'
-import { SeedDataLoader } from '@/components/seed-data-loader'
-import { AuthProvider } from '@/lib/auth/auth-context'
-import { LanguageProvider } from '@/lib/i18n/LanguageContext'
+import type { Metadata } from "next";
+import Script from "next/script";
+import "./globals.css";
+import { Navbar } from "@/components/navigation/navbar";
+import { ThemeProvider } from "@/components/theme-provider";
+import { SeedDataLoader } from "@/components/seed-data-loader";
+import { AuthProvider } from "@/lib/auth/auth-context";
+import { SupabaseAuthProvider } from "@/lib/auth/supabase-auth-context";
+import { LanguageProvider } from "@/lib/i18n/LanguageContext";
+import { ChatWidget } from "@/components/chat/ChatWidget";
 
 export const metadata: Metadata = {
-  title: 'IAU 24h World Championships 2025',
-  description: 'Runner analytics for IAU 24h World Championships in Albi, France',
-}
+  title: "IAU 24h World Championships 2025",
+  description:
+    "Runner analytics for IAU 24h World Championships in Albi, France",
+};
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
@@ -68,7 +71,7 @@ export default function RootLayout({
             src="https://www.googletagmanager.com/ns.html?id=GTM-N2MMWTD"
             height="0"
             width="0"
-            style={{ display: 'none', visibility: 'hidden' }}
+            style={{ display: "none", visibility: "hidden" }}
           />
         </noscript>
         <ThemeProvider
@@ -79,13 +82,16 @@ export default function RootLayout({
         >
           <LanguageProvider>
             <AuthProvider>
-              <SeedDataLoader />
-              <Navbar />
-              {children}
+              <SupabaseAuthProvider>
+                <SeedDataLoader />
+                <Navbar />
+                {children}
+                <ChatWidget />
+              </SupabaseAuthProvider>
             </AuthProvider>
           </LanguageProvider>
         </ThemeProvider>
       </body>
     </html>
-  )
+  );
 }
