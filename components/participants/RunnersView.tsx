@@ -71,20 +71,25 @@ export function RunnersView({
   }, [runners]);
 
   useEffect(() => {
-    // Fetch runners from API (Supabase)
+    // Fetch filtered runners from API (server-side computation)
     async function fetchRunners() {
       try {
         setLoading(true);
 
-        const response = await fetch("/api/runners");
+        const params = new URLSearchParams({
+          gender: selectedGender,
+          metric: selectedMetric,
+          country: countryFilter,
+          search: searchQuery,
+        });
+
+        const response = await fetch(`/api/runners/filtered?${params}`);
         if (!response.ok) {
           throw new Error("Failed to fetch runners from API");
         }
 
         const data = await response.json();
-        const fetchedRunners = data.runners as Runner[];
-
-        setRunners(fetchedRunners);
+        setRunners(data.runners);
       } catch (err) {
         console.error("Error loading runners from API:", err);
         setError(err instanceof Error ? err.message : "Failed to load runners");
@@ -94,72 +99,10 @@ export function RunnersView({
     }
 
     fetchRunners();
-  }, []);
+  }, [selectedGender, selectedMetric, countryFilter, searchQuery]);
 
-  // Filter, sort, and add rankings
-  const runnersWithRankings = useMemo(() => {
-    // Get PB value based on selected metric
-    const getPB = (runner: Runner) => {
-      return selectedMetric === "last-3-years"
-        ? runner.personalBestLast3Years || 0
-        : runner.personalBestAllTime || 0;
-    };
-
-    // STEP 1: Filter by gender ONLY (not by country or search yet)
-    let genderFiltered = runners.filter(
-      (runner) => runner.gender === selectedGender
-    );
-
-    // Separate matched (with DUV ID) and unmatched runners
-    const matched = genderFiltered.filter((r) => r.duvId !== null);
-    const unmatched = genderFiltered.filter((r) => r.duvId === null);
-
-    // Sort matched runners by PB (highest first) - includes both DNS and non-DNS
-    const sortedMatched = matched.sort((a, b) => {
-      const aPB = getPB(a);
-      const bPB = getPB(b);
-      return bPB - aPB; // Descending order (highest PB first)
-    });
-
-    // Sort unmatched runners by name
-    const sortedUnmatched = unmatched.sort((a, b) => {
-      const aName = `${a.lastname} ${a.firstname}`.toLowerCase();
-      const bName = `${b.lastname} ${b.firstname}`.toLowerCase();
-      return aName.localeCompare(bName);
-    });
-
-    // Assign rankings BEFORE country/search filtering (total gender rankings)
-    let currentRank = 1;
-    const rankedMatched = sortedMatched.map((runner) => {
-      if (runner.dns) {
-        // DNS runner - no rank
-        return { ...runner, rank: undefined };
-      } else {
-        // Active runner - assign rank
-        return { ...runner, rank: currentRank++ };
-      }
-    });
-
-    // Combine: ranked matched first (with DNS in natural position), then unmatched
-    let allRunnersWithRanks = [...rankedMatched, ...sortedUnmatched];
-
-    // STEP 2: NOW apply country and search filters (ranks are preserved)
-    if (countryFilter !== "all") {
-      allRunnersWithRanks = allRunnersWithRanks.filter(
-        (runner) => runner.nationality === countryFilter
-      );
-    }
-
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      allRunnersWithRanks = allRunnersWithRanks.filter((runner) => {
-        const name = `${runner.firstname} ${runner.lastname}`.toLowerCase();
-        return name.includes(query);
-      });
-    }
-
-    return allRunnersWithRanks;
-  }, [runners, selectedGender, selectedMetric, countryFilter, searchQuery]);
+  // Runners are already filtered, sorted, and ranked by the server!
+  // No client-side computation needed - just display them
 
   if (loading) {
     return (
@@ -371,7 +314,7 @@ export function RunnersView({
       </div>
 
       <RunnerTable
-        runners={runnersWithRankings}
+        runners={runners}
         metric={selectedMetric}
         onManualMatch={(runner) => {
           router.push("/match");
