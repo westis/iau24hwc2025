@@ -3,8 +3,11 @@ CREATE TABLE IF NOT EXISTS email_subscriptions (
   id SERIAL PRIMARY KEY,
   email VARCHAR(255) UNIQUE NOT NULL,
   enabled BOOLEAN DEFAULT TRUE,
+  confirmed BOOLEAN DEFAULT FALSE,
   subscribed_at TIMESTAMP DEFAULT NOW(),
+  confirmed_at TIMESTAMP,
   unsubscribe_token VARCHAR(255) UNIQUE NOT NULL,
+  confirmation_token VARCHAR(255) UNIQUE NOT NULL,
   updated_at TIMESTAMP DEFAULT NOW()
 );
 

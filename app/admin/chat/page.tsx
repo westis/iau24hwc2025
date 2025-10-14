@@ -110,21 +110,31 @@ export default function AdminChatPage() {
               Chat Login Required
             </CardTitle>
             <CardDescription>
-              You&apos;re logged in as site admin, but you also need to log in to chat to manage messages.
+              You&apos;re logged in as site admin, but you also need to log in
+              to chat to manage messages.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="p-3 bg-muted rounded-lg text-sm">
               <p className="font-semibold mb-2">Why do I need both?</p>
               <p className="text-muted-foreground">
-                Chat uses Supabase authentication. To delete messages or ban users, you need to be logged in to the chat system with an admin account.
+                Chat uses Supabase authentication. To delete messages or ban
+                users, you need to be logged in to the chat system with an admin
+                account.
               </p>
             </div>
             <div className="flex gap-2">
-              <Button onClick={() => router.push("/chat/login")} className="flex-1">
+              <Button
+                onClick={() => router.push("/chat/login")}
+                className="flex-1"
+              >
                 Login to Chat
               </Button>
-              <Button onClick={() => router.push("/admin")} variant="outline" className="flex-1">
+              <Button
+                onClick={() => router.push("/admin")}
+                variant="outline"
+                className="flex-1"
+              >
                 Back to Admin
               </Button>
             </div>

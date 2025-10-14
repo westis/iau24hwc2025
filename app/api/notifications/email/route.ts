@@ -27,12 +27,13 @@ export async function POST(request: NextRequest) {
     const fromEmail =
       process.env.RESEND_FROM_EMAIL || "noreply@ultramarathon.se";
 
-    // Get all active email subscriptions using service role
+    // Get all active AND confirmed email subscriptions using service role
     const supabase = await createServiceClient();
     const { data: subscriptions, error } = await supabase
       .from("email_subscriptions")
       .select("email, unsubscribe_token")
-      .eq("enabled", true);
+      .eq("enabled", true)
+      .eq("confirmed", true);
 
     if (error) {
       console.error("Error fetching subscriptions:", error);

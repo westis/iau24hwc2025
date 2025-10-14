@@ -12,7 +12,7 @@ export function NotificationBanner() {
   const [email, setEmail] = useState("");
   const [isSubscribing, setIsSubscribing] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<
-    "idle" | "success" | "error"
+    "idle" | "success" | "error" | "pending_confirmation"
   >("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [isPushSupported, setIsPushSupported] = useState(false);
@@ -80,10 +80,18 @@ export function NotificationBanner() {
       const data = await response.json();
 
       if (response.ok) {
-        setSubscriptionStatus("success");
-        localStorage.setItem("emailSubscribed", "true");
-        // Hide banner after 3 seconds
-        setTimeout(() => setShowBanner(false), 3000);
+        if (data.needsConfirmation) {
+          // Email confirmation required
+          setSubscriptionStatus("pending_confirmation");
+          setErrorMessage(""); // Clear any previous errors
+          // Keep banner visible to show confirmation message
+        } else {
+          // Already confirmed or reactivated
+          setSubscriptionStatus("success");
+          localStorage.setItem("emailSubscribed", "true");
+          // Hide banner after 3 seconds
+          setTimeout(() => setShowBanner(false), 3000);
+        }
       } else {
         setSubscriptionStatus("error");
         setErrorMessage(data.error || "Ett fel uppstod");
@@ -193,6 +201,22 @@ export function NotificationBanner() {
           <div className="flex items-center gap-2 bg-green-500/20 text-green-900 dark:text-green-100 p-3 rounded-lg">
             <Check className="h-5 w-5" />
             <span className="font-medium">Tack för din prenumeration!</span>
+          </div>
+        ) : subscriptionStatus === "pending_confirmation" ? (
+          <div className="bg-blue-500/20 text-blue-900 dark:text-blue-100 p-4 rounded-lg space-y-2">
+            <div className="flex items-start gap-2">
+              <Mail className="h-5 w-5 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="font-medium">Bekräfta din e-postadress</p>
+                <p className="text-sm opacity-90 mt-1">
+                  Vi har skickat ett e-postmeddelande till <strong>{email}</strong>.
+                  Klicka på länken i e-postmeddelandet för att aktivera din prenumeration.
+                </p>
+                <p className="text-xs opacity-75 mt-2">
+                  Kom ihåg att kolla din skräppost om du inte ser mejlet inom några minuter.
+                </p>
+              </div>
+            </div>
           </div>
         ) : (
           <div className="space-y-3">
