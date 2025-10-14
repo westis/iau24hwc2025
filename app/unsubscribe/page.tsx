@@ -10,7 +10,9 @@ import Link from "next/link";
 function UnsubscribeContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
-  const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
+  const [status, setStatus] = useState<"loading" | "success" | "error">(
+    "loading"
+  );
   const [message, setMessage] = useState("");
 
   useEffect(() => {
@@ -54,8 +56,12 @@ function UnsubscribeContent() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            {status === "loading" && <Loader2 className="h-5 w-5 animate-spin" />}
-            {status === "success" && <Check className="h-5 w-5 text-green-600" />}
+            {status === "loading" && (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            )}
+            {status === "success" && (
+              <Check className="h-5 w-5 text-green-600" />
+            )}
             {status === "error" && <X className="h-5 w-5 text-red-600" />}
             Avprenumerera
           </CardTitle>
@@ -107,4 +113,3 @@ export default function UnsubscribePage() {
     </Suspense>
   );
 }
-

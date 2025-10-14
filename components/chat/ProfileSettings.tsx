@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ImageUpload } from "@/components/ImageUpload";
-import { Save, Loader2 } from "lucide-react";
+import { Save, Loader2, Key } from "lucide-react";
 import type { Area } from "react-easy-crop";
 
 export function ProfileSettings() {
@@ -19,6 +19,10 @@ export function ProfileSettings() {
   const [avatarUrl, setAvatarUrl] = React.useState(chatUser?.avatar_url || "");
   const [saving, setSaving] = React.useState(false);
   const [message, setMessage] = React.useState("");
+  const [newPassword, setNewPassword] = React.useState("");
+  const [confirmPassword, setConfirmPassword] = React.useState("");
+  const [changingPassword, setChangingPassword] = React.useState(false);
+  const [passwordMessage, setPasswordMessage] = React.useState("");
 
   React.useEffect(() => {
     if (chatUser) {
@@ -81,6 +85,53 @@ export function ProfileSettings() {
     await saveProfile(displayName, avatarUrl);
   };
 
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordMessage("");
+
+    if (newPassword.length < 6) {
+      setPasswordMessage("Lösenordet måste vara minst 6 tecken");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordMessage("Lösenorden matchar inte");
+      return;
+    }
+
+    setChangingPassword(true);
+
+    try {
+      const response = await fetch("/api/chat/change-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          new_password: newPassword,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Misslyckades att ändra lösenord");
+      }
+
+      setPasswordMessage("Lösenord uppdaterat!");
+      setNewPassword("");
+      setConfirmPassword("");
+      setTimeout(() => setPasswordMessage(""), 3000);
+    } catch (error) {
+      console.error("Error changing password:", error);
+      setPasswordMessage(
+        error instanceof Error ? error.message : "Misslyckades att ändra lösenord"
+      );
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
   if (!chatUser) return null;
 
   return (
@@ -95,7 +146,7 @@ export function ProfileSettings() {
 
         <div className="space-y-2">
           <Label className="text-xs">Profilbild</Label>
-          <div className="flex items-start gap-4">
+          <div className="flex flex-col sm:flex-row items-start gap-4">
             {avatarUrl && (
               <div className="flex-shrink-0">
                 <img
@@ -108,7 +159,7 @@ export function ProfileSettings() {
                 />
               </div>
             )}
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 w-full max-w-[280px]">
               <ImageUpload
                 bucket="chat-avatars"
                 currentImageUrl={avatarUrl}
@@ -164,6 +215,85 @@ export function ProfileSettings() {
             }`}
           >
             {message}
+          </p>
+        )}
+      </form>
+
+      {/* Password Change Section */}
+      <form onSubmit={handlePasswordChange} className="space-y-4 mt-6 pt-6 border-t">
+        <div className="text-center">
+          <h3 className="font-semibold text-sm mb-1 flex items-center justify-center gap-2">
+            <Key className="h-4 w-4" />
+            Ändra lösenord
+          </h3>
+          <p className="text-xs text-muted-foreground">
+            Minst 6 tecken
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="new-password" className="text-xs">
+            Nytt lösenord
+          </Label>
+          <Input
+            id="new-password"
+            type="password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            placeholder="••••••"
+            required
+            minLength={6}
+            className="h-9 text-sm"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="confirm-password" className="text-xs">
+            Bekräfta lösenord
+          </Label>
+          <Input
+            id="confirm-password"
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="••••••"
+            required
+            minLength={6}
+            className="h-9 text-sm"
+          />
+        </div>
+
+        <Button
+          type="submit"
+          size="sm"
+          disabled={changingPassword}
+          className="w-full"
+          variant="secondary"
+        >
+          {changingPassword ? (
+            <>
+              <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+              Ändrar...
+            </>
+          ) : (
+            <>
+              <Key className="mr-2 h-3 w-3" />
+              Ändra lösenord
+            </>
+          )}
+        </Button>
+
+        {passwordMessage && (
+          <p
+            className={`text-xs text-center ${
+              passwordMessage.includes("Misslyckades") ||
+              passwordMessage.includes("måste") ||
+              passwordMessage.includes("matchar")
+                ? "text-red-600"
+                : "text-green-600"
+            }`}
+          >
+            {passwordMessage}
           </p>
         )}
       </form>

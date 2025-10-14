@@ -34,12 +34,14 @@ This creates the `email_subscriptions` table.
 ### 3. Verify Your Domain in Resend
 
 **Option A: Use your domain (recommended)**
+
 1. Go to Resend → **Domains** → **Add Domain**
 2. Add `ultramarathon.se`
 3. Follow DNS setup instructions
 4. Once verified, you can send from `noreply@ultramarathon.se`
 
 **Option B: Use Resend's domain (testing only)**
+
 - You can skip this for now
 - Resend will use `onboarding@resend.dev` for testing
 
@@ -63,11 +65,11 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 1. Go to Vercel Project → **Settings** → **Environment Variables**
 2. Add these variables for **Production**, **Preview**, and **Development**:
 
-| Key | Value | Description |
-|-----|-------|-------------|
-| `RESEND_API_KEY` | `re_xxxxx` | Your Resend API key |
-| `RESEND_FROM_EMAIL` | `noreply@ultramarathon.se` | Verified sender email |
-| `NEXT_PUBLIC_SITE_URL` | `https://iau24hwc2025.ultramarathon.se` | Your production URL |
+| Key                    | Value                                   | Description           |
+| ---------------------- | --------------------------------------- | --------------------- |
+| `RESEND_API_KEY`       | `re_xxxxx`                              | Your Resend API key   |
+| `RESEND_FROM_EMAIL`    | `noreply@ultramarathon.se`              | Verified sender email |
+| `NEXT_PUBLIC_SITE_URL` | `https://iau24hwc2025.ultramarathon.se` | Your production URL   |
 
 3. **Redeploy** your app for the changes to take effect
 
@@ -102,6 +104,7 @@ When you create/edit news and check **"Send push notification"**:
 ### Email Template
 
 Beautiful HTML email with:
+
 - Gradient header with IAU 24h WC branding
 - News title and content preview
 - "Read full article" button
@@ -155,8 +158,8 @@ Beautiful HTML email with:
 SELECT COUNT(*) FROM email_subscriptions WHERE enabled = TRUE;
 
 -- See all subscriptions
-SELECT email, subscribed_at, enabled 
-FROM email_subscriptions 
+SELECT email, subscribed_at, enabled
+FROM email_subscriptions
 ORDER BY subscribed_at DESC;
 ```
 
@@ -173,24 +176,30 @@ ORDER BY subscribed_at DESC;
 ### Email not sending
 
 **Check 1: Is RESEND_API_KEY set?**
+
 - Verify in `.env.local` or Vercel environment variables
 
 **Check 2: Is domain verified?**
+
 - Go to Resend → Domains → Check status
 
 **Check 3: Check browser console**
+
 - Look for error messages in admin panel
 
 **Check 4: Check server logs**
+
 - In Vercel → Deployments → Click deployment → Runtime Logs
 
 ### Banner not appearing
 
 **Check 1: Already subscribed?**
+
 - Clear localStorage: `localStorage.removeItem('emailSubscribed')`
 - Refresh page
 
 **Check 2: Already dismissed?**
+
 - Clear localStorage: `localStorage.removeItem('notificationBannerDismissed')`
 - Refresh page
 
@@ -235,7 +244,7 @@ ORDER BY subscribed_at DESC;
 **You now have a complete dual notification system! 🎉**
 
 Users can choose:
+
 - ✅ Email (works everywhere, especially iOS!)
 - ✅ Push (instant on desktop/Android)
 - ✅ Both (maximum reach)
-

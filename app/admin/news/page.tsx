@@ -88,9 +88,15 @@ export default function AdminNewsPage() {
 
         // Send notifications if requested
         if (formData.sendNotification && formData.published) {
-          const notifResults = await sendNotifications(formData.title, formData.content, data.id);
+          const notifResults = await sendNotifications(
+            formData.title,
+            formData.content,
+            data.id
+          );
           if (notifResults) {
-            alert(`Notifications sent!\nPush: ${notifResults.push}\nEmail: ${notifResults.email}`);
+            alert(
+              `Notifications sent!\nPush: ${notifResults.push}\nEmail: ${notifResults.email}`
+            );
           }
         }
 
@@ -143,9 +149,15 @@ export default function AdminNewsPage() {
       if (response.ok) {
         // Send notifications if requested
         if (formData.sendNotification && formData.published) {
-          const notifResults = await sendNotifications(formData.title, formData.content, id);
+          const notifResults = await sendNotifications(
+            formData.title,
+            formData.content,
+            id
+          );
           if (notifResults) {
-            alert(`Notifications sent!\nPush: ${notifResults.push}\nEmail: ${notifResults.email}`);
+            alert(
+              `Notifications sent!\nPush: ${notifResults.push}\nEmail: ${notifResults.email}`
+            );
           }
         }
 

@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 import { createServiceClient } from "@/lib/supabase/server";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export async function POST(request: NextRequest) {
+  // Initialize Resend with API key at runtime (not build time)
+  const resend = new Resend(process.env.RESEND_API_KEY);
   try {
     const { title, content, newsId } = await request.json();
 
@@ -24,7 +24,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const fromEmail = process.env.RESEND_FROM_EMAIL || "noreply@ultramarathon.se";
+    const fromEmail =
+      process.env.RESEND_FROM_EMAIL || "noreply@ultramarathon.se";
 
     // Get all active email subscriptions using service role
     const supabase = await createServiceClient();
@@ -51,15 +52,24 @@ export async function POST(request: NextRequest) {
 
     // Strip HTML tags for plain text content
     const plainText = content.replace(/<[^>]*>/g, "").substring(0, 300);
-    
+
     // Construct news URL
-    const newsUrl = newsId 
-      ? `${process.env.NEXT_PUBLIC_SITE_URL || "https://iau24hwc2025.ultramarathon.se"}/news/${newsId}`
-      : `${process.env.NEXT_PUBLIC_SITE_URL || "https://iau24hwc2025.ultramarathon.se"}/news`;
+    const newsUrl = newsId
+      ? `${
+          process.env.NEXT_PUBLIC_SITE_URL ||
+          "https://iau24hwc2025.ultramarathon.se"
+        }/news/${newsId}`
+      : `${
+          process.env.NEXT_PUBLIC_SITE_URL ||
+          "https://iau24hwc2025.ultramarathon.se"
+        }/news`;
 
     // Send emails (Resend supports batch sending)
     const emailPromises = subscriptions.map(async (sub) => {
-      const unsubscribeUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "https://iau24hwc2025.ultramarathon.se"}/unsubscribe?token=${sub.unsubscribe_token}`;
+      const unsubscribeUrl = `${
+        process.env.NEXT_PUBLIC_SITE_URL ||
+        "https://iau24hwc2025.ultramarathon.se"
+      }/unsubscribe?token=${sub.unsubscribe_token}`;
 
       try {
         const { data, error } = await resend.emails.send({
@@ -136,4 +146,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

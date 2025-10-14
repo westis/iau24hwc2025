@@ -22,7 +22,7 @@ export function NotificationBanner() {
     // Check if user has dismissed the banner
     const dismissed = localStorage.getItem("notificationBannerDismissed");
     const emailSubscribed = localStorage.getItem("emailSubscribed");
-    
+
     // Show banner if not dismissed and not already subscribed
     if (!dismissed && !emailSubscribed) {
       // Wait a bit before showing to not be annoying
@@ -83,15 +83,51 @@ export function NotificationBanner() {
   };
 
   const handlePushSubscribe = async () => {
-    if (typeof window === "undefined" || !window.OneSignalDeferred) return;
+    if (typeof window === "undefined" || !window.OneSignalDeferred) {
+      alert("Push-notiser är inte tillgängliga. Fortsätt med e-post istället.");
+      return;
+    }
 
     window.OneSignalDeferred.push(async function (OneSignal: any) {
       try {
+        // Check if push is supported
+        const isPushSupported = OneSignal.Notifications.isPushSupported();
+        if (!isPushSupported) {
+          alert("Push-notiser stöds inte i din webbläsare. Använd e-post istället.");
+          return;
+        }
+
+        // Check current permission state
+        const currentPermission = OneSignal.Notifications.permission;
+        
+        if (currentPermission === false) {
+          // Permission previously denied
+          alert(
+            "Push-notiser är blockerade. Aktivera dem i dina webbläsarinställningar:\n\n" +
+            "Chrome/Edge: Klicka på hänglåset → Webbplatsinställningar → Notiser\n" +
+            "Firefox: Klicka på skölden → Behörigheter → Notiser"
+          );
+          return;
+        }
+
+        // Show the permission prompt
         await OneSignal.Slidedown.promptPush();
-        const permission = OneSignal.Notifications.permission;
-        setIsPushSubscribed(permission);
+        
+        // Wait a bit for user to respond
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Check the new permission state
+        const newPermission = OneSignal.Notifications.permission;
+        setIsPushSubscribed(newPermission);
+        
+        if (newPermission) {
+          alert("Push-notiser aktiverade! Du får nu notiser även när webbläsaren är stängd.");
+        } else {
+          alert("Du behöver tillåta notiser i popup-fönstret för att aktivera push-notiser.");
+        }
       } catch (error) {
         console.error("Error subscribing to push:", error);
+        alert("Något gick fel. Försök igen eller använd e-post istället.");
       }
     });
   };
@@ -105,29 +141,31 @@ export function NotificationBanner() {
 
   return (
     <div className="fixed bottom-4 right-4 left-4 md:left-auto md:w-[480px] z-50 animate-in slide-in-from-bottom-5 duration-500">
-      <div className="bg-gradient-to-br from-primary/95 to-primary/90 backdrop-blur-sm text-primary-foreground rounded-lg shadow-2xl border border-primary-foreground/20 p-5 relative">
+      <div className="bg-gradient-to-br from-primary to-primary/90 dark:from-primary/20 dark:to-primary/10 backdrop-blur-sm text-primary-foreground dark:text-foreground rounded-lg shadow-2xl border border-primary-foreground/20 dark:border-border p-5 relative">
         <button
           onClick={handleDismiss}
-          className="absolute top-2 right-2 p-1 hover:bg-white/20 rounded-full transition-colors"
+          className="absolute top-2 right-2 p-1 hover:bg-primary-foreground/20 dark:hover:bg-accent rounded-full transition-colors"
           aria-label="Stäng"
         >
           <X className="h-4 w-4" />
         </button>
 
         <div className="flex items-start gap-3 mb-4">
-          <div className="bg-white/20 p-2 rounded-lg">
+          <div className="bg-primary-foreground/20 dark:bg-primary/20 p-2 rounded-lg">
             <Bell className="h-5 w-5" />
           </div>
           <div className="flex-1">
-            <h3 className="font-bold text-lg mb-1">Missa inga uppdateringar!</h3>
-            <p className="text-sm text-primary-foreground/90">
+            <h3 className="font-bold text-lg mb-1">
+              Missa inga uppdateringar!
+            </h3>
+            <p className="text-sm opacity-90">
               Få meddelanden om nyheter, starttider och live-resultat
             </p>
           </div>
         </div>
 
         {subscriptionStatus === "success" ? (
-          <div className="flex items-center gap-2 bg-green-500/20 text-white p-3 rounded-lg">
+          <div className="flex items-center gap-2 bg-green-500/20 text-green-900 dark:text-green-100 p-3 rounded-lg">
             <Check className="h-5 w-5" />
             <span className="font-medium">Tack för din prenumeration!</span>
           </div>
@@ -148,30 +186,30 @@ export function NotificationBanner() {
                   onKeyDown={(e) => {
                     if (e.key === "Enter") handleEmailSubscribe();
                   }}
-                  className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-white/60"
+                  className="flex-1 bg-primary-foreground/10 dark:bg-background/50 border-primary-foreground/20 dark:border-border placeholder:text-muted-foreground"
                   disabled={isSubscribing}
                 />
                 <Button
                   onClick={handleEmailSubscribe}
                   disabled={isSubscribing}
-                  className="bg-white text-primary hover:bg-white/90"
+                  className="bg-primary-foreground text-primary dark:bg-primary dark:text-primary-foreground hover:opacity-90"
                 >
                   {isSubscribing ? "..." : "Prenumerera"}
                 </Button>
               </div>
               {subscriptionStatus === "error" && (
-                <p className="text-sm text-red-200">{errorMessage}</p>
+                <p className="text-sm text-red-600 dark:text-red-400">{errorMessage}</p>
               )}
             </div>
 
             {/* Push Notification Option */}
             {isPushSupported && !isPushSubscribed && (
-              <div className="pt-2 border-t border-white/20">
+              <div className="pt-2 border-t border-primary-foreground/20 dark:border-border">
                 <Button
                   onClick={handlePushSubscribe}
                   variant="ghost"
                   size="sm"
-                  className="w-full text-white hover:bg-white/10 gap-2"
+                  className="w-full hover:bg-primary-foreground/10 dark:hover:bg-accent gap-2"
                 >
                   <Bell className="h-4 w-4" />
                   Aktivera push-notiser (desktop/Android)
@@ -179,7 +217,7 @@ export function NotificationBanner() {
               </div>
             )}
 
-            <p className="text-xs text-primary-foreground/70">
+            <p className="text-xs opacity-70">
               Fungerar på alla enheter. Avprenumerera när som helst.
             </p>
           </div>
@@ -188,4 +226,3 @@ export function NotificationBanner() {
     </div>
   );
 }
-
