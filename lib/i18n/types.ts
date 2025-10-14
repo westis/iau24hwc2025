@@ -275,6 +275,9 @@ export interface Translations {
     media: string;
     men: string;
     women: string;
+    previewMen: string;
+    previewWomen: string;
+    readPreview: string;
   };
   chat: {
     title: string;

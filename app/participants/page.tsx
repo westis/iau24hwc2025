@@ -4,12 +4,13 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Edit3 } from "lucide-react";
+import { Edit3, Newspaper, ChevronRight } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { useAuth } from "@/lib/auth/auth-context";
 import { RunnersView } from "@/components/participants/RunnersView";
 import { TeamsView } from "@/components/participants/TeamsView";
 import { SocialView } from "@/components/participants/SocialView";
+import Link from "next/link";
 
 function ParticipantsPageContent() {
   const router = useRouter();
@@ -96,6 +97,12 @@ function ParticipantsPageContent() {
     updateURL({ metric: newMetric });
   };
 
+  // Preview article links - configure these to match your news article IDs
+  const previewLinks = {
+    men: "/news/1", // Replace with actual men's preview article ID
+    women: "/news/2", // Replace with actual women's preview article ID
+  };
+
   return (
     <main className="min-h-screen py-6 sm:py-8 lg:py-10">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
@@ -111,6 +118,31 @@ function ParticipantsPageContent() {
             </Button>
           )}
         </div>
+
+        {/* Preview Article Banner */}
+        {activeTab === "individual" && (
+          <Link
+            href={gender === "M" ? previewLinks.men : previewLinks.women}
+            className="block mb-6"
+          >
+            <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 rounded-lg p-4 hover:border-primary/40 transition-all hover:shadow-md group">
+              <div className="flex items-center gap-3">
+                <div className="flex-shrink-0 p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
+                  <Newspaper className="h-5 w-5 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
+                    {gender === "M" ? t.participants.previewMen : t.participants.previewWomen}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {t.participants.readPreview}
+                  </p>
+                </div>
+                <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all flex-shrink-0" />
+              </div>
+            </div>
+          </Link>
+        )}
 
         <Tabs
           value={activeTab}

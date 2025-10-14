@@ -280,6 +280,9 @@ export const en: Translations = {
     media: "Media",
     men: "Men",
     women: "Women",
+    previewMen: "Men's Preview",
+    previewWomen: "Women's Preview",
+    readPreview: "Read preview",
   },
   chat: {
     title: "Race Chat",
