@@ -93,37 +93,43 @@ export function NotificationBanner() {
         // Check if push is supported
         const isPushSupported = OneSignal.Notifications.isPushSupported();
         if (!isPushSupported) {
-          alert("Push-notiser stöds inte i din webbläsare. Använd e-post istället.");
+          alert(
+            "Push-notiser stöds inte i din webbläsare. Använd e-post istället."
+          );
           return;
         }
 
         // Check current permission state
         const currentPermission = OneSignal.Notifications.permission;
-        
+
         if (currentPermission === false) {
           // Permission previously denied
           alert(
             "Push-notiser är blockerade. Aktivera dem i dina webbläsarinställningar:\n\n" +
-            "Chrome/Edge: Klicka på hänglåset → Webbplatsinställningar → Notiser\n" +
-            "Firefox: Klicka på skölden → Behörigheter → Notiser"
+              "Chrome/Edge: Klicka på hänglåset → Webbplatsinställningar → Notiser\n" +
+              "Firefox: Klicka på skölden → Behörigheter → Notiser"
           );
           return;
         }
 
         // Show the permission prompt
         await OneSignal.Slidedown.promptPush();
-        
+
         // Wait a bit for user to respond
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
         // Check the new permission state
         const newPermission = OneSignal.Notifications.permission;
         setIsPushSubscribed(newPermission);
-        
+
         if (newPermission) {
-          alert("Push-notiser aktiverade! Du får nu notiser även när webbläsaren är stängd.");
+          alert(
+            "Push-notiser aktiverade! Du får nu notiser även när webbläsaren är stängd."
+          );
         } else {
-          alert("Du behöver tillåta notiser i popup-fönstret för att aktivera push-notiser.");
+          alert(
+            "Du behöver tillåta notiser i popup-fönstret för att aktivera push-notiser."
+          );
         }
       } catch (error) {
         console.error("Error subscribing to push:", error);
@@ -198,7 +204,9 @@ export function NotificationBanner() {
                 </Button>
               </div>
               {subscriptionStatus === "error" && (
-                <p className="text-sm text-red-600 dark:text-red-400">{errorMessage}</p>
+                <p className="text-sm text-red-600 dark:text-red-400">
+                  {errorMessage}
+                </p>
               )}
             </div>
 

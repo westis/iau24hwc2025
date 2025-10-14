@@ -135,31 +135,31 @@ export function ProfileSettings() {
   if (!chatUser) return null;
 
   return (
-    <div className="p-4 border-b max-h-[calc(100vh-300px)] overflow-y-auto">
-      <form onSubmit={handleSave} className="space-y-4">
+    <div className="p-3 border-b max-h-[calc(100vh-200px)] overflow-y-auto">
+      <form onSubmit={handleSave} className="space-y-3">
         <div className="text-center">
-          <h3 className="font-semibold text-sm mb-1">Redigera profil</h3>
+          <h3 className="font-semibold text-sm mb-0.5">Redigera profil</h3>
           <p className="text-xs text-muted-foreground">
             Ladda upp en avatar och uppdatera ditt namn
           </p>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <Label className="text-xs">Profilbild</Label>
-          <div className="flex flex-col sm:flex-row items-start gap-4">
+          <div className="flex flex-col sm:flex-row items-start gap-3">
             {avatarUrl && (
               <div className="flex-shrink-0">
                 <img
                   src={avatarUrl}
                   alt="Avatar preview"
-                  className="h-20 w-20 rounded-full object-cover border-2 border-border"
+                  className="h-16 w-16 rounded-full object-cover border-2 border-border"
                   onError={(e) => {
                     (e.target as HTMLImageElement).style.display = "none";
                   }}
                 />
               </div>
             )}
-            <div className="flex-1 min-w-0 w-full max-w-[280px]">
+            <div className="flex-1 min-w-0 w-full max-w-[260px]">
               <ImageUpload
                 bucket="chat-avatars"
                 currentImageUrl={avatarUrl}
@@ -174,7 +174,7 @@ export function ProfileSettings() {
           </div>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <Label htmlFor="display-name" className="text-xs">
             Visningsnamn
           </Label>
@@ -186,25 +186,23 @@ export function ProfileSettings() {
             placeholder="Ditt namn"
             required
             maxLength={50}
-            className="h-9 text-sm"
+            className="h-8 text-sm"
           />
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button type="submit" size="sm" disabled={saving} className="flex-1">
-            {saving ? (
-              <>
-                <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                Sparar...
-              </>
-            ) : (
-              <>
-                <Save className="mr-2 h-3 w-3" />
-                Spara namn
-              </>
-            )}
-          </Button>
-        </div>
+        <Button type="submit" size="sm" disabled={saving} className="w-full">
+          {saving ? (
+            <>
+              <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+              Sparar...
+            </>
+          ) : (
+            <>
+              <Save className="mr-2 h-3 w-3" />
+              Spara namn
+            </>
+          )}
+        </Button>
 
         {message && (
           <p
@@ -220,10 +218,10 @@ export function ProfileSettings() {
       </form>
 
       {/* Password Change Section */}
-      <form onSubmit={handlePasswordChange} className="space-y-4 mt-6 pt-6 border-t">
+      <form onSubmit={handlePasswordChange} className="space-y-3 mt-4 pt-4 border-t">
         <div className="text-center">
-          <h3 className="font-semibold text-sm mb-1 flex items-center justify-center gap-2">
-            <Key className="h-4 w-4" />
+          <h3 className="font-semibold text-sm mb-0.5 flex items-center justify-center gap-2">
+            <Key className="h-3.5 w-3.5" />
             Ändra lösenord
           </h3>
           <p className="text-xs text-muted-foreground">
@@ -231,7 +229,7 @@ export function ProfileSettings() {
           </p>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <Label htmlFor="new-password" className="text-xs">
             Nytt lösenord
           </Label>
@@ -243,11 +241,11 @@ export function ProfileSettings() {
             placeholder="••••••"
             required
             minLength={6}
-            className="h-9 text-sm"
+            className="h-8 text-sm"
           />
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <Label htmlFor="confirm-password" className="text-xs">
             Bekräfta lösenord
           </Label>
@@ -259,7 +257,7 @@ export function ProfileSettings() {
             placeholder="••••••"
             required
             minLength={6}
-            className="h-9 text-sm"
+            className="h-8 text-sm"
           />
         </div>
 
