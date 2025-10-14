@@ -105,9 +105,12 @@ export function NotificationBanner() {
         if (currentPermission === false) {
           // Permission previously denied
           alert(
-            "Push-notiser är blockerade. Aktivera dem i dina webbläsarinställningar:\n\n" +
-              "Chrome/Edge: Klicka på hänglåset → Webbplatsinställningar → Notiser\n" +
-              "Firefox: Klicka på skölden → Behörigheter → Notiser"
+            "Push-notiser är blockerade. Aktivera dem så här:\n\n" +
+              "Chrome/Edge:\n" +
+              "1. Klicka på ikonen i adressfältet (vänster om URL)\n" +
+              "2. Klicka 'Webbplatsinställningar'\n" +
+              "3. Ändra 'Notiser' från Blockera till Tillåt\n\n" +
+              "Eller använd e-post istället – fungerar på alla enheter!"
           );
           return;
         }
@@ -213,6 +216,9 @@ export function NotificationBanner() {
             {/* Push Notification Option */}
             {isPushSupported && !isPushSubscribed && (
               <div className="pt-2 border-t border-primary-foreground/20 dark:border-border">
+                <p className="text-xs opacity-70 mb-2 text-center">
+                  Valfritt: Lägg även till push-notiser
+                </p>
                 <Button
                   onClick={handlePushSubscribe}
                   variant="ghost"
@@ -220,7 +226,7 @@ export function NotificationBanner() {
                   className="w-full hover:bg-primary-foreground/10 dark:hover:bg-accent gap-2"
                 >
                   <Bell className="h-4 w-4" />
-                  Aktivera push-notiser (desktop/Android)
+                  Push-notiser (desktop/Android)
                 </Button>
               </div>
             )}

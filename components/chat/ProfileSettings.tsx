@@ -125,7 +125,9 @@ export function ProfileSettings() {
     } catch (error) {
       console.error("Error changing password:", error);
       setPasswordMessage(
-        error instanceof Error ? error.message : "Misslyckades att ändra lösenord"
+        error instanceof Error
+          ? error.message
+          : "Misslyckades att ändra lösenord"
       );
     } finally {
       setChangingPassword(false);
@@ -218,15 +220,16 @@ export function ProfileSettings() {
       </form>
 
       {/* Password Change Section */}
-      <form onSubmit={handlePasswordChange} className="space-y-3 mt-4 pt-4 border-t">
+      <form
+        onSubmit={handlePasswordChange}
+        className="space-y-3 mt-4 pt-4 border-t"
+      >
         <div className="text-center">
           <h3 className="font-semibold text-sm mb-0.5 flex items-center justify-center gap-2">
             <Key className="h-3.5 w-3.5" />
             Ändra lösenord
           </h3>
-          <p className="text-xs text-muted-foreground">
-            Minst 6 tecken
-          </p>
+          <p className="text-xs text-muted-foreground">Minst 6 tecken</p>
         </div>
 
         <div className="space-y-1.5">
