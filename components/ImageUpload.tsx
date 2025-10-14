@@ -16,7 +16,7 @@ import Cropper from "react-easy-crop";
 import { Area } from "react-easy-crop";
 
 interface ImageUploadProps {
-  bucket: "runner-photos" | "team-photos" | "race-photos" | "chat-avatars";
+  bucket: "runner-photos" | "team-photos" | "race-photos" | "chat-avatars" | "news-images";
   currentImageUrl?: string | null;
   currentFocalPoint?: { x: number; y: number } | null;
   currentZoom?: number | null;

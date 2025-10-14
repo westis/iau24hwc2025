@@ -109,9 +109,7 @@ export async function GET(request: NextRequest) {
     const teamsWithoutPB = allTeams.filter((t) => t.topThree.length < 3);
 
     // Sort teams with PB by total distance (highest first)
-    const sortedWithPB = teamsWithPB.sort(
-      (a, b) => b.teamTotal - a.teamTotal
-    );
+    const sortedWithPB = teamsWithPB.sort((a, b) => b.teamTotal - a.teamTotal);
 
     // Sort teams without PB by name
     const sortedWithoutPB = teamsWithoutPB.sort((a, b) =>
