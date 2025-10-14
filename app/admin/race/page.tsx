@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/auth-context";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
@@ -41,24 +41,11 @@ export default function AdminRacePage() {
     contactPhone: "",
   });
 
-  useEffect(() => {
-    if (isAdmin) {
-      fetchRaceInfo();
-    } else if (!isAdmin && typeof window !== "undefined") {
-      router.push("/");
-    }
-  }, [isAdmin, router]);
-
   // Helper function to format UTC timestamp for datetime-local input in race's timezone
   function formatDateTimeForInput(isoString: string | null): string {
     if (!isoString) return "";
 
-    // The race is in Albi, France (Europe/Paris timezone)
-    // Convert UTC to local time in Europe/Paris for display in the form
     const date = new Date(isoString);
-
-    // Format as YYYY-MM-DDTHH:mm for datetime-local input
-    // We need to get the local time in the race timezone (Europe/Paris)
     const options: Intl.DateTimeFormatOptions = {
       timeZone: "Europe/Paris",
       year: "numeric",
@@ -81,7 +68,8 @@ export default function AdminRacePage() {
     return `${year}-${month}-${day}T${hour}:${minute}`;
   }
 
-  async function fetchRaceInfo() {
+  // ✅ useCallback version of fetchRaceInfo
+  const fetchRaceInfo = useCallback(async () => {
     try {
       const response = await fetch("/api/race");
       if (response.ok) {
@@ -112,40 +100,30 @@ export default function AdminRacePage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetchRaceInfo();
+    } else if (!isAdmin && typeof window !== "undefined") {
+      router.push("/");
+    }
+  }, [isAdmin, router, fetchRaceInfo]);
 
   // Helper function to convert datetime-local value to ISO string in race's timezone
   function datetimeLocalToISO(datetimeLocal: string): string | null {
     if (!datetimeLocal) return null;
 
-    // The datetime-local value is in format YYYY-MM-DDTHH:mm
-    // We need to interpret this as being in the race's timezone (Europe/Paris)
-    // and convert it to UTC for storage
-
-    // Parse the datetime-local value
     const [datePart, timePart] = datetimeLocal.split("T");
     const [year, month, day] = datePart.split("-");
     const [hour, minute] = timePart.split(":");
-
-    // Create a date string in ISO format WITH timezone offset for Europe/Paris
-    // We'll use a library approach: format the string as if it's in Europe/Paris
-    // Note: This is a simplified approach. For production, consider using a library like date-fns-tz
-
-    // Europe/Paris is UTC+1 in winter, UTC+2 in summer (CEST)
-    // The race is in October, so it could be either depending on DST rules
-    // For October 2025, DST ends on Oct 26, so Oct 18 is still CEST (UTC+2)
-    const raceTimezoneOffset = "+02:00"; // CEST for October 18, 2025
-
-    // Create ISO string with timezone
+    const raceTimezoneOffset = "+02:00"; // CEST for October 2025
     const isoWithTZ = `${year}-${month}-${day}T${hour}:${minute}:00${raceTimezoneOffset}`;
-
-    // Convert to UTC
     return new Date(isoWithTZ).toISOString();
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-
     if (!raceInfo) return;
 
     setSaving(true);
@@ -163,7 +141,6 @@ export default function AdminRacePage() {
       });
 
       if (response.ok) {
-        // Trigger cache revalidation
         await fetch("/api/revalidate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -185,9 +162,7 @@ export default function AdminRacePage() {
     }
   }
 
-  if (!isAdmin) {
-    return null;
-  }
+  if (!isAdmin) return null;
 
   if (loading) {
     return (
@@ -268,7 +243,7 @@ export default function AdminRacePage() {
                   onChange={(content) =>
                     setFormData({ ...formData, descriptionSv: content })
                   }
-                  placeholder="Ange banebeskrivning, lägg till bilder och länkar..."
+                  placeholder="Ange banbeskrivning, lägg till bilder och länkar..."
                 />
               </div>
             </CardContent>
@@ -371,7 +346,9 @@ export default function AdminRacePage() {
               </div>
 
               <div>
-                <Label htmlFor="officialWebsiteUrl">Official Website URL</Label>
+                <Label htmlFor="officialWebsiteUrl">
+                  Official Website URL
+                </Label>
                 <Input
                   id="officialWebsiteUrl"
                   type="url"
