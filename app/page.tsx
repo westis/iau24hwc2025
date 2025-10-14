@@ -96,17 +96,17 @@ export default function Home() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-5xl lg:max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-12">
         {/* Latest News Section */}
         {!loadingNews && news.length > 0 && (
           <div className="mb-8">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <Newspaper className="w-5 h-5 text-primary" />
-                <h2 className="text-xl font-semibold">{t.home.latestNews}</h2>
+                <Newspaper className="w-5 h-5 lg:w-6 lg:h-6 text-primary" />
+                <h2 className="text-xl sm:text-2xl lg:text-3xl font-semibold">{t.home.latestNews}</h2>
               </div>
               <Link href="/news">
-                <Button variant="ghost" size="sm" className="text-sm">
+                <Button variant="ghost" size="sm" className="text-sm sm:text-base">
                   {t.home.viewAllNews} →
                 </Button>
               </Link>
@@ -114,13 +114,13 @@ export default function Home() {
             <div className="space-y-1">
               {news.map((item) => (
                 <div key={item.id} className="flex items-center gap-3 py-2 px-3 hover:bg-accent rounded-md transition-colors">
-                  <span className="text-xs text-muted-foreground min-w-[70px]">
+                  <span className="text-xs sm:text-sm lg:text-base text-muted-foreground min-w-[70px] sm:min-w-[90px]">
                     {new Date(item.created_at).toLocaleDateString(language === 'sv' ? 'sv-SE' : 'en-US', {
                       month: 'short',
                       day: 'numeric',
                     })}
                   </span>
-                  <Link href="/news" className="text-sm hover:underline flex-1">
+                  <Link href="/news" className="text-sm sm:text-base lg:text-lg hover:underline flex-1">
                     {item.title}
                   </Link>
                 </div>
