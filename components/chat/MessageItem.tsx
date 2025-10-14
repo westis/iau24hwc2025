@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { formatDistanceToNow } from "date-fns";
+import { sv } from "date-fns/locale";
 import { Trash2, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ChatMessage } from "@/types/chat";
@@ -19,9 +20,12 @@ export function MessageItem({ message, onDelete }: MessageItemProps) {
 
   const formatTime = (dateString: string) => {
     try {
-      return formatDistanceToNow(new Date(dateString), { addSuffix: true });
+      return formatDistanceToNow(new Date(dateString), { 
+        addSuffix: true,
+        locale: sv 
+      });
     } catch {
-      return "just now";
+      return "nyss";
     }
   };
 

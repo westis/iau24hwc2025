@@ -20,14 +20,27 @@ export function NotificationBanner() {
 
   useEffect(() => {
     // Check if user has dismissed the banner
-    const dismissed = localStorage.getItem("notificationBannerDismissed");
+    const dismissedTime = localStorage.getItem("notificationBannerDismissed");
     const emailSubscribed = localStorage.getItem("emailSubscribed");
-
-    // Show banner if not dismissed and not already subscribed
-    if (!dismissed && !emailSubscribed) {
-      // Wait a bit before showing to not be annoying
-      setTimeout(() => setShowBanner(true), 3000);
+    
+    // If already subscribed, never show banner
+    if (emailSubscribed) {
+      return;
     }
+    
+    // If dismissed, check if it's been more than 7 days
+    if (dismissedTime) {
+      const dismissedDate = new Date(parseInt(dismissedTime));
+      const daysSinceDismissed = (Date.now() - dismissedDate.getTime()) / (1000 * 60 * 60 * 24);
+      
+      // Show again after 7 days
+      if (daysSinceDismissed < 7) {
+        return;
+      }
+    }
+    
+    // Show banner after 3 seconds
+    setTimeout(() => setShowBanner(true), 3000);
 
     // Check push notification support
     if (typeof window !== "undefined" && window.OneSignalDeferred) {
@@ -144,7 +157,8 @@ export function NotificationBanner() {
 
   const handleDismiss = () => {
     setShowBanner(false);
-    localStorage.setItem("notificationBannerDismissed", "true");
+    // Store timestamp so we can show again after 7 days
+    localStorage.setItem("notificationBannerDismissed", Date.now().toString());
   };
 
   if (!showBanner) return null;

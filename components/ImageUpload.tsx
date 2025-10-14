@@ -205,7 +205,11 @@ export function ImageUpload({
   return (
     <>
       <div className="space-y-4">
-        <div className={compact ? "flex flex-col gap-2" : "flex items-center gap-4"}>
+        <div
+          className={
+            compact ? "flex flex-col gap-2" : "flex items-center gap-4"
+          }
+        >
           <input
             ref={fileInputRef}
             type="file"
