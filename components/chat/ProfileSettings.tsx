@@ -171,6 +171,7 @@ export function ProfileSettings() {
                 aspectRatio={1}
                 cropShape="round"
                 hidePreview={true}
+                compact={true}
               />
             </div>
           </div>

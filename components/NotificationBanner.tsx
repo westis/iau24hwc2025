@@ -105,12 +105,13 @@ export function NotificationBanner() {
         if (currentPermission === false) {
           // Permission previously denied
           alert(
-            "Push-notiser är blockerade. Aktivera dem så här:\n\n" +
-              "Chrome/Edge:\n" +
-              "1. Klicka på ikonen i adressfältet (vänster om URL)\n" +
-              "2. Klicka 'Webbplatsinställningar'\n" +
-              "3. Ändra 'Notiser' från Blockera till Tillåt\n\n" +
-              "Eller använd e-post istället – fungerar på alla enheter!"
+            "Du har tidigare blockerat push-notiser.\n\n" +
+              "Så här aktiverar du dem i Chrome:\n" +
+              "1. Öppna Chrome-inställningar (tre punkter högst upp)\n" +
+              "2. Sekretess och säkerhet → Webbplatsinställningar\n" +
+              "3. Notiser → Sök efter denna webbplats\n" +
+              "4. Ändra till 'Tillåt'\n\n" +
+              "Enklare: Använd e-post istället! Fungerar direkt utan krångel."
           );
           return;
         }

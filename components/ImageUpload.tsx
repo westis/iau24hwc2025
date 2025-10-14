@@ -34,6 +34,7 @@ interface ImageUploadProps {
   aspectRatio?: number;
   cropShape?: "rect" | "round";
   hidePreview?: boolean;
+  compact?: boolean; // Stack buttons vertically for narrow spaces
 }
 
 export function ImageUpload({
@@ -48,6 +49,7 @@ export function ImageUpload({
   aspectRatio = 1,
   cropShape = "round",
   hidePreview = false,
+  compact = false,
 }: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(
@@ -203,7 +205,7 @@ export function ImageUpload({
   return (
     <>
       <div className="space-y-4">
-        <div className="flex items-center gap-4">
+        <div className={compact ? "flex flex-col gap-2" : "flex items-center gap-4"}>
           <input
             ref={fileInputRef}
             type="file"
@@ -218,6 +220,8 @@ export function ImageUpload({
             variant="outline"
             onClick={handleButtonClick}
             disabled={isUploading}
+            size={compact ? "sm" : "default"}
+            className={compact ? "w-full justify-start" : ""}
           >
             {isUploading ? (
               <>
@@ -240,6 +244,7 @@ export function ImageUpload({
                 size="sm"
                 onClick={handleAdjustFocalPoint}
                 disabled={isUploading}
+                className={compact ? "w-full justify-start" : ""}
               >
                 <Edit className="h-4 w-4 mr-1" />
                 Adjust Crop
@@ -251,6 +256,7 @@ export function ImageUpload({
                   size="sm"
                   onClick={handleDelete}
                   disabled={isUploading}
+                  className={compact ? "w-full justify-start" : ""}
                 >
                   <X className="h-4 w-4 mr-1" />
                   Remove
