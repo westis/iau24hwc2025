@@ -85,8 +85,8 @@ export async function GET(request: NextRequest) {
         ];
 
         // Calculate team total from top 3 runners with PBs
-        const top3Runners = sortedWithPB.slice(0, 3);
-        const teamTotal = top3Runners.reduce((sum, runner) => {
+        const topThree = sortedWithPB.slice(0, 3);
+        const teamTotal = topThree.reduce((sum, runner) => {
           const pb =
             metric === "last-3-years"
               ? runner.personalBestLast3Years || 0
@@ -96,21 +96,21 @@ export async function GET(request: NextRequest) {
 
         return {
           nationality,
+          gender,
           runners: sortedRunners,
-          totalDistance: teamTotal,
-          runnerCount: allTeamRunners.length,
-          hasPB: top3Runners.length >= 3,
+          topThree,
+          teamTotal,
         };
       }
     );
 
-    // Separate teams with complete PBs from those without
-    const teamsWithPB = allTeams.filter((t) => t.hasPB);
-    const teamsWithoutPB = allTeams.filter((t) => !t.hasPB);
+    // Separate teams with complete PBs (3+ runners) from those without
+    const teamsWithPB = allTeams.filter((t) => t.topThree.length >= 3);
+    const teamsWithoutPB = allTeams.filter((t) => t.topThree.length < 3);
 
     // Sort teams with PB by total distance (highest first)
     const sortedWithPB = teamsWithPB.sort(
-      (a, b) => b.totalDistance - a.totalDistance
+      (a, b) => b.teamTotal - a.teamTotal
     );
 
     // Sort teams without PB by name
@@ -118,18 +118,8 @@ export async function GET(request: NextRequest) {
       a.nationality.localeCompare(b.nationality)
     );
 
-    // Combine: teams with PB first (ranked), then teams without PB
-    const rankedTeams = sortedWithPB.map((team, index) => ({
-      ...team,
-      rank: index + 1,
-    }));
-
-    const unrankedTeams = sortedWithoutPB.map((team) => ({
-      ...team,
-      rank: undefined,
-    }));
-
-    const finalTeams = [...rankedTeams, ...unrankedTeams];
+    // Combine all teams (sorted)
+    const finalTeams = [...sortedWithPB, ...sortedWithoutPB];
 
     return NextResponse.json(
       {
@@ -150,4 +140,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
