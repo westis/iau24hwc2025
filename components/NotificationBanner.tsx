@@ -22,23 +22,24 @@ export function NotificationBanner() {
     // Check if user has dismissed the banner
     const dismissedTime = localStorage.getItem("notificationBannerDismissed");
     const emailSubscribed = localStorage.getItem("emailSubscribed");
-    
+
     // If already subscribed, never show banner
     if (emailSubscribed) {
       return;
     }
-    
+
     // If dismissed, check if it's been more than 7 days
     if (dismissedTime) {
       const dismissedDate = new Date(parseInt(dismissedTime));
-      const daysSinceDismissed = (Date.now() - dismissedDate.getTime()) / (1000 * 60 * 60 * 24);
-      
+      const daysSinceDismissed =
+        (Date.now() - dismissedDate.getTime()) / (1000 * 60 * 60 * 24);
+
       // Show again after 7 days
       if (daysSinceDismissed < 7) {
         return;
       }
     }
-    
+
     // Show banner after 3 seconds
     setTimeout(() => setShowBanner(true), 3000);
 

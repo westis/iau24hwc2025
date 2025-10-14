@@ -77,23 +77,57 @@ export default function AdminChatPage() {
     );
   }
 
-  if (!isOldAdmin || !isChatAdmin) {
+  if (!isOldAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-destructive">
               <Shield className="h-5 w-5" />
-              Access Denied
+              Site Admin Login Required
             </CardTitle>
             <CardDescription>
-              You must be an admin to access this page
+              You must log in as site admin first
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Button onClick={() => router.push("/admin")} className="w-full">
               Go to Admin Login
             </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!isChatAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-amber-600">
+              <MessageSquare className="h-5 w-5" />
+              Chat Login Required
+            </CardTitle>
+            <CardDescription>
+              You&apos;re logged in as site admin, but you also need to log in to chat to manage messages.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="p-3 bg-muted rounded-lg text-sm">
+              <p className="font-semibold mb-2">Why do I need both?</p>
+              <p className="text-muted-foreground">
+                Chat uses Supabase authentication. To delete messages or ban users, you need to be logged in to the chat system with an admin account.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={() => router.push("/chat/login")} className="flex-1">
+                Login to Chat
+              </Button>
+              <Button onClick={() => router.push("/admin")} variant="outline" className="flex-1">
+                Back to Admin
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>

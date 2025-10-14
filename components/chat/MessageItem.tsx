@@ -20,9 +20,9 @@ export function MessageItem({ message, onDelete }: MessageItemProps) {
 
   const formatTime = (dateString: string) => {
     try {
-      return formatDistanceToNow(new Date(dateString), { 
+      return formatDistanceToNow(new Date(dateString), {
         addSuffix: true,
-        locale: sv 
+        locale: sv,
       });
     } catch {
       return "nyss";
