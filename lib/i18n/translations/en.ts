@@ -191,6 +191,7 @@ export const en: Translations = {
     error: "Error",
     runBackendTools: "Run backend CLI tools to populate data",
     noTeamData: "No team data available",
+    country: "Country",
     total: "Total",
     runners: "runners",
     noPB: "No PB",

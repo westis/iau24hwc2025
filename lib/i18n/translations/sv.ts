@@ -191,6 +191,7 @@ export const sv: Translations = {
     error: "Fel",
     runBackendTools: "Kör backend CLI-verktyg för att fylla i data",
     noTeamData: "Ingen lagdata tillgänglig",
+    country: "Land",
     total: "Totalt",
     runners: "löpare",
     noPB: "Inget PR",

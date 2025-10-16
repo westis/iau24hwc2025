@@ -186,6 +186,7 @@ export interface Translations {
     error: string;
     runBackendTools: string;
     noTeamData: string;
+    country: string;
     total: string;
     runners: string;
     noPB: string;
