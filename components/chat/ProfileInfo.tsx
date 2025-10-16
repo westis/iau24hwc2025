@@ -113,15 +113,17 @@ export function ProfileInfo() {
                 {initials}
               </AvatarFallback>
             </Avatar>
-            <ImageUpload
-              bucket="chat-avatars"
-              currentImageUrl={avatarUrl}
-              onUploadComplete={handleAvatarUpload}
-              onDelete={handleAvatarDelete}
-              cropShape="round"
-              aspectRatio={1}
-              label={t.chat.uploadAvatar}
-            />
+            <div className="flex gap-2">
+              <ImageUpload
+                bucket="chat-avatars"
+                currentImageUrl="" 
+                onUploadComplete={handleAvatarUpload}
+                onDelete={handleAvatarDelete}
+                cropShape="round"
+                aspectRatio={1}
+                label={t.chat.uploadAvatar}
+              />
+            </div>
           </div>
 
           <div className="space-y-2">
