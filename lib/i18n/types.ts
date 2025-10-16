@@ -32,6 +32,8 @@ export interface Translations {
     manageNews: string;
     admin: string;
     logout: string;
+    adjustCrop: string;
+    remove: string;
   };
   home: {
     title: string;
@@ -168,6 +170,13 @@ export interface Translations {
     saving: string;
     saveChanges: string;
     unmatchConfirm: string;
+    runnerPhoto: string;
+    uploadPhoto: string;
+    profileAndSocial: string;
+    bio: string;
+    bioPlaceholder: string;
+    instagramUrl: string;
+    stravaUrl: string;
   };
   teams: {
     title: string;
@@ -361,6 +370,13 @@ export interface Translations {
     failedToChangePassword: string;
     updating: string;
     uploadAvatar: string;
+    deleteAccount: string;
+    deleteAccountWarning: string;
+    deleteAccountConfirm: string;
+    typeDeleteToConfirm: string;
+    accountDeleted: string;
+    failedToDeleteAccount: string;
+    deleting: string;
   };
   live: {
     title: string;

@@ -32,6 +32,8 @@ export const sv: Translations = {
     manageNews: "Hantera nyheter",
     admin: "Admin",
     logout: "Logga ut",
+    adjustCrop: "Justera beskärning",
+    remove: "Ta bort",
   },
   home: {
     title: "IAU VM i 24-timmars 2025",
@@ -173,6 +175,13 @@ export const sv: Translations = {
     saveChanges: "Spara ändringar",
     unmatchConfirm:
       "Är du säker på att du vill avmatcha denna löpare? Detta kommer att ta bort DUV-ID och resultatdata.",
+    runnerPhoto: "Löparbild",
+    uploadPhoto: "Ladda upp bild",
+    profileAndSocial: "Profil & Socialt",
+    bio: "Biografi",
+    bioPlaceholder: "Löparbiografi...",
+    instagramUrl: "Instagram-URL",
+    stravaUrl: "Strava-URL",
   },
   teams: {
     title: "Lag",
@@ -319,7 +328,6 @@ export const sv: Translations = {
     displayNamePlaceholder: "Ditt namn",
     emailPlaceholder: "din@epost.se",
     passwordPlaceholder: "••••••••",
-    passwordMinLength: "Minst 6 tecken",
     signingIn: "Loggar in...",
     creatingAccount: "Skapar konto...",
     signUp: "Registrera",
@@ -366,6 +374,14 @@ export const sv: Translations = {
     failedToChangePassword: "Misslyckades att ändra lösenord",
     updating: "Uppdaterar...",
     uploadAvatar: "Ladda upp avatar",
+    deleteAccount: "Radera konto",
+    deleteAccountWarning:
+      "Detta kommer permanent radera ditt konto och all associerad data. Denna åtgärd kan inte ångras.",
+    deleteAccountConfirm: "Skriv RADERA för att bekräfta",
+    typeDeleteToConfirm: "Skriv 'RADERA' för att bekräfta radering av konto",
+    accountDeleted: "Konto raderat",
+    failedToDeleteAccount: "Misslyckades att radera konto",
+    deleting: "Raderar...",
   },
   live: {
     title: "Live",

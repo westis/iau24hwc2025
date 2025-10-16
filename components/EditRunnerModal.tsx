@@ -160,8 +160,10 @@ export function EditRunnerModal({
         ) : (
           <Tabs defaultValue="basic" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="basic">Basic Information</TabsTrigger>
-              <TabsTrigger value="profile">Profile & Social</TabsTrigger>
+              <TabsTrigger value="basic">{t.runners.basicInfo}</TabsTrigger>
+              <TabsTrigger value="profile">
+                {t.runners.profileAndSocial}
+              </TabsTrigger>
             </TabsList>
 
             <div className="py-4">
@@ -250,55 +252,62 @@ export function EditRunnerModal({
               <TabsContent value="profile" className="space-y-4 mt-0">
                 {/* Photo Upload */}
                 <div className="space-y-2">
-                  <Label className="block">Runner Photo</Label>
-                  <ImageUpload
-                    bucket="runner-photos"
-                    currentImageUrl={editForm.photo_url}
-                    currentFocalPoint={{
-                      x: editForm.photo_focal_x,
-                      y: editForm.photo_focal_y,
-                    }}
-                    currentZoom={editForm.photo_zoom}
-                    currentCrop={
-                      editForm.photo_crop_x !== undefined &&
-                      editForm.photo_crop_y !== undefined
-                        ? { x: editForm.photo_crop_x, y: editForm.photo_crop_y }
-                        : undefined
-                    }
-                    onUploadComplete={(
-                      url,
-                      path,
-                      focalPoint,
-                      zoom,
-                      cropPosition
-                    ) => {
-                      setEditForm({
-                        ...editForm,
-                        photo_url: url,
-                        photo_focal_x: focalPoint.x,
-                        photo_focal_y: focalPoint.y,
-                        photo_zoom: zoom,
-                        photo_crop_x: cropPosition?.x ?? 0,
-                        photo_crop_y: cropPosition?.y ?? 0,
-                      });
-                    }}
-                    onDelete={() => {
-                      setEditForm({
-                        ...editForm,
-                        photo_url: null,
-                        photo_focal_x: 50,
-                        photo_focal_y: 50,
-                        photo_crop_x: 0,
-                        photo_crop_y: 0,
-                        photo_zoom: 1.5,
-                      });
-                    }}
-                  />
+                  <Label className="block">{t.runners.runnerPhoto}</Label>
+                  <div className="flex flex-col items-center gap-4">
+                    <ImageUpload
+                      bucket="runner-photos"
+                      currentImageUrl={editForm.photo_url}
+                      currentFocalPoint={{
+                        x: editForm.photo_focal_x,
+                        y: editForm.photo_focal_y,
+                      }}
+                      currentZoom={editForm.photo_zoom}
+                      currentCrop={
+                        editForm.photo_crop_x !== undefined &&
+                        editForm.photo_crop_y !== undefined
+                          ? {
+                              x: editForm.photo_crop_x,
+                              y: editForm.photo_crop_y,
+                            }
+                          : undefined
+                      }
+                      onUploadComplete={(
+                        url,
+                        path,
+                        focalPoint,
+                        zoom,
+                        cropPosition
+                      ) => {
+                        setEditForm({
+                          ...editForm,
+                          photo_url: url,
+                          photo_focal_x: focalPoint.x,
+                          photo_focal_y: focalPoint.y,
+                          photo_zoom: zoom,
+                          photo_crop_x: cropPosition?.x ?? 0,
+                          photo_crop_y: cropPosition?.y ?? 0,
+                        });
+                      }}
+                      onDelete={() => {
+                        setEditForm({
+                          ...editForm,
+                          photo_url: null,
+                          photo_focal_x: 50,
+                          photo_focal_y: 50,
+                          photo_crop_x: 0,
+                          photo_crop_y: 0,
+                          photo_zoom: 1.5,
+                        });
+                      }}
+                      cropShape="round"
+                      label={t.runners.uploadPhoto}
+                    />
+                  </div>
                 </div>
 
                 {/* Bio */}
                 <div className="space-y-2">
-                  <Label htmlFor="edit-bio">Bio</Label>
+                  <Label htmlFor="edit-bio">{t.runners.bio}</Label>
                   <Textarea
                     id="edit-bio"
                     value={editForm.bio}
@@ -306,14 +315,16 @@ export function EditRunnerModal({
                       setEditForm({ ...editForm, bio: e.target.value })
                     }
                     rows={3}
-                    placeholder="Runner bio..."
+                    placeholder={t.runners.bioPlaceholder}
                   />
                 </div>
 
                 {/* Social Links */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="edit-instagram">Instagram URL</Label>
+                    <Label htmlFor="edit-instagram">
+                      {t.runners.instagramUrl}
+                    </Label>
                     <Input
                       id="edit-instagram"
                       type="url"
@@ -328,7 +339,7 @@ export function EditRunnerModal({
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="edit-strava">Strava URL</Label>
+                    <Label htmlFor="edit-strava">{t.runners.stravaUrl}</Label>
                     <Input
                       id="edit-strava"
                       type="url"

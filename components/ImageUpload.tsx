@@ -14,6 +14,7 @@ import { Slider } from "@/components/ui/slider";
 import Image from "next/image";
 import Cropper from "react-easy-crop";
 import { Area } from "react-easy-crop";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 interface ImageUploadProps {
   bucket:
@@ -56,10 +57,12 @@ export function ImageUpload({
   hidePreview = false,
   compact = false,
 }: ImageUploadProps) {
+  const { t } = useLanguage();
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(
     currentImageUrl || null
   );
+  const [previewKey, setPreviewKey] = useState(0); // Force re-render of preview
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -144,14 +147,20 @@ export function ImageUpload({
       y: croppedArea.y + croppedArea.height / 2,
     };
 
-    setPreviewUrl(tempImageUrl);
+    // Add timestamp to force refresh when adjusting existing image
+    const urlWithTimestamp = tempImageUrl.includes("?")
+      ? `${tempImageUrl}&t=${Date.now()}`
+      : `${tempImageUrl}?t=${Date.now()}`;
+
+    setPreviewUrl(urlWithTimestamp);
+    setPreviewKey((prev) => prev + 1); // Force re-render
 
     // If tempImagePath is null, we're just adjusting existing image, use current URL
     const pathToUse = tempImagePath || currentImageUrl || "";
 
     // Pass cropAreaPixels to the parent - the API endpoint will handle cropping
     onUploadComplete(
-      tempImageUrl,
+      urlWithTimestamp,
       pathToUse,
       focalPoint,
       zoom,
@@ -256,7 +265,7 @@ export function ImageUpload({
                 className={compact ? "w-full justify-start" : ""}
               >
                 <Edit className="h-4 w-4 mr-1" />
-                Adjust Crop
+                {t.common.adjustCrop}
               </Button>
               {onDelete && (
                 <Button
@@ -268,7 +277,7 @@ export function ImageUpload({
                   className={compact ? "w-full justify-start" : ""}
                 >
                   <X className="h-4 w-4 mr-1" />
-                  Remove
+                  {t.common.remove}
                 </Button>
               )}
             </>
@@ -280,21 +289,38 @@ export function ImageUpload({
         )}
 
         {!hidePreview && previewUrl && (
-          <div className="relative w-full max-w-md aspect-video rounded-lg overflow-hidden border border-border bg-muted">
+          <div
+            className={`relative ${
+              cropShape === "round"
+                ? "w-32 h-32 rounded-full"
+                : "w-full max-w-md aspect-video rounded-lg"
+            } overflow-hidden border border-border bg-muted`}
+          >
             <Image
               src={previewUrl}
               alt="Preview"
               fill
               className="object-cover"
               unoptimized={previewUrl.startsWith("blob:")}
+              key={`preview-${previewKey}`}
             />
           </div>
         )}
 
         {!hidePreview && !previewUrl && (
-          <div className="relative w-full max-w-md aspect-video rounded-lg overflow-hidden border border-dashed border-border bg-muted flex items-center justify-center">
+          <div
+            className={`relative ${
+              cropShape === "round"
+                ? "w-32 h-32 rounded-full"
+                : "w-full max-w-md aspect-video rounded-lg"
+            } overflow-hidden border border-dashed border-border bg-muted flex items-center justify-center`}
+          >
             <div className="text-center">
-              <ImageIcon className="mx-auto h-12 w-12 text-muted-foreground mb-2" />
+              <ImageIcon
+                className={`mx-auto ${
+                  cropShape === "round" ? "h-8 w-8" : "h-12 w-12"
+                } text-muted-foreground mb-2`}
+              />
               <p className="text-sm text-muted-foreground">No image selected</p>
             </div>
           </div>
@@ -385,9 +411,11 @@ export function ImageUpload({
 
           <DialogFooter>
             <Button variant="outline" onClick={handleFocalPointCancel}>
-              Cancel
+              {t.common.cancel}
             </Button>
-            <Button onClick={handleFocalPointConfirm}>Confirm Crop</Button>
+            <Button onClick={handleFocalPointConfirm}>
+              {t.common.adjustCrop}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

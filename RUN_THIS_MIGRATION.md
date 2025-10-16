@@ -73,3 +73,4 @@ Both tables should have:
 - Multiple RLS policies for different user roles
 - Indexes for performance
 
+

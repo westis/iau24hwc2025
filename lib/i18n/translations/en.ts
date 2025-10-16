@@ -32,6 +32,8 @@ export const en: Translations = {
     manageNews: "Manage News",
     admin: "Admin",
     logout: "Logout",
+    adjustCrop: "Adjust Crop",
+    remove: "Remove",
   },
   home: {
     title: "IAU 24h World Championships 2025",
@@ -173,6 +175,13 @@ export const en: Translations = {
     saveChanges: "Save changes",
     unmatchConfirm:
       "Are you sure you want to unmatch this runner? This will remove the DUV ID and performance data.",
+    runnerPhoto: "Runner Photo",
+    uploadPhoto: "Upload Photo",
+    profileAndSocial: "Profile & Social",
+    bio: "Bio",
+    bioPlaceholder: "Runner bio...",
+    instagramUrl: "Instagram URL",
+    stravaUrl: "Strava URL",
   },
   teams: {
     title: "Teams",
@@ -319,7 +328,6 @@ export const en: Translations = {
     displayNamePlaceholder: "Your name",
     emailPlaceholder: "your@email.com",
     passwordPlaceholder: "••••••••",
-    passwordMinLength: "Minimum 6 characters",
     signingIn: "Signing in...",
     creatingAccount: "Creating account...",
     signUp: "Sign Up",
@@ -366,6 +374,14 @@ export const en: Translations = {
     failedToChangePassword: "Failed to change password",
     updating: "Updating...",
     uploadAvatar: "Upload Avatar",
+    deleteAccount: "Delete Account",
+    deleteAccountWarning:
+      "This will permanently delete your account and all associated data. This action cannot be undone.",
+    deleteAccountConfirm: "Type DELETE to confirm",
+    typeDeleteToConfirm: "Type 'DELETE' to confirm account deletion",
+    accountDeleted: "Account deleted successfully",
+    failedToDeleteAccount: "Failed to delete account",
+    deleting: "Deleting...",
   },
   live: {
     title: "Live",

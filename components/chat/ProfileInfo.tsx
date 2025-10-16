@@ -6,8 +6,13 @@ import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { ImageUpload } from "@/components/ImageUpload";
 import { Save, Loader2 } from "lucide-react";
 import type { Area } from "react-easy-crop";
@@ -25,7 +30,9 @@ export function ProfileInfo() {
   React.useEffect(() => {
     if (chatUser) {
       setDisplayName(chatUser.display_name);
-      setAvatarUrl(chatUser.avatar_url || "");
+      // Add timestamp to avatar URL to force refresh after updates
+      const url = chatUser.avatar_url || "";
+      setAvatarUrl(url ? `${url}?t=${Date.now()}` : "");
     }
   }, [chatUser]);
 
@@ -37,9 +44,11 @@ export function ProfileInfo() {
     cropPosition?: { x: number; y: number },
     cropAreaPixels?: Area | null
   ) => {
+    // ImageUpload already adds timestamp, just save it
     setAvatarUrl(url);
-    // Auto-save when avatar is uploaded
-    saveProfile(displayName, url);
+    // Save clean URL to database (remove timestamp)
+    const cleanUrl = url.split("?")[0];
+    saveProfile(displayName, cleanUrl);
   };
 
   const handleAvatarDelete = () => {
@@ -85,45 +94,25 @@ export function ProfileInfo() {
 
   if (!chatUser) return null;
 
-  const displayNameValue = displayName || chatUser.display_name;
-  const initials = displayNameValue
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-
   return (
     <Card>
       <CardHeader>
         <CardTitle>{t.chat.profile}</CardTitle>
-        <CardDescription>
-          {t.chat.updateProfilePicture}
-        </CardDescription>
+        <CardDescription>{t.chat.updateProfilePicture}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSave} className="space-y-6">
-          {/* Avatar Display */}
+          {/* Avatar Upload */}
           <div className="flex flex-col items-center gap-4">
-            <Avatar className="h-32 w-32">
-              {avatarUrl ? (
-                <AvatarImage src={avatarUrl} alt={displayNameValue} />
-              ) : null}
-              <AvatarFallback className="bg-primary text-primary-foreground text-3xl">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex gap-2">
-              <ImageUpload
-                bucket="chat-avatars"
-                currentImageUrl="" 
-                onUploadComplete={handleAvatarUpload}
-                onDelete={handleAvatarDelete}
-                cropShape="round"
-                aspectRatio={1}
-                label={t.chat.uploadAvatar}
-              />
-            </div>
+            <ImageUpload
+              bucket="chat-avatars"
+              currentImageUrl={avatarUrl}
+              onUploadComplete={handleAvatarUpload}
+              onDelete={handleAvatarDelete}
+              cropShape="round"
+              aspectRatio={1}
+              label={t.chat.uploadAvatar}
+            />
           </div>
 
           <div className="space-y-2">
@@ -138,7 +127,13 @@ export function ProfileInfo() {
           </div>
 
           {message && (
-            <div className={`text-sm ${message.includes(t.chat.failedToUpdateProfile) ? "text-destructive" : "text-green-600"}`}>
+            <div
+              className={`text-sm ${
+                message.includes(t.chat.failedToUpdateProfile)
+                  ? "text-destructive"
+                  : "text-green-600"
+              }`}
+            >
               {message}
             </div>
           )}
@@ -161,4 +156,3 @@ export function ProfileInfo() {
     </Card>
   );
 }
-

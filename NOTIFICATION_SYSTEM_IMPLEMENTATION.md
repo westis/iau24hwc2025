@@ -72,3 +72,4 @@ RESEND_FROM_EMAIL=noreply@ultramarathon.se
 - Better error handling and feedback
 
 
+

@@ -68,3 +68,4 @@ After running this migration:
 - That's fine! The `ON CONFLICT DO NOTHING` clause handles this
 - The migration is safe to run multiple times
 
+

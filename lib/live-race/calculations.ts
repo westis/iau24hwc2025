@@ -99,3 +99,4 @@ export function speedToPace(kmPerHour: number): number {
   return 3600 / kmPerHour;
 }
 
+
