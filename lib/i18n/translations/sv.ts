@@ -408,7 +408,8 @@ export const sv: Translations = {
     loadAll: "Ladda alla",
     of: "av",
     emptyWatchlistTitle: "Ingen favorit vald",
-    emptyWatchlistMessage: "Lägg till löpare i din favoritlista genom att klicka på stjärnan bredvid deras namn.",
+    emptyWatchlistMessage:
+      "Lägg till löpare i din favoritlista genom att klicka på stjärnan bredvid deras namn.",
     viewAllRunners: "Visa alla löpare",
   },
 };

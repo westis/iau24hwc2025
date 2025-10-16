@@ -449,7 +449,7 @@ export default function LivePage() {
                         {t.live?.emptyWatchlistTitle || "Ingen favorit vald"}
                       </h3>
                       <p className="text-muted-foreground mb-4">
-                        {t.live?.emptyWatchlistMessage || 
+                        {t.live?.emptyWatchlistMessage ||
                           "Lägg till löpare i din favoritlista genom att klicka på stjärnan bredvid deras namn."}
                       </p>
                       <Button
@@ -471,7 +471,7 @@ export default function LivePage() {
                       isInWatchlist={isInWatchlist}
                       showGenderRank={filter === "men" || filter === "women"}
                     />
-                    
+
                     {/* Pagination Controls */}
                     {hasMore && (
                       <div className="flex justify-center gap-3 mt-4">
@@ -483,17 +483,22 @@ export default function LivePage() {
                         </Button>
                         <Button
                           variant="outline"
-                          onClick={() => setVisibleCount(filteredEntries.length)}
+                          onClick={() =>
+                            setVisibleCount(filteredEntries.length)
+                          }
                         >
-                          {t.live?.loadAll || "Ladda alla"} ({filteredEntries.length})
+                          {t.live?.loadAll || "Ladda alla"} (
+                          {filteredEntries.length})
                         </Button>
                       </div>
                     )}
-                    
+
                     {/* Show count indicator */}
                     {filteredEntries.length > 0 && (
                       <div className="text-center text-sm text-muted-foreground mt-4">
-                        {t.live?.showing || "Visar"} {visibleEntries.length} {t.live?.of || "av"} {filteredEntries.length} {t.live?.runners || "löpare"}
+                        {t.live?.showing || "Visar"} {visibleEntries.length}{" "}
+                        {t.live?.of || "av"} {filteredEntries.length}{" "}
+                        {t.live?.runners || "löpare"}
                       </div>
                     )}
                   </>

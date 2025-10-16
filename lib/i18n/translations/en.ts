@@ -408,7 +408,8 @@ export const en: Translations = {
     loadAll: "Load All",
     of: "of",
     emptyWatchlistTitle: "No Favorites Selected",
-    emptyWatchlistMessage: "Add runners to your watchlist by clicking the star icon next to their name.",
+    emptyWatchlistMessage:
+      "Add runners to your watchlist by clicking the star icon next to their name.",
     viewAllRunners: "View All Runners",
   },
 };

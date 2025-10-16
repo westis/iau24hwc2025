@@ -1,6 +1,7 @@
 // app/api/race/laps/[bib]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { raceCache, cacheKeys } from "@/lib/live-race/cache";
 import type { LapTimesResponse } from "@/types/live-race";
 
 export async function GET(
@@ -17,6 +18,19 @@ export async function GET(
         { error: "Invalid bib number" },
         { status: 400 }
       );
+    }
+
+    // Check cache first (60 second TTL - laps don't change often)
+    const cacheKey = cacheKeys.laps(bibNumber);
+    const cached = raceCache.get<LapTimesResponse>(cacheKey);
+    
+    if (cached) {
+      return NextResponse.json(cached, {
+        headers: {
+          'X-Cache': 'HIT',
+          'Cache-Control': 'public, max-age=60, s-maxage=60, stale-while-revalidate=120',
+        },
+      });
     }
 
     // Get active race
@@ -78,7 +92,15 @@ export async function GET(
       laps: formattedLaps,
     };
 
-    return NextResponse.json(response);
+    // Cache the response (60 seconds - laps don't change often)
+    raceCache.set(cacheKey, response, 60);
+
+    return NextResponse.json(response, {
+      headers: {
+        'X-Cache': 'MISS',
+        'Cache-Control': 'public, max-age=60, s-maxage=60, stale-while-revalidate=120',
+      },
+    });
   } catch (error) {
     console.error("Error in lap times GET:", error);
     return NextResponse.json(

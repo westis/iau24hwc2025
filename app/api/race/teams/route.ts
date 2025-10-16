@@ -1,10 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { raceCache, cacheKeys } from "@/lib/live-race/cache";
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const gender = searchParams.get("gender") || "m"; // "m" or "w"
+
+    // Check cache first (30 second TTL)
+    const cacheKey = cacheKeys.teams(gender);
+    const cached = raceCache.get<any>(cacheKey);
+    
+    if (cached) {
+      return NextResponse.json(cached, {
+        headers: {
+          'X-Cache': 'HIT',
+          'Cache-Control': 'public, max-age=30, s-maxage=30, stale-while-revalidate=60',
+        },
+      });
+    }
 
     const supabase = await createClient();
 
@@ -79,11 +93,21 @@ export async function GET(request: NextRequest) {
     // Sort teams by total distance (descending)
     teams.sort((a, b) => b.teamTotal - a.teamTotal);
 
-    return NextResponse.json({
+    const response = {
       teams,
       gender,
       lastUpdate: new Date().toISOString(),
       totalTeams: teams.length,
+    };
+
+    // Cache the response (30 seconds)
+    raceCache.set(cacheKey, response, 30);
+
+    return NextResponse.json(response, {
+      headers: {
+        'X-Cache': 'MISS',
+        'Cache-Control': 'public, max-age=30, s-maxage=30, stale-while-revalidate=60',
+      },
     });
   } catch (error) {
     console.error("Error in teams endpoint:", error);

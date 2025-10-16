@@ -1,6 +1,7 @@
 // app/api/race/leaderboard/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { raceCache, cacheKeys } from "@/lib/live-race/cache";
 import type { LeaderboardResponse } from "@/types/live-race";
 
 export async function GET(request: NextRequest) {
@@ -8,6 +9,19 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
     const { searchParams } = new URL(request.url);
     const filter = searchParams.get("filter") || "overall"; // overall, men, women
+
+    // Check cache first (30 second TTL) - don't cache watchlist as it's user-specific
+    const cacheKey = cacheKeys.leaderboard(filter);
+    const cached = raceCache.get<LeaderboardResponse>(cacheKey);
+    
+    if (cached && filter !== "watchlist") {
+      return NextResponse.json(cached, {
+        headers: {
+          'X-Cache': 'HIT',
+          'Cache-Control': 'public, max-age=30, s-maxage=30, stale-while-revalidate=60',
+        },
+      });
+    }
 
     // Get active race
     const { data: activeRace } = await supabase
@@ -81,7 +95,17 @@ export async function GET(request: NextRequest) {
       totalRunners: formattedEntries.length,
     };
 
-    return NextResponse.json(response);
+    // Cache the response (30 seconds) - don't cache watchlist
+    if (filter !== "watchlist") {
+      raceCache.set(cacheKey, response, 30);
+    }
+
+    return NextResponse.json(response, {
+      headers: {
+        'X-Cache': 'MISS',
+        'Cache-Control': 'public, max-age=30, s-maxage=30, stale-while-revalidate=60',
+      },
+    });
   } catch (error) {
     console.error("Error in leaderboard GET:", error);
     return NextResponse.json(
