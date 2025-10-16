@@ -37,33 +37,25 @@ interface RaceMapProps {
   refreshInterval?: number; // Milliseconds (default 5000)
 }
 
-// Custom timing mat icon
+// Custom timing mat icon - pin/teardrop shape pointing to exact location
 const timingMatIcon = L.divIcon({
   html: `
-    <div style="
-      background-color: #10b981;
-      border: 3px solid white;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-    ">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
-        <circle cx="12" cy="10" r="3"/>
-      </svg>
-    </div>
+    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="50" viewBox="0 0 40 50" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));">
+      <path d="M20 0 C10 0, 2 8, 2 18 C2 28, 20 50, 20 50 C20 50, 38 28, 38 18 C38 8, 30 0, 20 0 Z" 
+            fill="#10b981" 
+            stroke="white" 
+            stroke-width="2"/>
+      <circle cx="20" cy="18" r="6" fill="white"/>
+      <text x="20" y="23" font-size="12" font-weight="bold" fill="#10b981" text-anchor="middle">S/F</text>
+    </svg>
   `,
   className: "timing-mat-marker",
-  iconSize: [40, 40],
-  iconAnchor: [20, 40],
-  popupAnchor: [0, -40],
+  iconSize: [40, 50],
+  iconAnchor: [20, 50], // Point at the bottom tip
+  popupAnchor: [0, -50],
 });
 
-export function RaceMap({ bibFilter, refreshInterval = 5000 }: RaceMapProps) {
+export function RaceMap({ bibFilter, refreshInterval = 10000 }: RaceMapProps) {
   const { t } = useLanguage();
   const [data, setData] = useState<PositionsResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -234,9 +226,9 @@ export function RaceMap({ bibFilter, refreshInterval = 5000 }: RaceMapProps) {
 
       {/* Runners Sidebar - On right side on large screens */}
       <div className="lg:w-80 w-full">
-        <RunnersSidebar 
-          runnersOnTrack={data.positions} 
-          runnersOnBreak={data.onBreak} 
+        <RunnersSidebar
+          runnersOnTrack={data.positions}
+          runnersOnBreak={data.onBreak}
         />
       </div>
     </div>

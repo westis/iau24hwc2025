@@ -138,11 +138,13 @@ export interface RunnerPosition {
   bib: number;
   name: string;
   country: string;
+  gender: "m" | "w";
   lat: number;
   lon: number;
   status: "racing" | "overdue" | "break";
   rank: number;
   genderRank: number;
+  distanceKm: number;
   timeSinceLastPassing: number;
   predictedLapTime: number;
   progressPercent: number;

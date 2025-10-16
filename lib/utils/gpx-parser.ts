@@ -201,25 +201,28 @@ export function rotateTrackToStart(
   ];
 
   // Recalculate distances from the new start point
-  const pointsWithDistance = rotatedPoints.map((point, index) => {
-    if (index === 0) {
-      return { ...point, distanceFromStart: 0 };
+  const pointsWithDistance: typeof track.points = [];
+  
+  for (let i = 0; i < rotatedPoints.length; i++) {
+    const point = rotatedPoints[i];
+    
+    if (i === 0) {
+      pointsWithDistance.push({ ...point, distanceFromStart: 0 });
+    } else {
+      const prevPoint = pointsWithDistance[i - 1]; // Use newly calculated point!
+      const segmentDistance = haversineDistance(
+        prevPoint.lat,
+        prevPoint.lon,
+        point.lat,
+        point.lon
+      );
+      
+      pointsWithDistance.push({
+        ...point,
+        distanceFromStart: prevPoint.distanceFromStart + segmentDistance,
+      });
     }
-
-    const prevPoint = rotatedPoints[index - 1];
-    const segmentDistance = haversineDistance(
-      prevPoint.lat,
-      prevPoint.lon,
-      point.lat,
-      point.lon
-    );
-
-    return {
-      ...point,
-      distanceFromStart:
-        (rotatedPoints[index - 1].distanceFromStart || 0) + segmentDistance,
-    };
-  });
+  }
 
   const totalDistance =
     pointsWithDistance[pointsWithDistance.length - 1].distanceFromStart || 0;
@@ -241,25 +244,28 @@ export function reverseTrack(track: GPXTrack): GPXTrack {
   const reversedPoints = [...track.points].reverse();
 
   // Recalculate distances from the new start point
-  const pointsWithDistance = reversedPoints.map((point, index) => {
-    if (index === 0) {
-      return { ...point, distanceFromStart: 0 };
+  const pointsWithDistance: typeof track.points = [];
+  
+  for (let i = 0; i < reversedPoints.length; i++) {
+    const point = reversedPoints[i];
+    
+    if (i === 0) {
+      pointsWithDistance.push({ ...point, distanceFromStart: 0 });
+    } else {
+      const prevPoint = pointsWithDistance[i - 1]; // Use newly calculated point!
+      const segmentDistance = haversineDistance(
+        prevPoint.lat,
+        prevPoint.lon,
+        point.lat,
+        point.lon
+      );
+      
+      pointsWithDistance.push({
+        ...point,
+        distanceFromStart: prevPoint.distanceFromStart + segmentDistance,
+      });
     }
-
-    const prevPoint = reversedPoints[index - 1];
-    const segmentDistance = haversineDistance(
-      prevPoint.lat,
-      prevPoint.lon,
-      point.lat,
-      point.lon
-    );
-
-    return {
-      ...point,
-      distanceFromStart:
-        (reversedPoints[index - 1].distanceFromStart || 0) + segmentDistance,
-    };
-  });
+  }
 
   const totalDistance =
     pointsWithDistance[pointsWithDistance.length - 1].distanceFromStart || 0;

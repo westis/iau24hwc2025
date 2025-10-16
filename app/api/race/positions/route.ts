@@ -151,10 +151,8 @@ export async function GET(request: NextRequest) {
         };
 
         console.log(
-          `GPX track processed: timing mat at point ${
-            closestPoint.index
-          }, ${closestPoint.distance.toFixed(2)}m from track, ${
-            raceConfig.reverse_track_direction ? "REVERSED" : "normal direction"
+          `GPX track: ${track.totalDistance.toFixed(0)}m, ${track.points.length} points, timing mat ${closestPoint.distance.toFixed(1)}m from track, ${
+            raceConfig.reverse_track_direction ? "REVERSED" : "normal"
           }`
         );
       } catch (error) {
