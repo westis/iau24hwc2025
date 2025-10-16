@@ -151,7 +151,11 @@ export async function GET(request: NextRequest) {
         };
 
         console.log(
-          `GPX track: ${track.totalDistance.toFixed(0)}m, ${track.points.length} points, timing mat ${closestPoint.distance.toFixed(1)}m from track, ${
+          `GPX track: ${track.totalDistance.toFixed(0)}m, ${
+            track.points.length
+          } points, timing mat ${closestPoint.distance.toFixed(
+            1
+          )}m from track, ${
             raceConfig.reverse_track_direction ? "REVERSED" : "normal"
           }`
         );

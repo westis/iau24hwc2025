@@ -407,6 +407,7 @@ export const en: Translations = {
     men: "Men",
     women: "Women",
     watchlist: "Watchlist",
+    view: "View",
     searchPlaceholder: "Search by name, bib, or country...",
     status: "Status",
     totalRunners: "Total Runners",

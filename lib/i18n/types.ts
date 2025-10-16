@@ -399,6 +399,7 @@ export interface Translations {
     men: string;
     women: string;
     watchlist: string;
+    view: string;
     searchPlaceholder: string;
     status: string;
     totalRunners: string;
@@ -481,5 +482,15 @@ export interface Translations {
     team: string;
     runnerOverdueMessage: string;
     ago: string;
+    noRunnersOnTrack: string;
+    loadingMap: string;
+    legend: string;
+    onCourse: string;
+    startFinishLine: string;
+    progress: string;
+    timeSinceLastPass: string;
+    predictedLapTime: string;
+    onBreak: string;
+    noRunnersOnBreak: string;
   };
 }

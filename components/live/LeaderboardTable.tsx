@@ -120,7 +120,7 @@ export function LeaderboardTable({
             <TableHead className="w-12 px-1 sm:px-2">
               {t.live?.rank || "Plac."}
             </TableHead>
-            <TableHead className="w-12 px-1 sm:px-2">
+            <TableHead className="w-12 px-1 sm:px-2 hidden sm:table-cell">
               {t.live?.bib || "Nr"}
             </TableHead>
             <TableHead className="px-2">{t.live?.runner || "Löpare"}</TableHead>
@@ -172,7 +172,7 @@ export function LeaderboardTable({
                 <TableCell className="font-medium px-1 sm:px-2 py-2">
                   {showGenderRank ? entry.genderRank : entry.rank}
                 </TableCell>
-                <TableCell className="font-mono px-1 sm:px-2 py-2 text-sm">
+                <TableCell className="font-mono px-1 sm:px-2 py-2 text-sm hidden sm:table-cell">
                   {entry.bib}
                 </TableCell>
                 <TableCell className="px-2 py-2">
@@ -251,6 +251,14 @@ export function LeaderboardTable({
                   <TableCell colSpan={11} className="bg-muted/30 p-4">
                     {/* Hidden column info for narrow screens */}
                     <div className="mb-4 grid grid-cols-2 gap-3 text-sm">
+                      <div className="sm:hidden">
+                        <div className="text-muted-foreground text-xs">
+                          {t.live?.bib || "Nr"}
+                        </div>
+                        <div className="font-mono">
+                          {entry.bib}
+                        </div>
+                      </div>
                       <div className="sm:hidden">
                         <div className="text-muted-foreground text-xs">
                           {t.live?.lastLap || "Senaste varv"}
