@@ -23,6 +23,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Star, RefreshCw, Users, Grid3x3, List } from "lucide-react";
 import ReactCountryFlag from "react-country-flag";
 import { getCountryCodeForFlag } from "@/lib/utils/country-codes";
+import { PageTitle } from "@/components/PageTitle";
 import type { RaceInfo } from "@/types/race";
 import type { CountdownResponse, NextLapPrediction } from "@/types/live-race";
 
@@ -171,9 +172,11 @@ export default function CountdownPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {simulationMode && <SimulationBanner />}
-      <LiveNavigation />
+    <>
+      <PageTitle title={`${t.live?.countdown || "Countdown"} | ${t.live?.title || "Live"}`} />
+      <div className="min-h-screen bg-background">
+        {simulationMode && <SimulationBanner />}
+        <LiveNavigation />
       <div className="container mx-auto py-4 px-4 space-y-4">
         {/* Header */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -375,6 +378,7 @@ export default function CountdownPage() {
         </Tabs>
       </div>
     </div>
+    </>
   );
 }
 

@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { RaceClock } from "@/components/live/RaceClock";
 import { LiveNavigation } from "@/components/live/LiveNavigation";
 import { SimulationBanner } from "@/components/live/SimulationBanner";
+import { PageTitle } from "@/components/PageTitle";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 import {
   Card,
   CardContent,
@@ -14,6 +16,7 @@ import {
 import type { RaceInfo } from "@/types/race";
 
 export default function MapPage() {
+  const { t } = useLanguage();
   const [raceInfo, setRaceInfo] = useState<RaceInfo | null>(null);
   const [loadingRace, setLoadingRace] = useState(true);
   const [simulationMode, setSimulationMode] = useState(false);
@@ -60,9 +63,11 @@ export default function MapPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {simulationMode && <SimulationBanner />}
-      <LiveNavigation />
+    <>
+      <PageTitle title={`${t.live?.map || "Map"} | ${t.live?.title || "Live"}`} />
+      <div className="min-h-screen bg-background">
+        {simulationMode && <SimulationBanner />}
+        <LiveNavigation />
       <div className="container mx-auto py-4 px-4 space-y-6">
         <RaceClock race={raceInfo} />
 
@@ -98,5 +103,6 @@ export default function MapPage() {
         </Card>
       </div>
     </div>
+    </>
   );
 }

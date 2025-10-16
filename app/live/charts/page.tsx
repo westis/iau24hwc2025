@@ -20,6 +20,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { PageTitle } from "@/components/PageTitle";
 import type { RaceInfo } from "@/types/race";
 
 // Empty array outside component to avoid recreating on every render
@@ -137,10 +138,12 @@ export default function ChartsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {simulationMode && <SimulationBanner />}
-      <LiveNavigation />
-      <div className="container mx-auto py-4 px-4 space-y-4">
+    <>
+      <PageTitle title={`${t.live?.charts || "Charts"} | ${t.live?.title || "Live"}`} />
+      <div className="min-h-screen bg-background">
+        {simulationMode && <SimulationBanner />}
+        <LiveNavigation />
+        <div className="container mx-auto py-4 px-4 space-y-4">
         {/* Compact Header: Race Clock + Runner Selection */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-card border rounded-lg p-4">
           <div className="flex-1">
@@ -264,5 +267,6 @@ export default function ChartsPage() {
         </Tabs>
       </div>
     </div>
+    </>
   );
 }
