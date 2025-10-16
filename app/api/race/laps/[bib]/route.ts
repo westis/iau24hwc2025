@@ -23,12 +23,13 @@ export async function GET(
     // Check cache first (60 second TTL - laps don't change often)
     const cacheKey = cacheKeys.laps(bibNumber);
     const cached = raceCache.get<LapTimesResponse>(cacheKey);
-    
+
     if (cached) {
       return NextResponse.json(cached, {
         headers: {
-          'X-Cache': 'HIT',
-          'Cache-Control': 'public, max-age=60, s-maxage=60, stale-while-revalidate=120',
+          "X-Cache": "HIT",
+          "Cache-Control":
+            "public, max-age=60, s-maxage=60, stale-while-revalidate=120",
         },
       });
     }
@@ -97,8 +98,9 @@ export async function GET(
 
     return NextResponse.json(response, {
       headers: {
-        'X-Cache': 'MISS',
-        'Cache-Control': 'public, max-age=60, s-maxage=60, stale-while-revalidate=120',
+        "X-Cache": "MISS",
+        "Cache-Control":
+          "public, max-age=60, s-maxage=60, stale-while-revalidate=120",
       },
     });
   } catch (error) {

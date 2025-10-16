@@ -20,13 +20,13 @@ class RaceDataCache {
 
   get<T>(key: string): T | null {
     const entry = this.cache.get(key);
-    
+
     if (!entry) {
       return null;
     }
 
     const age = Date.now() - entry.timestamp;
-    
+
     if (age > entry.ttl) {
       // Cache expired
       this.cache.delete(key);
@@ -66,6 +66,5 @@ export const cacheKeys = {
   laps: (bib: number) => `laps:${bib}`,
   teams: (gender: string) => `teams:${gender}`,
   chartData: (bibs: string) => `chart:${bibs}`,
-  config: () => 'config',
+  config: () => "config",
 };
-

@@ -10,12 +10,13 @@ export async function GET(request: NextRequest) {
     // Check cache first (30 second TTL)
     const cacheKey = cacheKeys.teams(gender);
     const cached = raceCache.get<any>(cacheKey);
-    
+
     if (cached) {
       return NextResponse.json(cached, {
         headers: {
-          'X-Cache': 'HIT',
-          'Cache-Control': 'public, max-age=30, s-maxage=30, stale-while-revalidate=60',
+          "X-Cache": "HIT",
+          "Cache-Control":
+            "public, max-age=30, s-maxage=30, stale-while-revalidate=60",
         },
       });
     }
@@ -105,8 +106,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response, {
       headers: {
-        'X-Cache': 'MISS',
-        'Cache-Control': 'public, max-age=30, s-maxage=30, stale-while-revalidate=60',
+        "X-Cache": "MISS",
+        "Cache-Control":
+          "public, max-age=30, s-maxage=30, stale-while-revalidate=60",
       },
     });
   } catch (error) {
