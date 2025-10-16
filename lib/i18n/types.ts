@@ -258,6 +258,10 @@ export interface Translations {
   };
   admin: {
     manageNews: string;
+    editRaceInfo: string;
+    liveRaceControl: string;
+    sendNotifications: string;
+    chatAdmin: string;
   };
   notifications: {
     subscribe: string;

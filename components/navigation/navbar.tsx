@@ -32,11 +32,11 @@ export function Navbar() {
 
   const adminNavItems = [
     { href: "/match", label: t.common.match },
-    { href: "/admin/news", label: t.common.manageNews },
-    { href: "/admin/race", label: "Edit Race Info" },
-    { href: "/admin/race-live", label: "Live Race Control" },
-    { href: "/admin/notifications", label: "Send Notifications" },
-    { href: "/admin/chat", label: "Chat Admin" },
+    { href: "/admin/news", label: t.admin.manageNews },
+    { href: "/admin/race", label: t.admin.editRaceInfo },
+    { href: "/admin/race-live", label: t.admin.liveRaceControl },
+    { href: "/admin/notifications", label: t.admin.sendNotifications },
+    { href: "/admin/chat", label: t.admin.chatAdmin },
   ];
 
   return (

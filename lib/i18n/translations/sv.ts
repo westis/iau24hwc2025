@@ -263,6 +263,10 @@ export const sv: Translations = {
   },
   admin: {
     manageNews: "Hantera nyheter",
+    editRaceInfo: "Redigera tävlingsinformation",
+    liveRaceControl: "Live-tävlingskontroll",
+    sendNotifications: "Skicka notiser",
+    chatAdmin: "Chatt-admin",
   },
   notifications: {
     subscribe: "Prenumerera på nyhetsuppdateringar",

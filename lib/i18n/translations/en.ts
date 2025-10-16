@@ -263,6 +263,10 @@ export const en: Translations = {
   },
   admin: {
     manageNews: "Manage News",
+    editRaceInfo: "Edit Race Info",
+    liveRaceControl: "Live Race Control",
+    sendNotifications: "Send Notifications",
+    chatAdmin: "Chat Admin",
   },
   notifications: {
     subscribe: "Subscribe to get news updates",
