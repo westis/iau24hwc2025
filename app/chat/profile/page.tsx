@@ -2,7 +2,8 @@
 
 import { useSupabaseAuth } from "@/lib/auth/supabase-auth-context";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
-import { ProfileSettings } from "@/components/chat/ProfileSettings";
+import { ProfileInfo } from "@/components/chat/ProfileInfo";
+import { AccountSettings } from "@/components/chat/AccountSettings";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, User, Settings } from "lucide-react";
@@ -80,11 +81,11 @@ function ProfilePageContent() {
           </TabsList>
 
           <TabsContent value="profile">
-            <ProfileSettings />
+            <ProfileInfo />
           </TabsContent>
 
           <TabsContent value="settings">
-            <ProfileSettings />
+            <AccountSettings />
           </TabsContent>
         </Tabs>
       </div>
@@ -94,11 +95,13 @@ function ProfilePageContent() {
 
 export default function ProfilePage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-foreground"></div>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-foreground"></div>
+        </div>
+      }
+    >
       <ProfilePageContent />
     </Suspense>
   );
