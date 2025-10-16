@@ -105,7 +105,7 @@ export function DistanceChart({
         </CardDescription>
       </CardHeader>
       <CardContent className="h-32 flex items-center justify-center text-muted-foreground">
-        {t.common?.comingSoon || "Replaced by DistancePaceChart and GapAnalysisChart"}
+        {"Replaced by DistancePaceChart and GapAnalysisChart"}
       </CardContent>
     </Card>
   );
