@@ -345,8 +345,6 @@ export interface Translations {
     profile: string;
     settings: string;
     updateProfilePicture: string;
-    displayName: string;
-    displayNamePlaceholder: string;
     saveChanges: string;
     saving: string;
     profileUpdated: string;

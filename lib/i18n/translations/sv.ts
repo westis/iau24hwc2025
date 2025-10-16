@@ -350,8 +350,6 @@ export const sv: Translations = {
     profile: "Profil",
     settings: "Inställningar",
     updateProfilePicture: "Uppdatera din profilbild och visningsnamn",
-    displayName: "Visningsnamn",
-    displayNamePlaceholder: "Ditt visningsnamn",
     saveChanges: "Spara ändringar",
     saving: "Sparar...",
     profileUpdated: "Profil uppdaterad!",

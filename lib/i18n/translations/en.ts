@@ -350,8 +350,6 @@ export const en: Translations = {
     profile: "Profile",
     settings: "Settings",
     updateProfilePicture: "Update your profile picture and display name",
-    displayName: "Display Name",
-    displayNamePlaceholder: "Your display name",
     saveChanges: "Save Changes",
     saving: "Saving...",
     profileUpdated: "Profile updated!",
