@@ -395,7 +395,12 @@ export interface Translations {
     paceAnalysisComingSoon: string;
     loading: string;
     noTeamsFound: string;
+    compact: string;
+    loadMore: string;
+    loadAll: string;
+    of: string;
     emptyWatchlistTitle: string;
     emptyWatchlistMessage: string;
+    viewAllRunners: string;
   };
 }
