@@ -82,6 +82,11 @@ export async function PATCH(request: NextRequest) {
       currentRaceTimeSec,
       simulationMode,
       simulationStartTime,
+      timingMatLat,
+      timingMatLon,
+      breakDetectionThresholdMultiplier,
+      overdueDisplaySeconds,
+      reverseTrackDirection,
     } = body;
 
     // Get active race
@@ -112,6 +117,17 @@ export async function PATCH(request: NextRequest) {
       updates.simulation_mode = simulationMode;
     if (simulationStartTime)
       updates.simulation_start_time = simulationStartTime;
+    if (typeof timingMatLat !== "undefined")
+      updates.timing_mat_lat = timingMatLat;
+    if (typeof timingMatLon !== "undefined")
+      updates.timing_mat_lon = timingMatLon;
+    if (typeof breakDetectionThresholdMultiplier !== "undefined")
+      updates.break_detection_threshold_multiplier =
+        breakDetectionThresholdMultiplier;
+    if (typeof overdueDisplaySeconds !== "undefined")
+      updates.overdue_display_seconds = overdueDisplaySeconds;
+    if (typeof reverseTrackDirection !== "undefined")
+      updates.reverse_track_direction = reverseTrackDirection;
 
     const { data, error } = await supabase
       .from("race_config")

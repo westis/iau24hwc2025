@@ -473,8 +473,10 @@ function CountdownTable({
               // Determine row background color based on time until timing mat
               const getRowColorClass = () => {
                 if (isOverdueTimingMat) return "bg-red-50 dark:bg-red-950/20";
-                if (currentTimeUntilTimingMat <= 60) return "bg-green-50 dark:bg-green-950/20"; // <= 1 minute
-                if (currentTimeUntilTimingMat <= 120) return "bg-yellow-50 dark:bg-yellow-950/20"; // <= 2 minutes
+                if (currentTimeUntilTimingMat <= 60)
+                  return "bg-green-50 dark:bg-green-950/20"; // <= 1 minute
+                if (currentTimeUntilTimingMat <= 120)
+                  return "bg-yellow-50 dark:bg-yellow-950/20"; // <= 2 minutes
                 return "";
               };
 

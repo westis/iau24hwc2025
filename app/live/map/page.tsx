@@ -1,25 +1,100 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { RaceClock } from "@/components/live/RaceClock";
 import { LiveNavigation } from "@/components/live/LiveNavigation";
 import { SimulationBanner } from "@/components/live/SimulationBanner";
 import { PageTitle } from "@/components/PageTitle";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { useWatchlist } from "@/lib/hooks/useWatchlist";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+import ReactCountryFlag from "react-country-flag";
+import { getCountryCodeForFlag } from "@/lib/utils/country-codes";
 import type { RaceInfo } from "@/types/race";
+import dynamic from "next/dynamic";
+
+// Dynamically import RaceMap to avoid SSR issues with Leaflet
+const RaceMap = dynamic(
+  () =>
+    import("@/components/live/RaceMap").then((mod) => ({
+      default: mod.RaceMap,
+    })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center h-[600px] bg-muted/20 rounded-lg">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground mx-auto mb-2"></div>
+          <p className="text-sm text-muted-foreground">Loading map...</p>
+        </div>
+      </div>
+    ),
+  }
+);
 
 export default function MapPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { t } = useLanguage();
+  const { watchlist } = useWatchlist();
   const [raceInfo, setRaceInfo] = useState<RaceInfo | null>(null);
   const [loadingRace, setLoadingRace] = useState(true);
   const [simulationMode, setSimulationMode] = useState(false);
+
+  // Selection mode state - initialize from URL parameters
+  const [selectionMode, setSelectionMode] = useState<
+    "top6" | "watchlist" | "country"
+  >((searchParams?.get("mode") as "top6" | "watchlist" | "country") || "top6");
+  const [selectedGender, setSelectedGender] = useState<"m" | "w">(
+    (searchParams?.get("gender") as "m" | "w") || "m"
+  );
+  const [selectedCountry, setSelectedCountry] = useState<string>(
+    searchParams?.get("country") || ""
+  );
+  const [countries, setCountries] = useState<string[]>([]);
+  const [leaderboardData, setLeaderboardData] = useState<any>(null);
+
+  // Update URL parameters when filters change
+  const updateURL = (updates: Record<string, string>) => {
+    const params = new URLSearchParams(searchParams?.toString() || "");
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value) {
+        params.set(key, value);
+      } else {
+        params.delete(key);
+      }
+    });
+    router.push(`/live/map?${params.toString()}`, { scroll: false });
+  };
+
+  // Fetch leaderboard data once for filtering
+  const fetchLeaderboardData = async () => {
+    try {
+      const res = await fetch("/api/race/leaderboard?filter=overall");
+      if (res.ok) {
+        const data = await res.json();
+        setLeaderboardData(data);
+
+        // Extract countries
+        const uniqueCountries = Array.from(
+          new Set(data.entries.map((e: any) => e.country))
+        ).sort();
+        setCountries(uniqueCountries as string[]);
+      }
+    } catch (err) {
+      console.error("Failed to fetch leaderboard:", err);
+    }
+  };
 
   useEffect(() => {
     async function fetchRaceInfo() {
@@ -46,10 +121,42 @@ export default function MapPage() {
 
     fetchRaceInfo();
     fetchSimulationConfig();
+    fetchLeaderboardData();
 
     const interval = setInterval(fetchSimulationConfig, 10000);
     return () => clearInterval(interval);
   }, []);
+
+  // Calculate filtered bibs based on selection mode
+  const getFilteredBibs = (): number[] | undefined => {
+    if (selectionMode === "watchlist") {
+      return watchlist.length > 0 ? watchlist : undefined;
+    }
+
+    if (selectionMode === "top6" && leaderboardData) {
+      const genderFilter = selectedGender === "m" ? "m" : "w";
+      const filtered = leaderboardData.entries
+        .filter((e) => e.gender === genderFilter)
+        .slice(0, 6)
+        .map((e) => e.bib);
+      return filtered.length > 0 ? filtered : undefined;
+    }
+
+    if (selectionMode === "country" && selectedCountry && leaderboardData) {
+      const filtered = leaderboardData.entries
+        .filter(
+          (e) =>
+            e.country === selectedCountry &&
+            (selectedGender === "m" ? e.gender === "m" : e.gender === "w")
+        )
+        .map((e) => e.bib);
+      return filtered.length > 0 ? filtered : undefined;
+    }
+
+    return undefined;
+  };
+
+  const filteredBibs = getFilteredBibs();
 
   if (loadingRace || !raceInfo) {
     return (
@@ -70,39 +177,122 @@ export default function MapPage() {
       <div className="min-h-screen bg-background">
         {simulationMode && <SimulationBanner />}
         <LiveNavigation />
-        <div className="container mx-auto py-4 px-4 space-y-6">
+        <div className="container mx-auto py-4 px-4 space-y-4">
           <RaceClock race={raceInfo} />
 
+          {/* Runner Selection Controls */}
           <Card>
-            <CardHeader>
-              <CardTitle>Virtual Course Map</CardTitle>
-              <CardDescription>
-                Live runner positions on the course (Coming Soon)
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="h-96 flex items-center justify-center text-muted-foreground">
-              <div className="text-center space-y-2">
-                <p>
-                  Virtual map with live runner tracking will be displayed here
-                </p>
-                <p className="text-sm">
-                  Upload course GPX file in admin panel to enable this feature
-                </p>
+            <CardContent className="pt-6">
+              <div className="flex flex-col sm:flex-row gap-4 items-end">
+                {/* Selection Mode Tabs */}
+                <div className="flex-1 min-w-[200px]">
+                  <Label className="text-sm font-medium mb-2 block">
+                    {t.live?.runnerSelection || "Select Runners"}
+                  </Label>
+                  <Tabs
+                    value={selectionMode}
+                    onValueChange={(v) => {
+                      const mode = v as "top6" | "watchlist" | "country";
+                      setSelectionMode(mode);
+                      updateURL({ mode });
+                    }}
+                  >
+                    <TabsList className="w-full">
+                      <TabsTrigger value="top6" className="flex-1">
+                        {t.live?.top6Overall || "Top 6"}
+                      </TabsTrigger>
+                      <TabsTrigger value="watchlist" className="flex-1">
+                        {t.live?.watchlist || "Watchlist"}{" "}
+                        {watchlist.length > 0 && `(${watchlist.length})`}
+                      </TabsTrigger>
+                      <TabsTrigger value="country" className="flex-1">
+                        {t.runners?.country || "Country"}
+                      </TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                </div>
+
+                {/* Gender Selection (for Top 6 and Country) */}
+                {(selectionMode === "top6" || selectionMode === "country") && (
+                  <div className="w-full sm:w-auto sm:min-w-[180px]">
+                    <Label className="text-sm font-medium mb-2 block">
+                      {t.common?.gender || "Gender"}
+                    </Label>
+                    <Tabs
+                      value={selectedGender}
+                      onValueChange={(v) => {
+                        const gender = v as "m" | "w";
+                        setSelectedGender(gender);
+                        updateURL({ gender });
+                      }}
+                    >
+                      <TabsList className="w-full">
+                        <TabsTrigger value="m" className="flex-1">
+                          {t.common?.men || "Men"}
+                        </TabsTrigger>
+                        <TabsTrigger value="w" className="flex-1">
+                          {t.common?.women || "Women"}
+                        </TabsTrigger>
+                      </TabsList>
+                    </Tabs>
+                  </div>
+                )}
+
+                {/* Country Selection (only for Country mode) */}
+                {selectionMode === "country" && (
+                  <div className="w-full sm:w-auto sm:min-w-[200px]">
+                    <Label className="text-sm font-medium mb-2 block">
+                      {t.runners?.country || "Country"}
+                    </Label>
+                    <Select
+                      value={selectedCountry}
+                      onValueChange={(value) => {
+                        setSelectedCountry(value);
+                        updateURL({ country: value });
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={t.live?.selectTeam || "Select a country"}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {countries.map((country) => (
+                          <SelectItem key={country} value={country}>
+                            <div className="flex items-center gap-2">
+                              <ReactCountryFlag
+                                countryCode={getCountryCodeForFlag(country)}
+                                svg
+                                style={{ width: "1.5em", height: "1em" }}
+                              />
+                              {country}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {/* Empty state messages - shown below filters on mobile, inline on desktop */}
+                {selectionMode === "watchlist" && watchlist.length === 0 && (
+                  <div className="text-sm text-muted-foreground sm:flex-1 text-center sm:text-left py-2">
+                    {t.live?.emptyWatchlistMessage ||
+                      "Add runners to your watchlist"}
+                  </div>
+                )}
+
+                {selectionMode === "country" && !selectedCountry && (
+                  <div className="text-sm text-muted-foreground sm:flex-1 text-center sm:text-left py-2">
+                    {t.live?.selectTeamToView || "Select a country"}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Crew Countdown</CardTitle>
-              <CardDescription>
-                Timing point countdown for watchlist runners (Coming Soon)
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="h-48 flex items-center justify-center text-muted-foreground">
-              Crew countdown feature will be added here
-            </CardContent>
-          </Card>
+          {/* Live Race Map */}
+          <RaceMap bibFilter={filteredBibs} />
         </div>
       </div>
     </>

@@ -8,6 +8,26 @@ import { WeatherForecast } from "@/components/live/WeatherForecast";
 import { LiveNavigation } from "@/components/live/LiveNavigation";
 import { LiveTeamCard } from "@/components/live/LiveTeamCard";
 import { SimulationBanner } from "@/components/live/SimulationBanner";
+import dynamic from "next/dynamic";
+
+// Dynamically import RaceMap to avoid SSR issues with Leaflet
+const RaceMap = dynamic(
+  () =>
+    import("@/components/live/RaceMap").then((mod) => ({
+      default: mod.RaceMap,
+    })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center h-[600px] bg-muted/20 rounded-lg">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground mx-auto mb-2"></div>
+          <p className="text-sm text-muted-foreground">Loading map...</p>
+        </div>
+      </div>
+    ),
+  }
+);
 import {
   useLeaderboard,
   type LeaderboardFilter,
@@ -59,8 +79,9 @@ function LivePageContent() {
   const { t, language } = useLanguage();
 
   // Initialize state from URL parameters
-  const [viewMode, setViewMode] = useState<"individuals" | "teams">(
-    (searchParams?.get("view") as "individuals" | "teams") || "individuals"
+  const [viewMode, setViewMode] = useState<"individuals" | "teams" | "map">(
+    (searchParams?.get("view") as "individuals" | "teams" | "map") ||
+      "individuals"
   );
   const [filter, setFilter] = useState<LeaderboardFilter>(
     (searchParams?.get("filter") as LeaderboardFilter) || "overall"
@@ -234,7 +255,7 @@ function LivePageContent() {
             <Tabs
               value={viewMode}
               onValueChange={(v) => {
-                const newMode = v as "individuals" | "teams";
+                const newMode = v as "individuals" | "teams" | "map";
                 setViewMode(newMode);
                 updateURL({ view: newMode });
               }}
@@ -246,6 +267,7 @@ function LivePageContent() {
                 <TabsTrigger value="teams">
                   {t.live?.teams || "Lag"}
                 </TabsTrigger>
+                <TabsTrigger value="map">{t.live?.map || "Map"}</TabsTrigger>
               </TabsList>
             </Tabs>
             <RaceClock race={raceInfo} />
@@ -700,6 +722,12 @@ function LivePageContent() {
                   ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {viewMode === "map" && (
+            <div className="space-y-4">
+              <RaceMap />
             </div>
           )}
 

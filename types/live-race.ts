@@ -132,3 +132,35 @@ export interface CountdownResponse {
   lapDistance: number; // km
   lastUpdate: string;
 }
+
+// Map-related types
+export interface RunnerPosition {
+  bib: number;
+  name: string;
+  country: string;
+  lat: number;
+  lon: number;
+  status: "racing" | "overdue" | "break";
+  rank: number;
+  genderRank: number;
+  timeSinceLastPassing: number;
+  predictedLapTime: number;
+  progressPercent: number;
+  timeOverdue?: number;
+}
+
+export interface MapConfig {
+  timingMatLat: number;
+  timingMatLon: number;
+  breakThreshold: number;
+  overdueDisplaySeconds: number;
+  courseGpxUrl: string;
+}
+
+export interface PositionsResponse {
+  positions: RunnerPosition[];
+  onBreak: RunnerPosition[];
+  timingMatPosition: { lat: number; lon: number };
+  courseTrack: { lat: number; lon: number }[];
+  lastUpdate: string;
+}

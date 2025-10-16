@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,6 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/lib/hooks/use-toast";
 import {
   Upload,
@@ -20,13 +22,68 @@ import {
   Square,
   Database,
   Download,
+  MapPin,
 } from "lucide-react";
+
+const TimingMatLocationPicker = dynamic(
+  () =>
+    import("@/components/admin/TimingMatLocationPicker").then((mod) => ({
+      default: mod.TimingMatLocationPicker,
+    })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-[400px] bg-muted/20 rounded-lg flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground mx-auto mb-2"></div>
+          <p className="text-sm text-muted-foreground">Loading map...</p>
+        </div>
+      </div>
+    ),
+  }
+);
 
 export default function RaceLiveAdminPage() {
   const [hours, setHours] = useState("12");
   const [loading, setLoading] = useState(false);
   const [jsonData, setJsonData] = useState("");
+  const [courseDistance, setCourseDistance] = useState("0.821");
+  const [crewSpotOffset, setCrewSpotOffset] = useState("0");
+  const [timingMatLat, setTimingMatLat] = useState("");
+  const [timingMatLon, setTimingMatLon] = useState("");
+  const [breakThreshold, setBreakThreshold] = useState("2.5");
+  const [overdueDisplay, setOverdueDisplay] = useState("180");
+  const [reverseTrackDirection, setReverseTrackDirection] = useState(false);
   const { toast } = useToast();
+
+  // Fetch current config values
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const res = await fetch("/api/race/config");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.course_distance_km)
+            setCourseDistance(String(data.course_distance_km));
+          if (data.crew_spot_offset_meters !== undefined)
+            setCrewSpotOffset(String(data.crew_spot_offset_meters));
+          if (data.timing_mat_lat) setTimingMatLat(String(data.timing_mat_lat));
+          if (data.timing_mat_lon) setTimingMatLon(String(data.timing_mat_lon));
+          if (data.break_detection_threshold_multiplier)
+            setBreakThreshold(
+              String(data.break_detection_threshold_multiplier)
+            );
+          if (data.overdue_display_seconds)
+            setOverdueDisplay(String(data.overdue_display_seconds));
+          if (data.reverse_track_direction !== undefined)
+            setReverseTrackDirection(data.reverse_track_direction);
+        }
+      } catch (err) {
+        console.error("Failed to fetch config:", err);
+      }
+    };
+    fetchConfig();
+  }, []);
 
   const generateAndUploadMockData = async () => {
     setLoading(true);
@@ -137,6 +194,7 @@ export default function RaceLiveAdminPage() {
           <TabsTrigger value="mock-data">Mock Data</TabsTrigger>
           <TabsTrigger value="json-upload">JSON Upload</TabsTrigger>
           <TabsTrigger value="race-control">Race Control</TabsTrigger>
+          <TabsTrigger value="map-config">Map Config</TabsTrigger>
           <TabsTrigger value="data-fetcher">Data Fetcher</TabsTrigger>
         </TabsList>
 
@@ -287,7 +345,8 @@ export default function RaceLiveAdminPage() {
                         type="number"
                         step="0.001"
                         placeholder="0.821"
-                        defaultValue="0.821"
+                        value={courseDistance}
+                        onChange={(e) => setCourseDistance(e.target.value)}
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
                             const input = e.currentTarget;
@@ -324,10 +383,7 @@ export default function RaceLiveAdminPage() {
                     <Button
                       variant="outline"
                       onClick={() => {
-                        const input = document.getElementById(
-                          "course-distance"
-                        ) as HTMLInputElement;
-                        const value = parseFloat(input.value);
+                        const value = parseFloat(courseDistance);
                         if (!isNaN(value) && value > 0) {
                           setLoading(true);
                           fetch("/api/race/config", {
@@ -373,7 +429,8 @@ export default function RaceLiveAdminPage() {
                         type="number"
                         step="10"
                         placeholder="0"
-                        defaultValue="0"
+                        value={crewSpotOffset}
+                        onChange={(e) => setCrewSpotOffset(e.target.value)}
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
                             const input = e.currentTarget;
@@ -412,10 +469,7 @@ export default function RaceLiveAdminPage() {
                     <Button
                       variant="outline"
                       onClick={() => {
-                        const input = document.getElementById(
-                          "crew-spot-offset"
-                        ) as HTMLInputElement;
-                        const value = parseInt(input.value);
+                        const value = parseInt(crewSpotOffset);
                         if (!isNaN(value)) {
                           setLoading(true);
                           fetch("/api/race/config", {
@@ -455,6 +509,313 @@ export default function RaceLiveAdminPage() {
                     crew countdown predictions.
                   </p>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="map-config">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MapPin className="h-5 w-5" />
+                Live Map Configuration
+              </CardTitle>
+              <CardDescription>
+                Configure the live map display, timing mat location, and break
+                detection settings
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Timing Mat Location */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-medium">Timing Mat Location</h3>
+                <p className="text-sm text-muted-foreground">
+                  📍 Click on the map to set the timing mat location, or enter
+                  coordinates manually below.
+                </p>
+                <div className="bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-md p-3">
+                  <p className="text-xs text-yellow-800 dark:text-yellow-200">
+                    ⚠️ <strong>Important:</strong> The timing mat must be placed
+                    within <strong>10 meters</strong> of the course track. This
+                    ensures runner positions are calculated correctly relative
+                    to their actual position on the course.
+                  </p>
+                </div>
+
+                {/* Interactive Map */}
+                <TimingMatLocationPicker
+                  initialLat={parseFloat(timingMatLat) || 43.9232716}
+                  initialLon={parseFloat(timingMatLon) || 2.1670189}
+                  onLocationChange={(lat, lon) => {
+                    setTimingMatLat(lat.toFixed(7));
+                    setTimingMatLon(lon.toFixed(7));
+                  }}
+                />
+
+                {/* Manual Coordinate Input */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="timing-mat-lat">Latitude</Label>
+                    <Input
+                      id="timing-mat-lat"
+                      type="number"
+                      step="0.0000001"
+                      placeholder="43.9232716"
+                      value={timingMatLat}
+                      onChange={(e) => setTimingMatLat(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="timing-mat-lon">Longitude</Label>
+                    <Input
+                      id="timing-mat-lon"
+                      type="number"
+                      step="0.0000001"
+                      placeholder="2.1670189"
+                      value={timingMatLon}
+                      onChange={(e) => setTimingMatLon(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                {/* Direction Toggle */}
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="reverse-direction" className="text-base">
+                      Reverse Track Direction
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      Enable if runners go opposite to how the GPX was recorded
+                    </p>
+                  </div>
+                  <Switch
+                    id="reverse-direction"
+                    checked={reverseTrackDirection}
+                    onCheckedChange={setReverseTrackDirection}
+                  />
+                </div>
+
+                <Button
+                  variant="outline"
+                  onClick={async () => {
+                    const lat = parseFloat(timingMatLat);
+                    const lon = parseFloat(timingMatLon);
+                    if (!isNaN(lat) && !isNaN(lon)) {
+                      setLoading(true);
+                      try {
+                        // Validate distance first
+                        const validateRes = await fetch(
+                          "/api/race/validate-timing-mat",
+                          {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ lat, lon }),
+                          }
+                        );
+
+                        if (validateRes.ok) {
+                          const validation = await validateRes.json();
+
+                          if (!validation.valid) {
+                            toast({
+                              title: "⚠️ Timing mat too far from course",
+                              description: `The timing mat is ${validation.distance.toFixed(
+                                1
+                              )}m from the track (max: ${
+                                validation.maxDistance
+                              }m). Please move it closer to the course.`,
+                              variant: "destructive",
+                            });
+                            setLoading(false);
+                            return;
+                          }
+
+                          // Show warning if close to limit
+                          if (
+                            validation.distance > 5 &&
+                            validation.distance <= 10
+                          ) {
+                            toast({
+                              title: "⚠️ Close to limit",
+                              description: `Timing mat is ${validation.distance.toFixed(
+                                1
+                              )}m from track. Consider moving it closer.`,
+                            });
+                          }
+                        }
+
+                        // Save configuration
+                        const res = await fetch("/api/race/config", {
+                          method: "PATCH",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            timingMatLat: lat,
+                            timingMatLon: lon,
+                            reverseTrackDirection: reverseTrackDirection,
+                          }),
+                        });
+
+                        if (!res.ok) {
+                          const errorData = await res.json();
+                          throw new Error(
+                            errorData.error ||
+                              `HTTP error! status: ${res.status}`
+                          );
+                        }
+
+                        toast({
+                          title: "✅ Map configuration updated",
+                          description: `Position: ${lat.toFixed(
+                            4
+                          )}, ${lon.toFixed(4)} | Direction: ${
+                            reverseTrackDirection ? "REVERSED" : "Normal"
+                          }`,
+                        });
+                      } catch (err) {
+                        console.error("Update error:", err);
+                        const errorMessage =
+                          err instanceof Error
+                            ? err.message
+                            : "Failed to update map configuration";
+                        toast({
+                          title: "Error updating configuration",
+                          description: errorMessage,
+                          variant: "destructive",
+                        });
+                      } finally {
+                        setLoading(false);
+                      }
+                    } else {
+                      toast({
+                        title: "Invalid coordinates",
+                        description:
+                          "Please enter valid latitude and longitude values",
+                        variant: "destructive",
+                      });
+                    }
+                  }}
+                  disabled={loading}
+                  className="w-full"
+                >
+                  Update Map Configuration
+                </Button>
+              </div>
+
+              {/* Break Detection Settings */}
+              <div className="border-t pt-4 space-y-3">
+                <h3 className="text-sm font-medium">
+                  Break Detection Settings
+                </h3>
+                <div>
+                  <Label htmlFor="break-threshold">
+                    Break Detection Threshold Multiplier
+                  </Label>
+                  <Input
+                    id="break-threshold"
+                    type="number"
+                    step="0.1"
+                    min="1.5"
+                    max="5"
+                    placeholder="2.5"
+                    value={breakThreshold}
+                    onChange={(e) => setBreakThreshold(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    A lap is considered a "break" if it's longer than{" "}
+                    {breakThreshold}x the predicted lap time. Lower = more
+                    sensitive, Higher = less sensitive. (Range: 1.5 - 5.0)
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="overdue-display">
+                    Overdue Display Time (seconds)
+                  </Label>
+                  <Input
+                    id="overdue-display"
+                    type="number"
+                    step="30"
+                    min="60"
+                    max="600"
+                    placeholder="180"
+                    value={overdueDisplay}
+                    onChange={(e) => setOverdueDisplay(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    How many seconds to show a runner as "overdue" near the
+                    timing mat before marking them as "on break". (Range: 60 -
+                    600)
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={async () => {
+                    const threshold = parseFloat(breakThreshold);
+                    const displaySecs = parseInt(overdueDisplay);
+                    if (
+                      !isNaN(threshold) &&
+                      !isNaN(displaySecs) &&
+                      threshold >= 1.5 &&
+                      threshold <= 5 &&
+                      displaySecs >= 60 &&
+                      displaySecs <= 600
+                    ) {
+                      setLoading(true);
+                      try {
+                        const res = await fetch("/api/race/config", {
+                          method: "PATCH",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            breakDetectionThresholdMultiplier: threshold,
+                            overdueDisplaySeconds: displaySecs,
+                          }),
+                        });
+
+                        if (!res.ok) {
+                          throw new Error(`HTTP error! status: ${res.status}`);
+                        }
+
+                        toast({
+                          title: "Break detection settings updated",
+                          description: `Threshold: ${threshold}x, Overdue: ${displaySecs}s`,
+                        });
+                      } catch (err) {
+                        console.error("Update error:", err);
+                        toast({
+                          title: "Error",
+                          description:
+                            "Failed to update break detection settings",
+                          variant: "destructive",
+                        });
+                      } finally {
+                        setLoading(false);
+                      }
+                    } else {
+                      toast({
+                        title: "Invalid values",
+                        description:
+                          "Please check the input ranges and try again.",
+                        variant: "destructive",
+                      });
+                    }
+                  }}
+                  disabled={loading}
+                  className="w-full"
+                >
+                  Update Break Detection Settings
+                </Button>
+              </div>
+
+              {/* Quick Link to Map */}
+              <div className="border-t pt-4">
+                <Button
+                  variant="secondary"
+                  onClick={() => window.open("/live/map", "_blank")}
+                  className="w-full"
+                >
+                  <MapPin className="mr-2 h-4 w-4" />
+                  Open Live Map
+                </Button>
               </div>
             </CardContent>
           </Card>

@@ -80,9 +80,12 @@ export function CountdownCard({
 
   // Determine card background color based on time until timing mat
   const getCardColorClass = () => {
-    if (isOverdueTimingMat) return "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900";
-    if (currentTimeUntilTimingMat <= 60) return "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-900"; // <= 1 minute
-    if (currentTimeUntilTimingMat <= 120) return "bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-900"; // <= 2 minutes
+    if (isOverdueTimingMat)
+      return "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900";
+    if (currentTimeUntilTimingMat <= 60)
+      return "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-900"; // <= 1 minute
+    if (currentTimeUntilTimingMat <= 120)
+      return "bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-900"; // <= 2 minutes
     return "";
   };
 
@@ -192,9 +195,7 @@ export function CountdownCard({
         {(isOverdueTimingMat || isOverdueCrewSpot) && (
           <div className="flex items-center gap-1 text-xs text-red-500 bg-red-50 dark:bg-red-950 px-2 py-1 rounded mt-1.5">
             <AlertCircle className="h-3 w-3 shrink-0" />
-            <span className="truncate">
-              {t.live?.overdue || "Overdue"}
-            </span>
+            <span className="truncate">{t.live?.overdue || "Overdue"}</span>
           </div>
         )}
       </CardContent>
