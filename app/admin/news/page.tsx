@@ -26,6 +26,7 @@ export default function AdminNewsPage() {
     title: "",
     content: "",
     published: false,
+    published_at: "",
     runnerIds: [] as number[],
     sendNotification: false,
     is_preview_men: false,
@@ -120,6 +121,7 @@ export default function AdminNewsPage() {
           title: "",
           content: "",
           published: false,
+          published_at: "",
           runnerIds: [],
           sendNotification: false,
           is_preview_men: false,
@@ -185,6 +187,7 @@ export default function AdminNewsPage() {
           title: "",
           content: "",
           published: false,
+          published_at: "",
           runnerIds: [],
           sendNotification: false,
           is_preview_men: false,
@@ -192,11 +195,11 @@ export default function AdminNewsPage() {
           preview_url: "",
         });
         setRunnerSearch("");
-        
+
         // Wait a bit for revalidation to take effect
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, 500));
         await fetchNews();
-        
+
         alert("News item updated successfully!");
       } else {
         const errorData = await response.json();
@@ -318,10 +321,15 @@ export default function AdminNewsPage() {
 
   function startEdit(item: NewsItem) {
     setEditing(item);
+    // Format published_at to datetime-local input format (YYYY-MM-DDTHH:MM)
+    const formattedPublishedAt = item.published_at
+      ? new Date(item.published_at).toISOString().slice(0, 16)
+      : "";
     setFormData({
       title: item.title,
       content: item.content,
       published: item.published,
+      published_at: formattedPublishedAt,
       runnerIds: item.linkedRunnerIds || [],
       sendNotification: false,
       is_preview_men: item.is_preview_men || false,
@@ -335,10 +343,13 @@ export default function AdminNewsPage() {
   function startCreate() {
     setCreating(true);
     setEditing(null);
+    // Default to current date/time
+    const now = new Date().toISOString().slice(0, 16);
     setFormData({
       title: "",
       content: "",
       published: false,
+      published_at: now,
       runnerIds: [],
       sendNotification: false,
       is_preview_men: false,
@@ -355,6 +366,7 @@ export default function AdminNewsPage() {
       title: "",
       content: "",
       published: false,
+      published_at: "",
       runnerIds: [],
       sendNotification: false,
       is_preview_men: false,
@@ -443,6 +455,29 @@ export default function AdminNewsPage() {
                   {t.news.published} ({t.news.publishedDesc})
                 </label>
               </div>
+              
+              {/* Publish Date/Time */}
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="publishedAt"
+                  className="block text-sm font-medium"
+                >
+                  Publish Date & Time
+                </label>
+                <input
+                  type="datetime-local"
+                  id="publishedAt"
+                  value={formData.published_at}
+                  onChange={(e) =>
+                    setFormData({ ...formData, published_at: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-border rounded-md bg-background"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Controls the display order (most recent first). Leave empty to use creation time.
+                </p>
+              </div>
+              
               <div className="flex items-center gap-2">
                 <input
                   type="checkbox"

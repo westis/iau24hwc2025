@@ -3,6 +3,7 @@ export interface NewsItem {
   title: string;
   content: string;
   published: boolean;
+  published_at?: string; // When the article was/will be published
   is_preview_men?: boolean;
   is_preview_women?: boolean;
   preview_url?: string; // External URL for preview articles (e.g., ultramarathon.se)
@@ -15,6 +16,7 @@ export interface NewsItemCreate {
   title: string;
   content: string;
   published?: boolean;
+  published_at?: string; // When the article should be published
   is_preview_men?: boolean;
   is_preview_women?: boolean;
   preview_url?: string;
@@ -25,6 +27,7 @@ export interface NewsItemUpdate {
   title?: string;
   content?: string;
   published?: boolean;
+  published_at?: string; // When the article should be published
   is_preview_men?: boolean;
   is_preview_women?: boolean;
   preview_url?: string;

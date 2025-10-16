@@ -590,8 +590,8 @@ export async function getNews(
 ): Promise<NewsItem[]> {
   const db = getDatabase();
   const query = publishedOnly
-    ? "SELECT * FROM news WHERE published = true ORDER BY created_at DESC"
-    : "SELECT * FROM news ORDER BY created_at DESC";
+    ? "SELECT * FROM news WHERE published = true ORDER BY COALESCE(published_at, created_at) DESC"
+    : "SELECT * FROM news ORDER BY COALESCE(published_at, created_at) DESC";
 
   const result = await db.query(query);
 
@@ -600,6 +600,10 @@ export async function getNews(
     title: row.title,
     content: row.content,
     published: row.published,
+    published_at: row.published_at,
+    is_preview_men: row.is_preview_men,
+    is_preview_women: row.is_preview_women,
+    preview_url: row.preview_url,
     created_at: row.created_at,
     updated_at: row.updated_at,
   }));
@@ -617,6 +621,10 @@ export async function getNewsById(id: number): Promise<NewsItem | null> {
     title: row.title,
     content: row.content,
     published: row.published,
+    published_at: row.published_at,
+    is_preview_men: row.is_preview_men,
+    is_preview_women: row.is_preview_women,
+    preview_url: row.preview_url,
     created_at: row.created_at,
     updated_at: row.updated_at,
   };
@@ -639,14 +647,15 @@ export async function createNews(news: NewsItemCreate): Promise<NewsItem> {
 
   const result = await db.query(
     `
-    INSERT INTO news (title, content, published, is_preview_men, is_preview_women, preview_url)
-    VALUES ($1, $2, $3, $4, $5, $6)
+    INSERT INTO news (title, content, published, published_at, is_preview_men, is_preview_women, preview_url)
+    VALUES ($1, $2, $3, $4, $5, $6, $7)
     RETURNING *
   `,
     [
       news.title,
       news.content,
       news.published || false,
+      news.published_at || null,
       news.is_preview_men || false,
       news.is_preview_women || false,
       news.preview_url || null,
@@ -659,8 +668,10 @@ export async function createNews(news: NewsItemCreate): Promise<NewsItem> {
     title: row.title,
     content: row.content,
     published: row.published,
+    published_at: row.published_at,
     is_preview_men: row.is_preview_men,
     is_preview_women: row.is_preview_women,
+    preview_url: row.preview_url,
     created_at: row.created_at,
     updated_at: row.updated_at,
   };
@@ -701,6 +712,10 @@ export async function updateNews(
     fields.push(`published = $${paramIndex++}`);
     values.push(updates.published);
   }
+  if (updates.published_at !== undefined) {
+    fields.push(`published_at = $${paramIndex++}`);
+    values.push(updates.published_at || null);
+  }
   if (updates.is_preview_men !== undefined) {
     fields.push(`is_preview_men = $${paramIndex++}`);
     values.push(updates.is_preview_men);
@@ -735,6 +750,10 @@ export async function updateNews(
     title: row.title,
     content: row.content,
     published: row.published,
+    published_at: row.published_at,
+    is_preview_men: row.is_preview_men,
+    is_preview_women: row.is_preview_women,
+    preview_url: row.preview_url,
     created_at: row.created_at,
     updated_at: row.updated_at,
   };
