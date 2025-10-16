@@ -342,6 +342,27 @@ export interface Translations {
     banned: string;
     bannedReason: string;
     logout: string;
+    profile: string;
+    settings: string;
+    updateProfilePicture: string;
+    displayName: string;
+    displayNamePlaceholder: string;
+    saveChanges: string;
+    saving: string;
+    profileUpdated: string;
+    failedToUpdateProfile: string;
+    manageAccountSettings: string;
+    changePassword: string;
+    newPassword: string;
+    newPasswordPlaceholder: string;
+    confirmPassword: string;
+    confirmPasswordPlaceholder: string;
+    passwordMinLength: string;
+    passwordsDoNotMatch: string;
+    passwordUpdated: string;
+    failedToChangePassword: string;
+    updating: string;
+    uploadAvatar: string;
   };
   live: {
     title: string;

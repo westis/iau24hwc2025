@@ -67,11 +67,11 @@ export function ProfileInfo() {
       }
 
       await refreshChatUser();
-      setMessage("Profile updated!");
+      setMessage(t.chat.profileUpdated);
       setTimeout(() => setMessage(""), 3000);
     } catch (error) {
       console.error("Error updating profile:", error);
-      setMessage("Failed to update profile");
+      setMessage(t.chat.failedToUpdateProfile);
     } finally {
       setSaving(false);
     }
@@ -89,13 +89,13 @@ export function ProfileInfo() {
       <CardHeader>
         <CardTitle>{t.chat.profile}</CardTitle>
         <CardDescription>
-          Update your profile picture and display name
+          {t.chat.updateProfilePicture}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSave} className="space-y-6">
           <div className="space-y-2">
-            <Label>Profile Picture</Label>
+            <Label>{t.chat.displayName}</Label>
             <ImageUpload
               bucket="chat-avatars"
               currentImageUrl={avatarUrl}
@@ -103,23 +103,23 @@ export function ProfileInfo() {
               onDelete={handleAvatarDelete}
               cropShape="round"
               aspectRatio={1}
-              label="Upload Avatar"
+              label={t.chat.uploadAvatar}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="displayName">Display Name</Label>
+            <Label htmlFor="displayName">{t.chat.displayName}</Label>
             <Input
               id="displayName"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="Your display name"
+              placeholder={t.chat.displayNamePlaceholder}
               required
             />
           </div>
 
           {message && (
-            <div className={`text-sm ${message.includes("Failed") ? "text-destructive" : "text-green-600"}`}>
+            <div className={`text-sm ${message.includes(t.chat.failedToUpdateProfile) ? "text-destructive" : "text-green-600"}`}>
               {message}
             </div>
           )}
@@ -128,12 +128,12 @@ export function ProfileInfo() {
             {saving ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Saving...
+                {t.chat.saving}
               </>
             ) : (
               <>
                 <Save className="h-4 w-4 mr-2" />
-                Save Changes
+                {t.chat.saveChanges}
               </>
             )}
           </Button>

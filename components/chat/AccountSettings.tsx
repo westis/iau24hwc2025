@@ -20,12 +20,12 @@ export function AccountSettings() {
     setPasswordMessage("");
 
     if (newPassword.length < 6) {
-      setPasswordMessage("Password must be at least 6 characters");
+      setPasswordMessage(t.chat.passwordMinLength);
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setPasswordMessage("Passwords do not match");
+      setPasswordMessage(t.chat.passwordsDoNotMatch);
       return;
     }
 
@@ -45,10 +45,10 @@ export function AccountSettings() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to change password");
+        throw new Error(data.error || t.chat.failedToChangePassword);
       }
 
-      setPasswordMessage("Password updated successfully!");
+      setPasswordMessage(t.chat.passwordUpdated);
       setNewPassword("");
       setConfirmPassword("");
       setTimeout(() => setPasswordMessage(""), 3000);
@@ -57,7 +57,7 @@ export function AccountSettings() {
       setPasswordMessage(
         error instanceof Error
           ? error.message
-          : "Failed to change password"
+          : t.chat.failedToChangePassword
       );
     } finally {
       setChangingPassword(false);
@@ -69,7 +69,7 @@ export function AccountSettings() {
       <CardHeader>
         <CardTitle>{t.chat.settings}</CardTitle>
         <CardDescription>
-          Manage your account security and preferences
+          {t.chat.manageAccountSettings}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -77,30 +77,30 @@ export function AccountSettings() {
           <div className="space-y-4">
             <h3 className="text-lg font-medium flex items-center gap-2">
               <Key className="h-5 w-5" />
-              Change Password
+              {t.chat.changePassword}
             </h3>
             
             <div className="space-y-2">
-              <Label htmlFor="newPassword">New Password</Label>
+              <Label htmlFor="newPassword">{t.chat.newPassword}</Label>
               <Input
                 id="newPassword"
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Enter new password"
+                placeholder={t.chat.newPasswordPlaceholder}
                 minLength={6}
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Label htmlFor="confirmPassword">{t.chat.confirmPassword}</Label>
               <Input
                 id="confirmPassword"
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirm new password"
+                placeholder={t.chat.confirmPasswordPlaceholder}
                 minLength={6}
                 required
               />
@@ -108,7 +108,7 @@ export function AccountSettings() {
           </div>
 
           {passwordMessage && (
-            <div className={`text-sm ${passwordMessage.includes("Failed") || passwordMessage.includes("not match") ? "text-destructive" : "text-green-600"}`}>
+            <div className={`text-sm ${passwordMessage.includes(t.chat.failedToChangePassword) || passwordMessage.includes(t.chat.passwordsDoNotMatch) ? "text-destructive" : "text-green-600"}`}>
               {passwordMessage}
             </div>
           )}
@@ -117,12 +117,12 @@ export function AccountSettings() {
             {changingPassword ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Updating...
+                {t.chat.updating}
               </>
             ) : (
               <>
                 <Key className="h-4 w-4 mr-2" />
-                Change Password
+                {t.chat.changePassword}
               </>
             )}
           </Button>
