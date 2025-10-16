@@ -722,7 +722,7 @@ export default function RaceLiveAdminPage() {
                     onChange={(e) => setBreakThreshold(e.target.value)}
                   />
                   <p className="text-xs text-muted-foreground mt-1">
-                    A lap is considered a "break" if it's longer than{" "}
+                    A lap is considered a &quot;break&quot; if it&apos;s longer than{" "}
                     {breakThreshold}x the predicted lap time. Lower = more
                     sensitive, Higher = less sensitive. (Range: 1.5 - 5.0)
                   </p>
@@ -742,8 +742,8 @@ export default function RaceLiveAdminPage() {
                     onChange={(e) => setOverdueDisplay(e.target.value)}
                   />
                   <p className="text-xs text-muted-foreground mt-1">
-                    How many seconds to show a runner as "overdue" near the
-                    timing mat before marking them as "on break". (Range: 60 -
+                    How many seconds to show a runner as &quot;overdue&quot; near the
+                    timing mat before marking them as &quot;on break&quot;. (Range: 60 -
                     600)
                   </p>
                 </div>

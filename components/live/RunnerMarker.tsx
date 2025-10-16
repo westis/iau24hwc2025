@@ -8,23 +8,10 @@ import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { AlertCircle } from "lucide-react";
 import type { RunnerPosition } from "@/types/live-race";
 import { renderToString } from "react-dom/server";
+import { getMarkerColor, getTextColor } from "@/lib/utils/runner-marker-colors";
 
 interface RunnerMarkerProps {
   runner: RunnerPosition;
-}
-
-function getMarkerColor(
-  genderRank: number,
-  status: RunnerPosition["status"]
-): string {
-  if (status === "overdue") return "#f97316"; // orange
-  if (status === "break") return "#ef4444"; // red
-
-  // Racing - color by gender rank
-  if (genderRank === 1) return "#fbbf24"; // gold
-  if (genderRank <= 3) return "#9ca3af"; // silver
-  if (genderRank <= 10) return "#cd7f32"; // bronze
-  return "#3b82f6"; // blue
 }
 
 function formatTime(seconds: number): string {
@@ -39,8 +26,7 @@ export function RunnerMarker({ runner }: RunnerMarkerProps) {
 
   // Create custom divIcon with bib number
   const createCustomIcon = () => {
-    // Use black text for gold (1st place), white for others
-    const textColor = runner.genderRank === 1 ? "black" : "white";
+    const textColor = getTextColor(runner.genderRank, runner.status);
 
     const iconHtml = `
       <div style="

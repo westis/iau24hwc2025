@@ -6,6 +6,7 @@ import ReactCountryFlag from "react-country-flag";
 import { getCountryCodeForFlag } from "@/lib/utils/country-codes";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import type { RunnerPosition } from "@/types/live-race";
+import { getMarkerColor, getTextColor } from "@/lib/utils/runner-marker-colors";
 
 interface RunnersSidebarProps {
   runnersOnTrack: RunnerPosition[];
@@ -33,11 +34,25 @@ function RunnerItem({
   runner: RunnerPosition;
   showOverdue?: boolean;
 }) {
+  const markerColor = getMarkerColor(runner.genderRank, runner.status);
+  const textColor = getTextColor(runner.genderRank, runner.status);
+
   return (
     <div className="flex items-center justify-between p-2 bg-muted/30 rounded border border-muted">
       <div className="flex items-center gap-2 flex-1 min-w-0">
-        <div className="font-mono text-sm font-bold text-muted-foreground shrink-0">
-          #{runner.bib}
+        <div
+          className="font-mono text-xs font-bold shrink-0 flex items-center justify-center"
+          style={{
+            backgroundColor: markerColor,
+            color: textColor,
+            borderRadius: "50%",
+            width: "28px",
+            height: "28px",
+            border: "2px solid white",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
+          }}
+        >
+          {runner.bib}
         </div>
         <ReactCountryFlag
           countryCode={getCountryCodeForFlag(runner.country)}
@@ -71,6 +86,14 @@ export function RunnersSidebar({
 }: RunnersSidebarProps) {
   const { t } = useLanguage();
 
+  // Sort runners by gender rank (1 at top)
+  const sortedOnTrack = [...runnersOnTrack].sort(
+    (a, b) => a.genderRank - b.genderRank
+  );
+  const sortedOnBreak = [...runnersOnBreak].sort(
+    (a, b) => a.genderRank - b.genderRank
+  );
+
   return (
     <div className="space-y-4">
       {/* On Track Section */}
@@ -78,16 +101,16 @@ export function RunnersSidebar({
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <Navigation className="h-4 w-4" />
-            {t.live?.onCourse || "On Track"} ({runnersOnTrack.length})
+            {t.live?.onCourse || "On Track"} ({sortedOnTrack.length})
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 max-h-[400px] overflow-y-auto">
-          {runnersOnTrack.length === 0 ? (
+          {sortedOnTrack.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">
               {t.live?.noRunnersOnTrack || "No runners on track"}
             </p>
           ) : (
-            runnersOnTrack.map((runner) => (
+            sortedOnTrack.map((runner) => (
               <RunnerItem
                 key={runner.bib}
                 runner={runner}
@@ -103,16 +126,16 @@ export function RunnersSidebar({
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <Coffee className="h-4 w-4" />
-            {t.live?.onBreak || "On Break"} ({runnersOnBreak.length})
+            {t.live?.onBreak || "On Break"} ({sortedOnBreak.length})
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 max-h-[300px] overflow-y-auto">
-          {runnersOnBreak.length === 0 ? (
+          {sortedOnBreak.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">
               {t.live?.noRunnersOnBreak || "All runners are on the course"}
             </p>
           ) : (
-            runnersOnBreak.map((runner) => (
+            sortedOnBreak.map((runner) => (
               <RunnerItem key={runner.bib} runner={runner} showOverdue={true} />
             ))
           )}
