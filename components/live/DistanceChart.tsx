@@ -11,6 +11,17 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 import type { ChartDataResponse } from "@/types/live-race";
 
 interface DistanceChartProps {
@@ -22,6 +33,7 @@ export function DistanceChart({
   bibs,
   initialRange = "24h",
 }: DistanceChartProps) {
+  const { t } = useLanguage();
   const [data, setData] = useState<ChartDataResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [range, setRange] = useState(initialRange);
@@ -55,13 +67,13 @@ export function DistanceChart({
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Distance Over Time</CardTitle>
+          <CardTitle>{t.live?.distanceOverTime || "Distance Over Time"}</CardTitle>
           <CardDescription>
-            Select runners from the leaderboard to view their progress
+            {t.live?.selectRunnersDesc || "Select runners from the leaderboard to view their progress"}
           </CardDescription>
         </CardHeader>
         <CardContent className="h-64 flex items-center justify-center text-muted-foreground">
-          No runners selected
+          {t.live?.noRunnersSelected || "No runners selected"}
         </CardContent>
       </Card>
     );
@@ -71,13 +83,13 @@ export function DistanceChart({
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Distance Over Time</CardTitle>
+          <CardTitle>{t.live?.distanceOverTime || "Distance Over Time"}</CardTitle>
         </CardHeader>
         <CardContent className="h-64 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground mx-auto mb-2"></div>
             <p className="text-sm text-muted-foreground">
-              Loading chart data...
+              {t.live?.loadingChartData || "Loading chart data..."}
             </p>
           </div>
         </CardContent>
@@ -90,9 +102,9 @@ export function DistanceChart({
       <CardHeader>
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <CardTitle>Distance Over Time</CardTitle>
+            <CardTitle>{t.live?.distanceOverTime || "Distance Over Time"}</CardTitle>
             <CardDescription>
-              Projected 24h distance based on current pace
+              {t.live?.projectedDistance || "Projected 24h distance based on current pace"}
             </CardDescription>
           </div>
 
@@ -131,38 +143,85 @@ export function DistanceChart({
               onCheckedChange={(checked) => setShowForecast(checked === true)}
             />
             <Label htmlFor="show-forecast" className="text-sm cursor-pointer">
-              Show rolling pace forecast
+              {t.live?.showForecast || "Show Forecast"}
             </Label>
           </div>
 
-          {/* Chart Placeholder */}
-          <div className="h-96 border rounded-lg p-4 flex items-center justify-center bg-muted/20">
-            <div className="text-center space-y-2">
-              <p className="text-muted-foreground">
-                Chart visualization will appear here
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Install recharts:{" "}
-                <code className="bg-muted px-2 py-1 rounded">
-                  npm install recharts
-                </code>
-              </p>
-              {data && (
-                <div className="mt-4 space-y-1">
+          {/* Chart */}
+          <div className="h-96 w-full">
+            {data && data.runners.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis
+                    dataKey="time"
+                    type="number"
+                    domain={["dataMin", "dataMax"]}
+                    tickFormatter={(value) => {
+                      const hours = Math.floor(value / 60);
+                      const minutes = Math.round(value % 60);
+                      return `${hours}:${minutes.toString().padStart(2, "0")}`;
+                    }}
+                    label={{
+                      value: "Race Time (h:mm)",
+                      position: "insideBottom",
+                      offset: -5,
+                    }}
+                  />
+                  <YAxis
+                    label={{
+                      value: "Distance (km)",
+                      angle: -90,
+                      position: "insideLeft",
+                    }}
+                  />
+                  <Tooltip
+                    content={({ active, payload }) => {
+                      if (!active || !payload || payload.length === 0) return null;
+                      const data = payload[0].payload;
+                      const hours = Math.floor(data.time / 60);
+                      const minutes = Math.round(data.time % 60);
+                      return (
+                        <div className="bg-background border rounded-lg shadow-lg p-3 space-y-1">
+                          <p className="font-semibold">
+                            Time: {hours}h {minutes}m
+                          </p>
+                          {payload.map((entry: any) => (
+                            <p
+                              key={entry.name}
+                              style={{ color: entry.color }}
+                              className="text-sm"
+                            >
+                              {entry.name}: {entry.value.toFixed(2)} km
+                            </p>
+                          ))}
+                        </div>
+                      );
+                    }}
+                  />
+                  <Legend />
                   {data.runners.map((runner) => (
-                    <div key={runner.bib} className="flex items-center gap-2">
-                      <div
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: runner.color }}
-                      />
-                      <span className="text-sm">
-                        {runner.name} - {runner.data.length} data points
-                      </span>
-                    </div>
+                    <Line
+                      key={runner.bib}
+                      type="monotone"
+                      data={runner.data}
+                      dataKey="distance"
+                      stroke={runner.color}
+                      name={`#${runner.bib} ${runner.name}`}
+                      strokeWidth={2}
+                      dot={false}
+                      activeDot={{ r: 6 }}
+                    />
                   ))}
-                </div>
-              )}
-            </div>
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center border rounded-lg bg-muted/20">
+                <p className="text-muted-foreground">No data available</p>
+              </div>
+            )}
           </div>
 
           {/* Legend */}

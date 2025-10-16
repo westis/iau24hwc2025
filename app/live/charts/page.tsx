@@ -143,7 +143,7 @@ export default function ChartsPage() {
               )}
 
               <div className="text-sm text-muted-foreground">
-                Selected: {selectedBibs.length} runner(s)
+                {t.live?.selected || "Selected"}: {selectedBibs.length} {t.live?.runners || "runners"}
               </div>
             </div>
           </CardContent>
@@ -155,13 +155,13 @@ export default function ChartsPage() {
         {/* Pace Analysis Chart - Coming Soon */}
         <Card>
           <CardHeader>
-            <CardTitle>Pace Analysis</CardTitle>
+            <CardTitle>{t.live?.paceAnalysis || "Pace Analysis"}</CardTitle>
             <CardDescription>
-              Rolling pace and forecast (Coming Soon)
+              {t.live?.paceAnalysisDesc || "Rolling pace and forecast (Coming Soon)"}
             </CardDescription>
           </CardHeader>
           <CardContent className="h-48 flex items-center justify-center text-muted-foreground">
-            Pace analysis chart will be added here
+            {t.live?.paceAnalysisComingSoon || "Pace analysis chart will be added here"}
           </CardContent>
         </Card>
       </div>
