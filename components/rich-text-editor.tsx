@@ -141,7 +141,7 @@ export function RichTextEditor({
         style: `width: ${
           width || "100%"
         }; max-width: 100%; height: auto; margin: 1rem auto; display: block;`,
-      })
+      } as any)
       .run();
 
     setShowImageDialog(false);
