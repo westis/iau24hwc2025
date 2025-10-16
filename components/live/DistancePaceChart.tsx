@@ -345,33 +345,41 @@ export function DistancePaceChart({ bibs }: DistancePaceChartProps) {
           },
           ticks: {
             color: textColor,
-            callback: (value) => {
+            callback: (value, index, ticks) => {
+              // Calculate label interval based on current range
+              const min = ticks[0]?.value || 0;
+              const max = ticks[ticks.length - 1]?.value || 24 * 3600 * 1000;
+              const rangeHours = (max - min) / 3600000;
+
+              let labelIntervalMs: number;
+              if (rangeHours <= 3) {
+                labelIntervalMs = 1800000; // 30 minutes
+              } else if (rangeHours <= 6) {
+                labelIntervalMs = 3600000; // 1 hour
+              } else if (rangeHours <= 12) {
+                labelIntervalMs = 7200000; // 2 hours
+              } else {
+                labelIntervalMs = 10800000; // 3 hours
+              }
+
+              // Only show label if it matches our label interval
+              const val = Number(value);
+              if (val % labelIntervalMs !== 0) {
+                return "";
+              }
+
               // Convert milliseconds to hours:minutes
-              const totalSeconds = Number(value) / 1000;
+              const totalSeconds = val / 1000;
               const hours = Math.floor(totalSeconds / 3600);
               const minutes = Math.floor((totalSeconds % 3600) / 60);
               return `${hours}:${minutes.toString().padStart(2, "0")}`;
             },
             maxRotation: 0,
             autoSkip: false,
-            stepSize: 1800000, // 30 minutes in milliseconds
           },
           afterBuildTicks: (axis: any) => {
             const min = axis.min || 0;
             const max = axis.max || 24 * 3600 * 1000;
-            const rangeHours = (max - min) / 3600000;
-
-            // Choose label interval based on visible range
-            let labelIntervalMs: number;
-            if (rangeHours <= 3) {
-              labelIntervalMs = 1800000; // 30 minutes for short ranges
-            } else if (rangeHours <= 6) {
-              labelIntervalMs = 3600000; // 1 hour for medium ranges
-            } else if (rangeHours <= 12) {
-              labelIntervalMs = 7200000; // 2 hours for larger ranges
-            } else {
-              labelIntervalMs = 10800000; // 3 hours for full 24h view
-            }
 
             // Always generate ticks for every hour (for gridlines)
             const hourMs = 3600000;
@@ -379,12 +387,7 @@ export function DistancePaceChart({ bibs }: DistancePaceChartProps) {
 
             const ticks = [];
             for (let value = startHour; value <= max; value += hourMs) {
-              // Only show label if it matches our label interval
-              const shouldShowLabel = value % labelIntervalMs === 0;
-              ticks.push({
-                value,
-                label: shouldShowLabel ? undefined : "", // Empty string hides label
-              });
+              ticks.push({ value });
             }
 
             axis.ticks = ticks;
