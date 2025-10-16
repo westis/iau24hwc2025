@@ -22,6 +22,7 @@ import {
   Grid3x3,
   Check,
   ChevronsUpDown,
+  Star,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -69,6 +70,7 @@ export default function LivePage() {
     searchParams?.get("country") || "all"
   );
   const [countryComboboxOpen, setCountryComboboxOpen] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(50); // Show 50 initially
   const [raceInfo, setRaceInfo] = useState<RaceInfo | null>(null);
   const [loadingRace, setLoadingRace] = useState(true);
   const [teamsGender, setTeamsGender] = useState<"m" | "w">(
@@ -117,6 +119,11 @@ export default function LivePage() {
     fetchRaceInfo();
   }, []);
 
+  // Reset pagination when filters change
+  useEffect(() => {
+    setVisibleCount(50);
+  }, [filter, searchQuery, countryFilter]);
+
   // Fetch teams data
   useEffect(() => {
     if (viewMode !== "teams") return;
@@ -164,6 +171,10 @@ export default function LivePage() {
   const countries = Array.from(
     new Set(data?.entries.map((e) => e.country) || [])
   ).sort();
+
+  // Slice entries for pagination
+  const visibleEntries = filteredEntries.slice(0, visibleCount);
+  const hasMore = filteredEntries.length > visibleCount;
 
   if (loadingRace || !raceInfo) {
     return (
@@ -429,12 +440,65 @@ export default function LivePage() {
 
             {/* Leaderboard Table */}
             {data && (
-              <LeaderboardTable
-                entries={filteredEntries}
-                onToggleWatchlist={toggleWatchlist}
-                isInWatchlist={isInWatchlist}
-                showGenderRank={filter === "men" || filter === "women"}
-              />
+              <>
+                {filter === "watchlist" && watchlist.length === 0 ? (
+                  <div className="text-center py-12 border rounded-lg bg-muted/30">
+                    <div className="max-w-md mx-auto">
+                      <Star className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                      <h3 className="text-lg font-semibold mb-2">
+                        {t.live?.emptyWatchlistTitle || "Ingen favorit vald"}
+                      </h3>
+                      <p className="text-muted-foreground mb-4">
+                        {t.live?.emptyWatchlistMessage || 
+                          "Lägg till löpare i din favoritlista genom att klicka på stjärnan bredvid deras namn."}
+                      </p>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setFilter("overall");
+                          updateURL({ filter: "overall" });
+                        }}
+                      >
+                        {t.live?.viewAllRunners || "Visa alla löpare"}
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <LeaderboardTable
+                      entries={visibleEntries}
+                      onToggleWatchlist={toggleWatchlist}
+                      isInWatchlist={isInWatchlist}
+                      showGenderRank={filter === "men" || filter === "women"}
+                    />
+                    
+                    {/* Pagination Controls */}
+                    {hasMore && (
+                      <div className="flex justify-center gap-3 mt-4">
+                        <Button
+                          variant="outline"
+                          onClick={() => setVisibleCount((prev) => prev + 50)}
+                        >
+                          {t.live?.loadMore || "Ladda fler"} (+50)
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => setVisibleCount(filteredEntries.length)}
+                        >
+                          {t.live?.loadAll || "Ladda alla"} ({filteredEntries.length})
+                        </Button>
+                      </div>
+                    )}
+                    
+                    {/* Show count indicator */}
+                    {filteredEntries.length > 0 && (
+                      <div className="text-center text-sm text-muted-foreground mt-4">
+                        {t.live?.showing || "Visar"} {visibleEntries.length} {t.live?.of || "av"} {filteredEntries.length} {t.live?.runners || "löpare"}
+                      </div>
+                    )}
+                  </>
+                )}
+              </>
             )}
           </>
         )}

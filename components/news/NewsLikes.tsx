@@ -21,12 +21,7 @@ export function NewsLikes({ newsId }: NewsLikesProps) {
   const [toggling, setToggling] = React.useState(false);
   const [showAuthPrompt, setShowAuthPrompt] = React.useState(false);
 
-  // Fetch likes
-  React.useEffect(() => {
-    fetchLikes();
-  }, [newsId, user]);
-
-  const fetchLikes = async () => {
+  const fetchLikes = React.useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`/api/news/${newsId}/likes`);
@@ -39,7 +34,12 @@ export function NewsLikes({ newsId }: NewsLikesProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [newsId, user]);
+
+  // Fetch likes
+  React.useEffect(() => {
+    fetchLikes();
+  }, [fetchLikes]);
 
   const handleToggleLike = async () => {
     if (!user) {

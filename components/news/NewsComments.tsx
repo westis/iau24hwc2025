@@ -52,12 +52,7 @@ export function NewsComments({ newsId }: NewsCommentsProps) {
 
   const locale = language === "sv" ? sv : enUS;
 
-  // Fetch comments
-  React.useEffect(() => {
-    fetchComments();
-  }, [newsId]);
-
-  const fetchComments = async () => {
+  const fetchComments = React.useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`/api/news/${newsId}/comments`);
@@ -69,7 +64,12 @@ export function NewsComments({ newsId }: NewsCommentsProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [newsId]);
+
+  // Fetch comments
+  React.useEffect(() => {
+    fetchComments();
+  }, [fetchComments]);
 
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -212,19 +212,25 @@ export function LeaderboardTable({
                         <div className="text-muted-foreground text-xs">
                           {t.live?.lastLap || "Senaste varv"}
                         </div>
-                        <div className="font-mono">{formatLapTime(entry.lapTimeSec)}</div>
+                        <div className="font-mono">
+                          {formatLapTime(entry.lapTimeSec)}
+                        </div>
                       </div>
                       <div className="lg:hidden">
                         <div className="text-muted-foreground text-xs">
                           Tempo
                         </div>
-                        <div className="font-mono">{formatPace(entry.lapPaceSec)}</div>
+                        <div className="font-mono">
+                          {formatPace(entry.lapPaceSec)}
+                        </div>
                       </div>
                       <div className="md:hidden">
                         <div className="text-muted-foreground text-xs">
                           {t.live?.projected || "Prognos"}
                         </div>
-                        <div className="font-mono">{entry.projectedKm.toFixed(2)} km</div>
+                        <div className="font-mono">
+                          {entry.projectedKm.toFixed(2)} km
+                        </div>
                       </div>
                     </div>
 

@@ -404,5 +404,11 @@ export const sv: Translations = {
     loading: "Laddar...",
     noTeamsFound: "Inga lag hittades",
     compact: "Kompakt",
+    loadMore: "Ladda fler",
+    loadAll: "Ladda alla",
+    of: "av",
+    emptyWatchlistTitle: "Ingen favorit vald",
+    emptyWatchlistMessage: "Lägg till löpare i din favoritlista genom att klicka på stjärnan bredvid deras namn.",
+    viewAllRunners: "Visa alla löpare",
   },
 };

@@ -209,7 +209,7 @@ export default function RaceLiveAdminPage() {
 }`}
                 />
                 <p className="text-sm text-muted-foreground">
-                  Paste JSON with "laps" and "leaderboard" arrays
+                  Paste JSON with &quot;laps&quot; and &quot;leaderboard&quot; arrays
                 </p>
               </div>
 
