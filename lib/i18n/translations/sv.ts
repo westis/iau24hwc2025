@@ -462,6 +462,7 @@ export const sv: Translations = {
     showForecast: "Visa prognos",
     timeRange: "Tidsperiod",
     reset: "Återställ",
+    noData: "Ingen data tillgänglig",
     paceAnalysis: "Tempoanalys",
     paceAnalysisDesc: "Rullande tempo och prognos (Kommer snart)",
     paceAnalysisComingSoon: "Tempoanalysdiagram kommer att läggas till här",

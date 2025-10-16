@@ -302,7 +302,7 @@ export function DistancePaceChart({ bibs }: DistancePaceChartProps) {
           callbacks: {
             title: (context) => {
               const time = context[0]?.parsed?.x;
-              if (!time) return '';
+              if (!time) return "";
               const hours = Math.floor(time / 3600000);
               const minutes = Math.floor((time % 3600000) / 60000);
               const seconds = Math.floor((time % 60000) / 1000);
@@ -310,7 +310,7 @@ export function DistancePaceChart({ bibs }: DistancePaceChartProps) {
             },
             label: (context) => {
               const label = context.dataset.label || "";
-              const distance = context.parsed.y?.toFixed(2) || '0';
+              const distance = context.parsed.y?.toFixed(2) || "0";
               return `${label}: ${distance} km`;
             },
           },

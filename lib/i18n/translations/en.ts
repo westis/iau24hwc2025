@@ -466,6 +466,7 @@ export const en: Translations = {
     showForecast: "Show Forecast",
     timeRange: "Time Range",
     reset: "Reset",
+    noData: "No data available",
     paceAnalysis: "Pace Analysis",
     paceAnalysisDesc: "Rolling pace and forecast (Coming Soon)",
     paceAnalysisComingSoon: "Pace analysis chart will be added here",
