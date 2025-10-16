@@ -270,3 +270,4 @@ For issues or questions, check:
 - Supabase dashboard logs
 - Browser developer console
 - Server logs in Vercel/hosting platform
+

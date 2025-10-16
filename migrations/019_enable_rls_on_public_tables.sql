@@ -59,3 +59,4 @@ USING (TRUE);
 -- No INSERT/UPDATE/DELETE policies needed as client-side writes are not allowed
 
 
+

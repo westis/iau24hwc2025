@@ -62,3 +62,4 @@ export function useLeaderboard(
     refetch: fetchLeaderboard,
   };
 }
+

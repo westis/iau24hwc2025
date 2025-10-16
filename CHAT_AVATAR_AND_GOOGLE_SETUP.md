@@ -180,3 +180,4 @@ Just create the `chat-avatars` bucket in Supabase Storage, and the avatar upload
 Want me to also implement the Google Sign-In button?
 
 
+

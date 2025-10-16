@@ -139,3 +139,4 @@ export function transformToInternalFormat(
 
   return { laps, leaderboard };
 }
+

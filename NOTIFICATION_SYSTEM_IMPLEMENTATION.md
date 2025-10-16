@@ -71,3 +71,4 @@ RESEND_FROM_EMAIL=noreply@ultramarathon.se
 - Admin can see subscriber count
 - Better error handling and feedback
 
+

@@ -15,6 +15,7 @@ import { useWatchlist } from "@/lib/hooks/useWatchlist";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import { PageTitle } from "@/components/PageTitle";
 import {
   Search,
   RefreshCw,
@@ -190,9 +191,11 @@ export default function LivePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <LiveNavigation />
-      <div className="container mx-auto py-4 px-4 space-y-4">
+    <>
+      <PageTitle title={language === "sv" ? "Live Leaderboard" : "Live Leaderboard"} />
+      <div className="min-h-screen bg-background">
+        <LiveNavigation />
+        <div className="container mx-auto py-4 px-4 space-y-4">
         {/* Race Clock and View Mode Tabs */}
         <div className="flex flex-row items-center justify-between gap-4">
           <Tabs
@@ -650,7 +653,8 @@ export default function LivePage() {
 
         {/* Weather Forecast - Moved to bottom */}
         <WeatherForecast />
+        </div>
       </div>
-    </div>
+    </>
   );
 }

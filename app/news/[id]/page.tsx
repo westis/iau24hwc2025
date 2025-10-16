@@ -12,6 +12,7 @@ import { ArrowLeft } from "lucide-react";
 import type { NewsItem } from "@/types/news";
 import { NewsComments } from "@/components/news/NewsComments";
 import { NewsLikes } from "@/components/news/NewsLikes";
+import { PageTitle } from "@/components/PageTitle";
 
 interface Runner {
   id: number;
@@ -97,8 +98,10 @@ export default function NewsArticlePage() {
     : [];
 
   return (
-    <main className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-6 sm:py-8 lg:py-10 max-w-5xl lg:max-w-6xl">
-      {/* Back Button */}
+    <>
+      <PageTitle title={newsItem.title} />
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-6 sm:py-8 lg:py-10 max-w-5xl lg:max-w-6xl">
+        {/* Back Button */}
       <div className="mb-6">
         <Button variant="ghost" onClick={() => router.push("/news")}>
           <ArrowLeft className="mr-2 h-4 w-4" />
@@ -155,7 +158,8 @@ export default function NewsArticlePage() {
       </div>
 
       {/* Comments Section */}
-      <NewsComments newsId={newsItem.id} />
-    </main>
+        <NewsComments newsId={newsItem.id} />
+      </main>
+    </>
   );
 }

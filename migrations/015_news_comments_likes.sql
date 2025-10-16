@@ -132,3 +132,4 @@ COMMENT ON TABLE news_comments IS 'User comments on news articles';
 COMMENT ON TABLE news_likes IS 'User likes on news articles (one per user per article)';
 COMMENT ON COLUMN news_comments.deleted_at IS 'Timestamp of soft deletion (NULL = not deleted)';
 
+

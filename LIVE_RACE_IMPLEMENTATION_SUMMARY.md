@@ -331,3 +331,4 @@ For issues or questions, refer to:
 - `live-race-tracking.plan.md` - Original plan
 - Supabase dashboard for database
 - Vercel dashboard for cron jobs
+

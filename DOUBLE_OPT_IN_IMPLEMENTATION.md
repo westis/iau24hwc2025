@@ -375,3 +375,4 @@ Potential improvements:
 **Questions?** Check `EMAIL_CONFIRMATION_SETUP.md` for detailed setup instructions.
 
 
+

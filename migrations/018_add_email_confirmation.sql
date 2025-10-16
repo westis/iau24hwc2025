@@ -24,3 +24,4 @@ WHERE confirmation_token IS NULL;
 -- UPDATE email_subscriptions SET confirmed = TRUE, confirmed_at = NOW() WHERE confirmed = FALSE;
 
 
+

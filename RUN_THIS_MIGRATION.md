@@ -72,3 +72,4 @@ Both tables should have:
 - Row Level Security (RLS) enabled
 - Multiple RLS policies for different user roles
 - Indexes for performance
+

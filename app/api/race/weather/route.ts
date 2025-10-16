@@ -130,3 +130,4 @@ function generateMockWeather(): { forecast: WeatherHour[] } {
 
   return { forecast };
 }
+

@@ -140,3 +140,4 @@ WHERE is_admin = true;
 
 **TL;DR**: To delete messages, you need BOTH site admin AND chat admin login! 🔐🔐
 
+

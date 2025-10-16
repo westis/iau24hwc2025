@@ -9,6 +9,7 @@ import { SafeHtml } from "@/components/safe-html";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { Heart, MessageSquare } from "lucide-react";
 import type { NewsItem } from "@/types/news";
+import { PageTitle } from "@/components/PageTitle";
 
 interface Runner {
   id: number;
@@ -109,9 +110,11 @@ export default function NewsPage() {
   }
 
   return (
-    <main className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-6 sm:py-8 lg:py-10 max-w-5xl lg:max-w-6xl">
-      {/* Header */}
-      <div className="mb-8">
+    <>
+      <PageTitle title={language === "sv" ? "Nyheter" : "News"} />
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-6 sm:py-8 lg:py-10 max-w-5xl lg:max-w-6xl">
+        {/* Header */}
+        <div className="mb-8">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">
           {t.news.title}
         </h1>
@@ -204,6 +207,7 @@ export default function NewsPage() {
           })
         )}
       </div>
-    </main>
+      </main>
+    </>
   );
 }

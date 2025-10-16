@@ -108,3 +108,4 @@ export interface ChartDataResponse {
   startTime: string;
   currentTime: string;
 }
+
