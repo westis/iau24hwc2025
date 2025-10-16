@@ -55,7 +55,7 @@ interface TeamData {
 export default function LivePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   // Initialize state from URL parameters
   const [viewMode, setViewMode] = useState<"individuals" | "teams">(
@@ -192,7 +192,7 @@ export default function LivePage() {
 
   return (
     <>
-      <PageTitle title={language === "sv" ? "Live Leaderboard" : "Live Leaderboard"} />
+      <PageTitle title={`${t.live?.title || "Live"} ${t.live?.leaderboard || "Leaderboard"}`} />
       <div className="min-h-screen bg-background">
         <LiveNavigation />
         <div className="container mx-auto py-4 px-4 space-y-4">
