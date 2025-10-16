@@ -117,7 +117,7 @@ export default function NewsArticlePage() {
           </CardTitle>
           <div className="flex items-center gap-3 flex-wrap">
             <p className="text-xs sm:text-sm lg:text-base text-muted-foreground">
-              {new Date(newsItem.created_at).toLocaleDateString(
+              {new Date(newsItem.published_at || newsItem.created_at).toLocaleDateString(
                 language === "sv" ? "sv-SE" : "en-US",
                 {
                   year: "numeric",

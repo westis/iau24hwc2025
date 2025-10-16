@@ -124,7 +124,7 @@ export default function Home() {
                   className="flex items-center gap-3 py-2 px-3 hover:bg-accent rounded-md transition-colors"
                 >
                   <span className="text-xs sm:text-sm lg:text-base text-muted-foreground min-w-[70px] sm:min-w-[90px]">
-                    {new Date(item.created_at).toLocaleDateString(
+                    {new Date(item.published_at || item.created_at).toLocaleDateString(
                       language === "sv" ? "sv-SE" : "en-US",
                       {
                         month: "short",
