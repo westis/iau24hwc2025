@@ -278,10 +278,6 @@ export function DistancePaceChart({ bibs }: DistancePaceChartProps) {
           strokeDashArray: hour % 6 === 0 ? 0 : 4,
           borderColor: theme === "dark" ? "#4b5563" : "#9ca3af",
           opacity: hour % 6 === 0 ? 0.75 : 0.25,
-          // Using label as invisible helps ensure alignment without clutter
-          label: {
-            show: false,
-          },
         })),
       },
     }),
