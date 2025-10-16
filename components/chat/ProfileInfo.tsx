@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ImageUpload } from "@/components/ImageUpload";
 import { Save, Loader2 } from "lucide-react";
 import type { Area } from "react-easy-crop";
@@ -84,6 +85,14 @@ export function ProfileInfo() {
 
   if (!chatUser) return null;
 
+  const displayNameValue = displayName || chatUser.display_name;
+  const initials = displayNameValue
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+
   return (
     <Card>
       <CardHeader>
@@ -94,8 +103,16 @@ export function ProfileInfo() {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSave} className="space-y-6">
-          <div className="space-y-2">
-            <Label>{t.chat.displayName}</Label>
+          {/* Avatar Display */}
+          <div className="flex flex-col items-center gap-4">
+            <Avatar className="h-32 w-32">
+              {avatarUrl ? (
+                <AvatarImage src={avatarUrl} alt={displayNameValue} />
+              ) : null}
+              <AvatarFallback className="bg-primary text-primary-foreground text-3xl">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
             <ImageUpload
               bucket="chat-avatars"
               currentImageUrl={avatarUrl}
