@@ -164,6 +164,14 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // TypeScript null check (should never be null at this point)
+    if (!cachedGPXData) {
+      return NextResponse.json(
+        { error: "Failed to load GPX data" },
+        { status: 500 }
+      );
+    }
+
     const { track, coursePoints } = cachedGPXData;
 
     // Get leaderboard data

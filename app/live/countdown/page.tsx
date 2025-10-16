@@ -205,25 +205,63 @@ export default function CountdownPage() {
               </TabsList>
 
               {/* View Toggle and Team Selection */}
-              <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-end">
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant={viewLayout === "grid" ? "default" : "outline"}
-                    onClick={() => setViewLayout("grid")}
-                  >
-                    <Grid3x3 className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={viewLayout === "table" ? "default" : "outline"}
-                    onClick={() => setViewLayout("table")}
-                  >
-                    <List className="h-4 w-4" />
-                  </Button>
+              <div className="flex flex-wrap gap-3 items-end">
+                {/* View Toggle */}
+                <div>
+                  <Label className="text-xs mb-1 block">
+                    {t.live?.view || "View"}
+                  </Label>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant={viewLayout === "grid" ? "default" : "outline"}
+                      onClick={() => setViewLayout("grid")}
+                    >
+                      <Grid3x3 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={viewLayout === "table" ? "default" : "outline"}
+                      onClick={() => setViewLayout("table")}
+                    >
+                      <List className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex-1 sm:min-w-[200px]">
-                  <Label className="text-xs">
+
+                {/* Gender Selection */}
+                <div>
+                  <Label className="text-xs mb-1 block">
+                    {t.common?.gender || "Gender"}
+                  </Label>
+                  <div className="flex gap-1">
+                    <Button
+                      size="sm"
+                      variant={selectedGender === "all" ? "default" : "outline"}
+                      onClick={() => setSelectedGender("all")}
+                    >
+                      {t.common?.all || "All"}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={selectedGender === "m" ? "default" : "outline"}
+                      onClick={() => setSelectedGender("m")}
+                    >
+                      {t.common?.men || "Men"}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={selectedGender === "w" ? "default" : "outline"}
+                      onClick={() => setSelectedGender("w")}
+                    >
+                      {t.common?.women || "Women"}
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Country Selection */}
+                <div className="flex-1 min-w-[200px]">
+                  <Label className="text-xs mb-1 block">
                     {t.live?.selectTeam || "Select Team"}
                   </Label>
                   <Select
@@ -252,34 +290,6 @@ export default function CountdownPage() {
                       ))}
                     </SelectContent>
                   </Select>
-                </div>
-                <div>
-                  <Label className="text-xs">
-                    {t.common?.gender || "Gender"}
-                  </Label>
-                  <div className="flex gap-1">
-                    <Button
-                      size="sm"
-                      variant={selectedGender === "all" ? "default" : "outline"}
-                      onClick={() => setSelectedGender("all")}
-                    >
-                      {t.common?.all || "All"}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={selectedGender === "m" ? "default" : "outline"}
-                      onClick={() => setSelectedGender("m")}
-                    >
-                      {t.common?.men || "Men"}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={selectedGender === "w" ? "default" : "outline"}
-                      onClick={() => setSelectedGender("w")}
-                    >
-                      {t.common?.women || "Women"}
-                    </Button>
-                  </div>
                 </div>
               </div>
             </div>
