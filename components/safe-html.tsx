@@ -48,7 +48,7 @@ export function SafeHtml({ html, className = "" }: SafeHtmlProps) {
 
   return (
     <div
-      className={`prose prose-sm max-w-none [&_img]:mx-auto [&_img]:block [&_img]:rounded-lg [&_img]:my-4 ${className}`}
+      className={`prose prose-sm max-w-none [&_img]:mx-auto [&_img]:block [&_img]:rounded-lg [&_img]:my-4 [&_strong]:text-foreground [&_strong]:font-bold ${className}`}
       dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
     />
   );

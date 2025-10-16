@@ -101,7 +101,7 @@ export function RichTextEditor({
     editorProps: {
       attributes: {
         class:
-          "prose prose-sm dark:prose-invert max-w-none min-h-[200px] px-3 py-2 focus:outline-none [&_h1]:text-foreground [&_h2]:text-foreground [&_h3]:text-foreground [&_p]:text-foreground [&_img]:max-w-full [&_img]:h-auto [&_img]:cursor-pointer [&_img]:mx-auto [&_img]:block [&_img]:hover:ring-2 [&_img]:hover:ring-primary [&_img]:transition-all",
+          "prose prose-sm dark:prose-invert max-w-none min-h-[200px] max-h-[500px] overflow-y-auto px-3 py-2 focus:outline-none [&_h1]:text-foreground [&_h2]:text-foreground [&_h3]:text-foreground [&_p]:text-foreground [&_strong]:text-foreground [&_strong]:font-bold [&_img]:max-w-full [&_img]:h-auto [&_img]:cursor-pointer [&_img]:mx-auto [&_img]:block [&_img]:hover:ring-2 [&_img]:hover:ring-primary [&_img]:transition-all",
       },
       handleClickOn: (view, pos, node, nodePos, event) => {
         if (node.type.name === "image") {

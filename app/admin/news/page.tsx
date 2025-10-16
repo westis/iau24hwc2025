@@ -64,7 +64,13 @@ export default function AdminNewsPage() {
   async function fetchNews() {
     try {
       const response = await fetch(
-        "/api/news?includeUnpublished=true&includeRunnerLinks=true"
+        "/api/news?includeUnpublished=true&includeRunnerLinks=true",
+        {
+          cache: "no-store",
+          headers: {
+            "Cache-Control": "no-cache",
+          },
+        }
       );
       const data = await response.json();
       setNews(data.news);
@@ -144,9 +150,13 @@ export default function AdminNewsPage() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
+        cache: "no-store",
       });
 
       if (response.ok) {
+        const data = await response.json();
+        console.log("Update successful:", data);
+
         // Send notifications if requested
         if (formData.sendNotification && formData.published) {
           const notifResults = await sendNotifications(
@@ -161,12 +171,12 @@ export default function AdminNewsPage() {
           }
         }
 
-        // Trigger cache revalidation
+        // Additional revalidation (API route also does this)
         await fetch("/api/revalidate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            paths: ["/", "/news"],
+            paths: ["/", "/news", `/news/${id}`],
           }),
         });
 
@@ -182,7 +192,11 @@ export default function AdminNewsPage() {
           preview_url: "",
         });
         setRunnerSearch("");
+        
+        // Wait a bit for revalidation to take effect
+        await new Promise(resolve => setTimeout(resolve, 500));
         await fetchNews();
+        
         alert("News item updated successfully!");
       } else {
         const errorData = await response.json();

@@ -71,6 +71,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 🔥 ON-DEMAND REVALIDATION
+    revalidatePath("/");
     revalidatePath("/news");
     revalidatePath("/api/news");
 

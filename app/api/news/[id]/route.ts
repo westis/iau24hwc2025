@@ -73,6 +73,7 @@ export async function PUT(
     }
 
     // 🔥 ON-DEMAND REVALIDATION
+    revalidatePath("/");
     revalidatePath("/news");
     revalidatePath(`/news/${id}`);
     revalidatePath("/api/news");
@@ -108,6 +109,7 @@ export async function DELETE(
     }
 
     // 🔥 ON-DEMAND REVALIDATION
+    revalidatePath("/");
     revalidatePath("/news");
     revalidatePath("/api/news");
 
