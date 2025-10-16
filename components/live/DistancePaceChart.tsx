@@ -179,14 +179,16 @@ export function DistancePaceChart({ bibs }: DistancePaceChartProps) {
             // Switch label granularity based on visible range
             const rangeMs = (xaxis?.max ?? min) - min;
             // Use half-hour labels if zoomed in to under 6 hours, else hourly
-            labelGranularityRef.current = rangeMs <= 6 * 3600000 ? "half" : "hour";
+            labelGranularityRef.current =
+              rangeMs <= 6 * 3600000 ? "half" : "hour";
             return { xaxis: { min, max: xaxis?.max } };
           },
           scrolled: (_chartContext: any, { xaxis }: any) => {
             // Update labels when user pans via wheel or drag
             const min = Math.max(0, xaxis?.min ?? 0);
             const rangeMs = (xaxis?.max ?? min) - min;
-            labelGranularityRef.current = rangeMs <= 6 * 3600000 ? "half" : "hour";
+            labelGranularityRef.current =
+              rangeMs <= 6 * 3600000 ? "half" : "hour";
           },
         } as any,
       } as any, // Type assertion needed for pan property
@@ -200,8 +202,8 @@ export function DistancePaceChart({ bibs }: DistancePaceChartProps) {
       xaxis: {
         type: "numeric",
         min: 0,
-        // Dense ticks; labels formatter will hide those we don't want
-        tickAmount: 97,
+        // 48 half-hour intervals in 24 hours for clean alignment
+        tickAmount: 48,
         labels: {
           formatter: (val) => {
             const value = Number(val);
@@ -210,8 +212,11 @@ export function DistancePaceChart({ bibs }: DistancePaceChartProps) {
             const hours = Math.floor(totalMinutes / 60);
             const mode = labelGranularityRef.current;
             // Show either hourly or half-hour marks depending on zoom level
-            const show = mode === "half" ? minutes % 30 === 0 : minutes % 60 === 0;
-            return show ? `${hours}:${minutes.toString().padStart(2, "0")}` : "";
+            const show =
+              mode === "half" ? minutes % 30 === 0 : minutes % 60 === 0;
+            return show
+              ? `${hours}:${minutes.toString().padStart(2, "0")}`
+              : "";
           },
         },
         title: {
@@ -277,6 +282,7 @@ export function DistancePaceChart({ bibs }: DistancePaceChartProps) {
           x: hour * 3600000,
           strokeDashArray: hour % 6 === 0 ? 0 : 4,
           borderColor: theme === "dark" ? "#4b5563" : "#9ca3af",
+          borderWidth: hour % 6 === 0 ? 2 : 1,
           opacity: hour % 6 === 0 ? 0.75 : 0.25,
         })),
       },

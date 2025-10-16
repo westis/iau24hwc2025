@@ -107,19 +107,12 @@ export function RichTextEditor({
   };
 
   const handleImageUpload = (url: string, width?: string) => {
-    // Insert image with custom width styling
-    const style =
-      width && width !== "100%"
-        ? `width: ${width}; max-width: 100%; height: auto;`
-        : "max-width: 100%; height: auto;";
-
+    // Insert image - style will be handled by CSS or inline HTML later if needed
     editor
       .chain()
       .focus()
       .setImage({
         src: url,
-        style: style,
-        width: width || "100%",
       })
       .run();
 

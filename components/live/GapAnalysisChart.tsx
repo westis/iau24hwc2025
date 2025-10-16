@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select";
 import dynamic from "next/dynamic";
 import { useTheme } from "next-themes";
- 
+
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import type { ChartDataResponse } from "@/types/live-race";
 import type { ApexOptions } from "apexcharts";
@@ -58,8 +58,6 @@ export function GapAnalysisChart({ bibs }: GapAnalysisChartProps) {
   const labelGranularityRef = useRef<"hour" | "half">("hour");
   const prevBaselineRef = useRef<number | null>(null);
 
- 
-
   // Fetch data with auto-refresh
   useEffect(() => {
     if (bibs.length === 0) {
@@ -90,12 +88,10 @@ export function GapAnalysisChart({ bibs }: GapAnalysisChartProps) {
     return () => clearInterval(interval);
   }, [bibs]);
 
- 
-
-    const baselineDistance =
-      baselineMode === "wr"
-        ? WORLD_RECORDS[wrGender]
-        : parseFloat(manualDistance) || 250;
+  const baselineDistance =
+    baselineMode === "wr"
+      ? WORLD_RECORDS[wrGender]
+      : parseFloat(manualDistance) || 250;
 
   // Transform data to ApexCharts series format (gap from baseline)
   // Use useMemo to prevent unnecessary recalculations
@@ -119,11 +115,14 @@ export function GapAnalysisChart({ bibs }: GapAnalysisChartProps) {
     initialSeriesRef.current = series;
     hasInitialData.current = true;
     prevBaselineRef.current = baselineDistance;
-    lastXBySeriesRef.current = series.reduce((acc: Record<string, number>, s: any) => {
-      const last = s.data[s.data.length - 1];
-      acc[s.name] = last ? last.x : -1;
-      return acc;
-    }, {});
+    lastXBySeriesRef.current = series.reduce(
+      (acc: Record<string, number>, s: any) => {
+        const last = s.data[s.data.length - 1];
+        acc[s.name] = last ? last.x : -1;
+        return acc;
+      },
+      {}
+    );
   }
 
   // Live updates: append only new points; if baseline changes, update full series
@@ -134,15 +133,23 @@ export function GapAnalysisChart({ bibs }: GapAnalysisChartProps) {
       // Baseline changed -> full update to recompute all gaps
       prevBaselineRef.current = baselineDistance;
       // Reset lastX cache too
-      lastXBySeriesRef.current = series.reduce((acc: Record<string, number>, s: any) => {
-        const last = s.data[s.data.length - 1];
-        acc[s.name] = last ? last.x : -1;
-        return acc;
-      }, {});
+      lastXBySeriesRef.current = series.reduce(
+        (acc: Record<string, number>, s: any) => {
+          const last = s.data[s.data.length - 1];
+          acc[s.name] = last ? last.x : -1;
+          return acc;
+        },
+        {}
+      );
       if (typeof window !== "undefined" && window.ApexCharts) {
         setTimeout(() => {
           try {
-            window.ApexCharts.exec("gap-analysis-chart", "updateSeries", series, false);
+            window.ApexCharts.exec(
+              "gap-analysis-chart",
+              "updateSeries",
+              series,
+              false
+            );
           } catch (e) {
             console.error("Failed to update gap chart series:", e);
           }
@@ -174,28 +181,6 @@ export function GapAnalysisChart({ bibs }: GapAnalysisChartProps) {
       }, 0);
     }
   }, [series, baselineDistance]);
-
-  // Handle time range button clicks
-  const handleTimeRange = (hours: number) => {
-    setViewHours(hours);
-    if (typeof window === "undefined" || !window.ApexCharts) return;
-
-    if (hours === 24) {
-      // Reset to full view
-      window.ApexCharts.exec("gap-analysis-chart", "zoomX", 0, 86400000);
-    } else if (raceStartTime && followLive) {
-      // Will be handled by the followLive effect
-      return;
-    } else {
-      // Zoom to specified hours from start
-      window.ApexCharts.exec(
-        "gap-analysis-chart",
-        "zoomX",
-        0,
-        hours * 3600 * 1000
-      );
-    }
-  };
 
   // ApexCharts options - memoized to prevent chart recreation
   const options: ApexOptions = useMemo(
@@ -229,13 +214,15 @@ export function GapAnalysisChart({ bibs }: GapAnalysisChartProps) {
           beforeZoom: (_ctx: any, { xaxis }: any) => {
             const min = Math.max(0, xaxis?.min ?? 0);
             const rangeMs = (xaxis?.max ?? min) - min;
-            labelGranularityRef.current = rangeMs <= 6 * 3600000 ? "half" : "hour";
+            labelGranularityRef.current =
+              rangeMs <= 6 * 3600000 ? "half" : "hour";
             return { xaxis: { min, max: xaxis?.max } };
           },
           scrolled: (_ctx: any, { xaxis }: any) => {
             const min = Math.max(0, xaxis?.min ?? 0);
             const rangeMs = (xaxis?.max ?? min) - min;
-            labelGranularityRef.current = rangeMs <= 6 * 3600000 ? "half" : "hour";
+            labelGranularityRef.current =
+              rangeMs <= 6 * 3600000 ? "half" : "hour";
           },
         } as any,
         pan: {
@@ -253,7 +240,8 @@ export function GapAnalysisChart({ bibs }: GapAnalysisChartProps) {
       xaxis: {
         type: "numeric",
         min: 0,
-        tickAmount: 97,
+        // 48 half-hour intervals in 24 hours for clean alignment
+        tickAmount: 48,
         labels: {
           formatter: (val) => {
             const value = Number(val);
@@ -261,8 +249,11 @@ export function GapAnalysisChart({ bibs }: GapAnalysisChartProps) {
             const minutes = totalMinutes % 60;
             const hours = Math.floor(totalMinutes / 60);
             const mode = labelGranularityRef.current;
-            const show = mode === "half" ? minutes % 30 === 0 : minutes % 60 === 0;
-            return show ? `${hours}:${minutes.toString().padStart(2, "0")}` : "";
+            const show =
+              mode === "half" ? minutes % 30 === 0 : minutes % 60 === 0;
+            return show
+              ? `${hours}:${minutes.toString().padStart(2, "0")}`
+              : "";
           },
         },
         title: {
@@ -337,6 +328,7 @@ export function GapAnalysisChart({ bibs }: GapAnalysisChartProps) {
           x: hour * 3600000,
           strokeDashArray: hour % 6 === 0 ? 0 : 4,
           borderColor: theme === "dark" ? "#4b5563" : "#9ca3af",
+          borderWidth: hour % 6 === 0 ? 2 : 1,
           opacity: hour % 6 === 0 ? 0.75 : 0.25,
         })),
         yaxis: [
@@ -402,12 +394,12 @@ export function GapAnalysisChart({ bibs }: GapAnalysisChartProps) {
     <Card>
       <CardHeader>
         <div className="flex flex-col gap-4">
-            <div>
-              <CardTitle>{t.live?.gapAnalysis || "Gap Analysis"}</CardTitle>
-              <CardDescription>
-                {t.live?.gapAnalysisDesc ||
+          <div>
+            <CardTitle>{t.live?.gapAnalysis || "Gap Analysis"}</CardTitle>
+            <CardDescription>
+              {t.live?.gapAnalysisDesc ||
                 `Gap from baseline. Use the toolbar to zoom, pan, and reset.`}
-              </CardDescription>
+            </CardDescription>
           </div>
 
           {/* Baseline Controls */}

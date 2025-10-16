@@ -74,4 +74,6 @@ async function checkSimulationMode() {
 
 checkSimulationMode();
 
+export {};
+
 

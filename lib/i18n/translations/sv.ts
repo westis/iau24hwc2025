@@ -425,6 +425,7 @@ export const sv: Translations = {
     lastPassing: "Passering",
     lapDetails: "Varvdetaljer",
     lap: "Varv",
+    laps: "Varv",
     lapTime: "Varvtid",
     lapPace: "Varvtempo",
     raceTime: "Tävlingstid",
