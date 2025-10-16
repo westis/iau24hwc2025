@@ -122,6 +122,13 @@ export interface Translations {
     linkedNews: string;
     noNotes: string;
     confirmDeleteNote: string;
+    profileAndSocial: string;
+    runnerPhoto: string;
+    uploadPhoto: string;
+    bio: string;
+    bioPlaceholder: string;
+    instagramUrl: string;
+    stravaUrl: string;
   };
   runnerDetail: {
     loadingProfile: string;
@@ -316,15 +323,12 @@ export interface Translations {
     createAccount: string;
     signInDescription: string;
     createAccountDescription: string;
-    profile: string;
-    settings: string;
     email: string;
     password: string;
     displayName: string;
     displayNamePlaceholder: string;
     emailPlaceholder: string;
     passwordPlaceholder: string;
-    passwordMinLength: string;
     signingIn: string;
     creatingAccount: string;
     signUp: string;

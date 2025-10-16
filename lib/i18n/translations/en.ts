@@ -125,6 +125,13 @@ export const en: Translations = {
     linkedNews: "Linked News",
     noNotes: "No notes",
     confirmDeleteNote: "Are you sure you want to delete this note?",
+    profileAndSocial: "Profile & Social",
+    runnerPhoto: "Runner Photo",
+    uploadPhoto: "Upload Photo",
+    bio: "Bio",
+    bioPlaceholder: "Runner bio...",
+    instagramUrl: "Instagram URL",
+    stravaUrl: "Strava URL",
   },
   runnerDetail: {
     loadingProfile: "Loading runner profile...",

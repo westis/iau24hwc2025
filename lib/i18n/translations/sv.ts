@@ -125,6 +125,13 @@ export const sv: Translations = {
     linkedNews: "Länkad nyhet",
     noNotes: "Inga anteckningar",
     confirmDeleteNote: "Är du säker på att du vill radera denna anteckning?",
+    profileAndSocial: "Profil & Socialt",
+    runnerPhoto: "Löparbild",
+    uploadPhoto: "Ladda upp bild",
+    bio: "Biografi",
+    bioPlaceholder: "Löparbiografi...",
+    instagramUrl: "Instagram-URL",
+    stravaUrl: "Strava-URL",
   },
   runnerDetail: {
     loadingProfile: "Laddar löparprofil...",
