@@ -165,7 +165,7 @@ export function DistancePaceChart({ bibs }: DistancePaceChartProps) {
           backgroundColor: runner.color,
           borderWidth: 2,
           pointRadius: 0,
-          tension: 0.4,
+          tension: 0.1,
         }));
 
       // Update last timestamps
@@ -206,6 +206,23 @@ export function DistancePaceChart({ bibs }: DistancePaceChartProps) {
       chart.update("none"); // Preserve zoom/pan
     }
   }, [data, bibs]);
+
+  // Update X-axis max when data range changes
+  useEffect(() => {
+    if (!chartRef.current || maxTime === 0) return;
+    const chart = chartRef.current;
+
+    if (chart.options.scales?.x) {
+      const dataMax = Math.min(maxTime + 600000, 24 * 3600 * 1000);
+      // Only update if not manually zoomed/panned
+      // Check if current max is close to previous data max (within 15 minutes)
+      const currentMax = chart.options.scales.x.max as number;
+      if (Math.abs(currentMax - dataMax) < 900000 || currentMax < dataMax) {
+        chart.options.scales.x.max = dataMax;
+        chart.update("none");
+      }
+    }
+  }, [maxTime]);
 
   // Update theme colors
   useEffect(() => {
@@ -266,7 +283,7 @@ export function DistancePaceChart({ bibs }: DistancePaceChartProps) {
           backgroundColor: runner.color,
           borderWidth: 2,
           pointRadius: 0,
-          tension: 0.4,
+          tension: 0.1,
         })),
     };
   }, [data]);
@@ -275,6 +292,10 @@ export function DistancePaceChart({ bibs }: DistancePaceChartProps) {
     const isDark = theme === "dark";
     const textColor = isDark ? "#e5e7eb" : "#111827";
     const gridColor = isDark ? "#374151" : "#e5e7eb";
+
+    // Calculate default max based on available data with buffer
+    const dataMax =
+      maxTime > 0 ? Math.min(maxTime + 600000, 24 * 3600 * 1000) : 3600000; // Add 10 min buffer or show 1h minimum
 
     return {
       responsive: true,
@@ -338,7 +359,7 @@ export function DistancePaceChart({ bibs }: DistancePaceChartProps) {
         x: {
           type: "linear",
           min: 0,
-          max: 24 * 3600 * 1000, // Hard limit: 0-24 hours
+          max: dataMax, // Show available data range by default
           title: {
             display: true,
             text: t.live?.raceTime || "Race Time",
@@ -427,7 +448,7 @@ export function DistancePaceChart({ bibs }: DistancePaceChartProps) {
         },
       },
     };
-  }, [theme, t]);
+  }, [theme, t, maxTime]);
 
   if (bibs.length === 0) {
     return (
