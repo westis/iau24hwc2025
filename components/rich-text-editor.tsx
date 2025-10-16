@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { ImageUpload } from "@/components/ImageUpload";
+import { NewsImageUpload } from "@/components/news/NewsImageUpload";
 import {
   Dialog,
   DialogContent,
@@ -48,9 +48,37 @@ export function RichTextEditor({
           class: "text-primary underline",
         },
       }),
-      Image.configure({
+      Image.extend({
+        addAttributes() {
+          return {
+            ...this.parent?.(),
+            style: {
+              default: null,
+              parseHTML: (element) => element.getAttribute("style"),
+              renderHTML: (attributes) => {
+                if (!attributes.style) {
+                  return {};
+                }
+                return { style: attributes.style };
+              },
+            },
+            width: {
+              default: null,
+              parseHTML: (element) => element.getAttribute("width"),
+              renderHTML: (attributes) => {
+                if (!attributes.width) {
+                  return {};
+                }
+                return { width: attributes.width };
+              },
+            },
+          };
+        },
+      }).configure({
+        inline: false,
+        allowBase64: false,
         HTMLAttributes: {
-          class: "max-w-full h-auto rounded-lg my-4",
+          class: "h-auto rounded-lg my-4",
         },
       }),
     ],
@@ -62,7 +90,7 @@ export function RichTextEditor({
     editorProps: {
       attributes: {
         class:
-          "prose prose-sm dark:prose-invert max-w-none min-h-[200px] px-3 py-2 focus:outline-none [&_h1]:text-foreground [&_h2]:text-foreground [&_h3]:text-foreground [&_p]:text-foreground",
+          "prose prose-sm dark:prose-invert max-w-none min-h-[200px] px-3 py-2 focus:outline-none [&_h1]:text-foreground [&_h2]:text-foreground [&_h3]:text-foreground [&_p]:text-foreground [&_img]:max-w-full [&_img]:h-auto",
       },
     },
   });
@@ -78,8 +106,23 @@ export function RichTextEditor({
     }
   };
 
-  const handleImageUpload = (url: string) => {
-    editor.chain().focus().setImage({ src: url }).run();
+  const handleImageUpload = (url: string, width?: string) => {
+    // Insert image with custom width styling
+    const style =
+      width && width !== "100%"
+        ? `width: ${width}; max-width: 100%; height: auto;`
+        : "max-width: 100%; height: auto;";
+
+    editor
+      .chain()
+      .focus()
+      .setImage({
+        src: url,
+        style: style,
+        width: width || "100%",
+      })
+      .run();
+
     setShowImageDialog(false);
   };
 
@@ -183,18 +226,16 @@ export function RichTextEditor({
 
       {/* Image Upload Dialog */}
       <Dialog open={showImageDialog} onOpenChange={setShowImageDialog}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Ladda upp bild</DialogTitle>
             <DialogDescription>
-              Välj en bild att ladda upp och infoga i texten
+              Välj en bild att ladda upp och infoga i artikeln
             </DialogDescription>
           </DialogHeader>
-          <ImageUpload
-            bucket="news-images"
-            currentImageUrl=""
+          <NewsImageUpload
             onUploadComplete={handleImageUpload}
-            hidePreview
+            allowCrop={true}
           />
         </DialogContent>
       </Dialog>

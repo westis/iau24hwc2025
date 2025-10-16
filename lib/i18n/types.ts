@@ -34,6 +34,8 @@ export interface Translations {
     logout: string;
     adjustCrop: string;
     remove: string;
+    reset: string;
+    gender: string;
   };
   home: {
     title: string;
@@ -409,12 +411,14 @@ export interface Translations {
     bib: string;
     runner: string;
     distance: string;
+    laps: string;
     lastLap: string;
     projected: string;
     lastPassing: string;
     lapDetails: string;
     lap: string;
     lapTime: string;
+    lapPace: string;
     raceTime: string;
     genderRank: string;
     avgPace: string;
@@ -433,6 +437,14 @@ export interface Translations {
     selected: string;
     runners: string;
     distanceOverTime: string;
+    distanceAndPace: string;
+    distanceAndPaceDesc: string;
+    gapAnalysis: string;
+    gapAnalysisDesc: string;
+    baselineMode: string;
+    worldRecord: string;
+    manualDistance: string;
+    baselineDistance: string;
     selectRunnersDesc: string;
     noRunnersSelected: string;
     loadingChartData: string;
@@ -450,5 +462,7 @@ export interface Translations {
     emptyWatchlistTitle: string;
     emptyWatchlistMessage: string;
     viewAllRunners: string;
+    simulationMode: string;
+    simulationModeDesc: string;
   };
 }

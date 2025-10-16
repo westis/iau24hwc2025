@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const filter = searchParams.get("filter") || "overall"; // overall, men, women
 
-    // Check cache first (30 second TTL) - don't cache watchlist as it's user-specific
+    // Check cache first (15 second TTL) - don't cache watchlist as it's user-specific
     const cacheKey = cacheKeys.leaderboard(filter);
     const cached = raceCache.get<LeaderboardResponse>(cacheKey);
 
@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
         headers: {
           "X-Cache": "HIT",
           "Cache-Control":
-            "public, max-age=30, s-maxage=30, stale-while-revalidate=60",
+            "public, max-age=15, s-maxage=15, stale-while-revalidate=30",
         },
       });
     }
@@ -53,11 +53,23 @@ export async function GET(request: NextRequest) {
 
     // Apply gender filter
     if (filter === "men") {
-      query = query.eq("gender", "m").order("gender_rank", { ascending: true });
+      query = query
+        .eq("gender", "m")
+        .order("gender_rank", { ascending: true })
+        .order("distance_km", { ascending: false })
+        .order("last_passing", { ascending: true });
     } else if (filter === "women") {
-      query = query.eq("gender", "w").order("gender_rank", { ascending: true });
+      query = query
+        .eq("gender", "w")
+        .order("gender_rank", { ascending: true })
+        .order("distance_km", { ascending: false })
+        .order("last_passing", { ascending: true });
     } else {
-      query = query.order("rank", { ascending: true });
+      // Overall: order by rank, then by distance descending, then by last passing time (earlier = better)
+      query = query
+        .order("rank", { ascending: true })
+        .order("distance_km", { ascending: false })
+        .order("last_passing", { ascending: true });
     }
 
     const { data: entries, error } = await query;
@@ -96,16 +108,16 @@ export async function GET(request: NextRequest) {
       totalRunners: formattedEntries.length,
     };
 
-    // Cache the response (30 seconds) - don't cache watchlist
+    // Cache the response (15 seconds) - don't cache watchlist
     if (filter !== "watchlist") {
-      raceCache.set(cacheKey, response, 30);
+      raceCache.set(cacheKey, response, 15);
     }
 
     return NextResponse.json(response, {
       headers: {
         "X-Cache": "MISS",
         "Cache-Control":
-          "public, max-age=30, s-maxage=30, stale-while-revalidate=60",
+          "public, max-age=15, s-maxage=15, stale-while-revalidate=30",
       },
     });
   } catch (error) {

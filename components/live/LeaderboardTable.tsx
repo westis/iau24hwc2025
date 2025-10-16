@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Star,
   ChevronDown,
@@ -53,6 +53,19 @@ export function LeaderboardTable({
   const [loadingLaps, setLoadingLaps] = useState<number | null>(null);
   const { t, language } = useLanguage();
 
+  const fetchLapData = async (bib: number) => {
+    setLoadingLaps(bib);
+    try {
+      const res = await fetch(`/api/race/laps/${bib}?_t=${Date.now()}`);
+      const data = await res.json();
+      setLapData((prev) => ({ ...prev, [bib]: data.laps }));
+    } catch (err) {
+      console.error("Failed to fetch lap data:", err);
+    } finally {
+      setLoadingLaps(null);
+    }
+  };
+
   const toggleExpand = async (bib: number) => {
     if (expandedBib === bib) {
       setExpandedBib(null);
@@ -61,20 +74,26 @@ export function LeaderboardTable({
 
     setExpandedBib(bib);
 
-    // Fetch lap data if not already loaded
+    // Fetch lap data immediately
     if (!lapData[bib]) {
-      setLoadingLaps(bib);
-      try {
-        const res = await fetch(`/api/race/laps/${bib}`);
-        const data = await res.json();
-        setLapData((prev) => ({ ...prev, [bib]: data.laps }));
-      } catch (err) {
-        console.error("Failed to fetch lap data:", err);
-      } finally {
-        setLoadingLaps(null);
-      }
+      await fetchLapData(bib);
     }
   };
+
+  // Auto-refresh lap data for expanded runner
+  useEffect(() => {
+    if (expandedBib === null) return;
+
+    // Refresh immediately
+    fetchLapData(expandedBib);
+
+    // Then poll every 30 seconds for new laps (optimized for free tier)
+    const interval = setInterval(() => {
+      fetchLapData(expandedBib);
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [expandedBib]);
 
   const getTrendIcon = (trend?: "up" | "down" | "stable") => {
     if (trend === "up")
@@ -97,11 +116,13 @@ export function LeaderboardTable({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-8 px-2"></TableHead>
-            <TableHead className="w-12 px-2">
+            <TableHead className="w-8 px-0.5 sm:px-2"></TableHead>
+            <TableHead className="w-12 px-1 sm:px-2">
               {t.live?.rank || "Plac."}
             </TableHead>
-            <TableHead className="w-12 px-2">{t.live?.bib || "Nr"}</TableHead>
+            <TableHead className="w-12 px-1 sm:px-2">
+              {t.live?.bib || "Nr"}
+            </TableHead>
             <TableHead className="px-2">{t.live?.runner || "Löpare"}</TableHead>
             <TableHead className="text-right px-2">
               {t.live?.distance || "Distans"}
@@ -109,11 +130,14 @@ export function LeaderboardTable({
             <TableHead className="text-right px-2 hidden md:table-cell">
               {t.live?.projected || "Prognos"}
             </TableHead>
+            <TableHead className="text-right px-2 hidden xl:table-cell">
+              {t.live?.lastPassing || "Sen. pass."}
+            </TableHead>
             <TableHead className="text-right px-2 hidden sm:table-cell">
               {t.live?.lastLap || "Varv"}
             </TableHead>
             <TableHead className="text-right px-2 hidden lg:table-cell">
-              Tempo
+              {t.live?.lapPace || "Lap Pace"}
             </TableHead>
             <TableHead className="w-8 px-2 hidden sm:table-cell"></TableHead>
             <TableHead className="w-8 px-2"></TableHead>
@@ -121,13 +145,12 @@ export function LeaderboardTable({
         </TableHeader>
         <TableBody>
           {entries.map((entry) => (
-            <>
+            <React.Fragment key={entry.bib}>
               <TableRow
-                key={entry.bib}
                 className="cursor-pointer hover:bg-muted/50"
                 onClick={() => toggleExpand(entry.bib)}
               >
-                <TableCell className="px-2 py-2">
+                <TableCell className="px-0.5 sm:px-2 py-2">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -146,10 +169,10 @@ export function LeaderboardTable({
                     />
                   </Button>
                 </TableCell>
-                <TableCell className="font-medium px-2 py-2">
+                <TableCell className="font-medium px-1 sm:px-2 py-2">
                   {showGenderRank ? entry.genderRank : entry.rank}
                 </TableCell>
-                <TableCell className="font-mono px-2 py-2 text-sm">
+                <TableCell className="font-mono px-1 sm:px-2 py-2 text-sm">
                   {entry.bib}
                 </TableCell>
                 <TableCell className="px-2 py-2">
@@ -176,6 +199,17 @@ export function LeaderboardTable({
                       </Tooltip>
                     </TooltipProvider>
                     <span className="font-medium text-sm">{entry.name}</span>
+                    {!showGenderRank && (
+                      <span
+                        className={`text-xs px-1.5 py-0.5 rounded ${
+                          entry.gender === "m"
+                            ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
+                            : "bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300"
+                        }`}
+                      >
+                        {entry.gender === "m" ? "M" : "W"}
+                      </span>
+                    )}
                   </div>
                 </TableCell>
                 <TableCell className="text-right font-mono px-2 py-2 text-sm">
@@ -183,6 +217,15 @@ export function LeaderboardTable({
                 </TableCell>
                 <TableCell className="text-right font-mono hidden md:table-cell text-muted-foreground px-2 py-2 text-sm">
                   {entry.projectedKm.toFixed(2)}
+                </TableCell>
+                <TableCell className="text-right font-mono hidden xl:table-cell px-2 py-2 text-sm text-muted-foreground">
+                  {entry.lastPassing
+                    ? new Date(entry.lastPassing).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        second: "2-digit",
+                      })
+                    : "-"}
                 </TableCell>
                 <TableCell className="text-right font-mono px-2 py-2 hidden sm:table-cell text-sm">
                   {formatLapTime(entry.lapTimeSec)}
@@ -205,7 +248,7 @@ export function LeaderboardTable({
               {/* Expanded lap details */}
               {expandedBib === entry.bib && (
                 <TableRow>
-                  <TableCell colSpan={10} className="bg-muted/30 p-4">
+                  <TableCell colSpan={11} className="bg-muted/30 p-4">
                     {/* Hidden column info for narrow screens */}
                     <div className="mb-4 grid grid-cols-2 gap-3 text-sm">
                       <div className="sm:hidden">
@@ -218,7 +261,7 @@ export function LeaderboardTable({
                       </div>
                       <div className="lg:hidden">
                         <div className="text-muted-foreground text-xs">
-                          Tempo
+                          {t.live?.lapPace || "Lap Pace"}
                         </div>
                         <div className="font-mono">
                           {formatPace(entry.lapPaceSec)}
@@ -230,6 +273,23 @@ export function LeaderboardTable({
                         </div>
                         <div className="font-mono">
                           {entry.projectedKm.toFixed(2)} km
+                        </div>
+                      </div>
+                      <div className="xl:hidden">
+                        <div className="text-muted-foreground text-xs">
+                          {t.live?.lastPassing || "Senaste passering"}
+                        </div>
+                        <div className="font-mono">
+                          {entry.lastPassing
+                            ? new Date(entry.lastPassing).toLocaleTimeString(
+                                [],
+                                {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                  second: "2-digit",
+                                }
+                              )
+                            : "-"}
                         </div>
                       </div>
                     </div>
@@ -254,7 +314,7 @@ export function LeaderboardTable({
                                 {t.live?.distance || "Distans"}
                               </TableHead>
                               <TableHead className="text-right">
-                                Tempo
+                                {t.live?.lapPace || "Lap Pace"}
                               </TableHead>
                               <TableHead className="text-right">
                                 {t.live?.avgPace || "Snittempo"}
@@ -296,7 +356,7 @@ export function LeaderboardTable({
                   </TableCell>
                 </TableRow>
               )}
-            </>
+            </React.Fragment>
           ))}
         </TableBody>
       </Table>

@@ -67,9 +67,12 @@ export function DistanceChart({
     return (
       <Card>
         <CardHeader>
-          <CardTitle>{t.live?.distanceOverTime || "Distance Over Time"}</CardTitle>
+          <CardTitle>
+            {t.live?.distanceOverTime || "Distance Over Time"}
+          </CardTitle>
           <CardDescription>
-            {t.live?.selectRunnersDesc || "Select runners from the leaderboard to view their progress"}
+            {t.live?.selectRunnersDesc ||
+              "Select runners from the leaderboard to view their progress"}
           </CardDescription>
         </CardHeader>
         <CardContent className="h-64 flex items-center justify-center text-muted-foreground">
@@ -83,7 +86,9 @@ export function DistanceChart({
     return (
       <Card>
         <CardHeader>
-          <CardTitle>{t.live?.distanceOverTime || "Distance Over Time"}</CardTitle>
+          <CardTitle>
+            {t.live?.distanceOverTime || "Distance Over Time"}
+          </CardTitle>
         </CardHeader>
         <CardContent className="h-64 flex items-center justify-center">
           <div className="text-center">
@@ -102,9 +107,12 @@ export function DistanceChart({
       <CardHeader>
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <CardTitle>{t.live?.distanceOverTime || "Distance Over Time"}</CardTitle>
+            <CardTitle>
+              {t.live?.distanceOverTime || "Distance Over Time"}
+            </CardTitle>
             <CardDescription>
-              {t.live?.projectedDistance || "Projected 24h distance based on current pace"}
+              {t.live?.projectedDistance ||
+                "Projected 24h distance based on current pace"}
             </CardDescription>
           </div>
 
@@ -151,10 +159,11 @@ export function DistanceChart({
           <div className="h-96 w-full">
             {data && data.runners.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <LineChart margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    className="stroke-muted"
+                  />
                   <XAxis
                     dataKey="time"
                     type="number"
@@ -179,7 +188,8 @@ export function DistanceChart({
                   />
                   <Tooltip
                     content={({ active, payload }) => {
-                      if (!active || !payload || payload.length === 0) return null;
+                      if (!active || !payload || payload.length === 0)
+                        return null;
                       const data = payload[0].payload;
                       const hours = Math.floor(data.time / 60);
                       const minutes = Math.round(data.time % 60);
@@ -245,6 +255,3 @@ export function DistanceChart({
     </Card>
   );
 }
-
-
-

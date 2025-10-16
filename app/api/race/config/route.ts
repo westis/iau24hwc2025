@@ -1,9 +1,24 @@
 // app/api/race/config/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { raceCache, cacheKeys } from "@/lib/live-race/cache";
 
 export async function GET() {
   try {
+    // Check cache first (10 second TTL)
+    const cacheKey = cacheKeys.config();
+    const cached = raceCache.get(cacheKey);
+
+    if (cached) {
+      return NextResponse.json(cached, {
+        headers: {
+          "X-Cache": "HIT",
+          "Cache-Control":
+            "public, max-age=10, s-maxage=10, stale-while-revalidate=20",
+        },
+      });
+    }
+
     const supabase = await createClient();
 
     // Get active race
@@ -35,7 +50,16 @@ export async function GET() {
       );
     }
 
-    return NextResponse.json(config);
+    // Cache for 10 seconds
+    raceCache.set(cacheKey, config, 10);
+
+    return NextResponse.json(config, {
+      headers: {
+        "X-Cache": "MISS",
+        "Cache-Control":
+          "public, max-age=10, s-maxage=10, stale-while-revalidate=20",
+      },
+    });
   } catch (error) {
     console.error("Error in race config GET:", error);
     return NextResponse.json(
@@ -50,7 +74,14 @@ export async function PATCH(request: NextRequest) {
     const supabase = await createClient();
     const body = await request.json();
 
-    const { raceState, courseGeojson, courseDistanceKm } = body;
+    const {
+      raceState,
+      courseGeojson,
+      courseDistanceKm,
+      currentRaceTimeSec,
+      simulationMode,
+      simulationStartTime,
+    } = body;
 
     // Get active race
     const { data: activeRace } = await supabase
@@ -72,6 +103,12 @@ export async function PATCH(request: NextRequest) {
     if (raceState) updates.race_state = raceState;
     if (courseGeojson) updates.course_geojson = courseGeojson;
     if (courseDistanceKm) updates.course_distance_km = courseDistanceKm;
+    if (typeof currentRaceTimeSec !== "undefined")
+      updates.current_race_time_sec = currentRaceTimeSec;
+    if (typeof simulationMode !== "undefined")
+      updates.simulation_mode = simulationMode;
+    if (simulationStartTime)
+      updates.simulation_start_time = simulationStartTime;
 
     const { data, error } = await supabase
       .from("race_config")
@@ -88,6 +125,9 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
+    // Clear cache after successful update
+    raceCache.clearPattern("config");
+
     return NextResponse.json(data);
   } catch (error) {
     console.error("Error in race config PATCH:", error);
@@ -97,6 +137,3 @@ export async function PATCH(request: NextRequest) {
     );
   }
 }
-
-
-

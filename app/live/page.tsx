@@ -7,6 +7,7 @@ import { LeaderboardTable } from "@/components/live/LeaderboardTable";
 import { WeatherForecast } from "@/components/live/WeatherForecast";
 import { LiveNavigation } from "@/components/live/LiveNavigation";
 import { LiveTeamCard } from "@/components/live/LiveTeamCard";
+import { SimulationBanner } from "@/components/live/SimulationBanner";
 import {
   useLeaderboard,
   type LeaderboardFilter,
@@ -71,7 +72,7 @@ function LivePageContent() {
     searchParams?.get("country") || "all"
   );
   const [countryComboboxOpen, setCountryComboboxOpen] = useState(false);
-  const [visibleCount, setVisibleCount] = useState(50); // Show 50 initially
+  const [visibleCount, setVisibleCount] = useState(10); // Show 10 initially
   const [raceInfo, setRaceInfo] = useState<RaceInfo | null>(null);
   const [loadingRace, setLoadingRace] = useState(true);
   const [teamsGender, setTeamsGender] = useState<"m" | "w">(
@@ -82,13 +83,14 @@ function LivePageContent() {
   );
   const [teams, setTeams] = useState<TeamData[]>([]);
   const [loadingTeams, setLoadingTeams] = useState(false);
+  const [simulationMode, setSimulationMode] = useState(false);
 
   const { watchlist, toggleWatchlist, isInWatchlist } = useWatchlist();
 
   const { data, loading, error, refetch } = useLeaderboard(
     filter,
     watchlist,
-    60000 // Poll every 60 seconds
+    10000 // Poll every 10 seconds for more responsive updates
   );
 
   // Update URL parameters when filters change
@@ -104,7 +106,7 @@ function LivePageContent() {
     router.push(`/live?${params.toString()}`, { scroll: false });
   };
 
-  // Fetch race info
+  // Fetch race info and simulation config
   useEffect(() => {
     async function fetchRaceInfo() {
       try {
@@ -117,12 +119,28 @@ function LivePageContent() {
         setLoadingRace(false);
       }
     }
+
+    async function fetchSimulationConfig() {
+      try {
+        const res = await fetch("/api/race/config");
+        const data = await res.json();
+        setSimulationMode(data.simulation_mode || false);
+      } catch (err) {
+        console.error("Failed to fetch simulation config:", err);
+      }
+    }
+
     fetchRaceInfo();
+    fetchSimulationConfig();
+
+    // Poll simulation config every 10 seconds
+    const interval = setInterval(fetchSimulationConfig, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   // Reset pagination when filters change
   useEffect(() => {
-    setVisibleCount(50);
+    setVisibleCount(10);
   }, [filter, searchQuery, countryFilter]);
 
   // Fetch teams data
@@ -132,7 +150,17 @@ function LivePageContent() {
     async function fetchTeams() {
       setLoadingTeams(true);
       try {
-        const res = await fetch(`/api/race/teams?gender=${teamsGender}`);
+        // Add cache-busting timestamp
+        const timestamp = Date.now();
+        const res = await fetch(
+          `/api/race/teams?gender=${teamsGender}&_t=${timestamp}`,
+          {
+            cache: "no-store",
+            headers: {
+              "Cache-Control": "no-cache",
+            },
+          }
+        );
         const data = await res.json();
         setTeams(data.teams || []);
       } catch (err) {
@@ -143,7 +171,7 @@ function LivePageContent() {
     }
 
     fetchTeams();
-    const interval = setInterval(fetchTeams, 60000); // Poll every 60 seconds
+    const interval = setInterval(fetchTeams, 10000); // Poll every 10 seconds
     return () => clearInterval(interval);
   }, [viewMode, teamsGender]);
 
@@ -198,6 +226,7 @@ function LivePageContent() {
         }`}
       />
       <div className="min-h-screen bg-background">
+        {simulationMode && <SimulationBanner />}
         <LiveNavigation />
         <div className="container mx-auto py-4 px-4 space-y-4">
           {/* Race Clock and View Mode Tabs */}
@@ -487,6 +516,12 @@ function LivePageContent() {
                       {/* Pagination Controls */}
                       {hasMore && (
                         <div className="flex justify-center gap-3 mt-4">
+                          <Button
+                            variant="outline"
+                            onClick={() => setVisibleCount((prev) => prev + 10)}
+                          >
+                            {t.live?.loadMore || "Ladda fler"} (+10)
+                          </Button>
                           <Button
                             variant="outline"
                             onClick={() => setVisibleCount((prev) => prev + 50)}

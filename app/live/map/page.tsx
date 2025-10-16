@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { RaceClock } from "@/components/live/RaceClock";
 import { LiveNavigation } from "@/components/live/LiveNavigation";
+import { SimulationBanner } from "@/components/live/SimulationBanner";
 import {
   Card,
   CardContent,
@@ -15,6 +16,7 @@ import type { RaceInfo } from "@/types/race";
 export default function MapPage() {
   const [raceInfo, setRaceInfo] = useState<RaceInfo | null>(null);
   const [loadingRace, setLoadingRace] = useState(true);
+  const [simulationMode, setSimulationMode] = useState(false);
 
   useEffect(() => {
     async function fetchRaceInfo() {
@@ -28,7 +30,22 @@ export default function MapPage() {
         setLoadingRace(false);
       }
     }
+
+    async function fetchSimulationConfig() {
+      try {
+        const res = await fetch("/api/race/config");
+        const data = await res.json();
+        setSimulationMode(data.simulation_mode || false);
+      } catch (err) {
+        console.error("Failed to fetch simulation config:", err);
+      }
+    }
+
     fetchRaceInfo();
+    fetchSimulationConfig();
+
+    const interval = setInterval(fetchSimulationConfig, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   if (loadingRace || !raceInfo) {
@@ -44,6 +61,7 @@ export default function MapPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      {simulationMode && <SimulationBanner />}
       <LiveNavigation />
       <div className="container mx-auto py-4 px-4 space-y-6">
         <RaceClock race={raceInfo} />
@@ -82,6 +100,3 @@ export default function MapPage() {
     </div>
   );
 }
-
-
-

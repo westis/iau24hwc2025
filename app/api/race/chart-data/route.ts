@@ -98,28 +98,25 @@ export async function GET(request: NextRequest) {
         .select("*")
         .eq("race_id", activeRace.id)
         .eq("bib", bib)
-        .gte("timestamp", cutoffTime.toISOString())
+        // .gte("timestamp", cutoffTime.toISOString()) // Commented out for simulation/testing
         .order("lap", { ascending: true });
 
       if (!laps || laps.length === 0) continue;
 
       // Convert to chart data points
       const dataPoints: ChartDataPoint[] = laps.map((lap) => {
-        const lapTime = new Date(lap.timestamp);
-        const elapsedSeconds = Math.floor(
-          (lapTime.getTime() - startTime.getTime()) / 1000
-        );
+        // Use race_time_sec from lap data (works for both live and simulation)
+        const elapsedSeconds = lap.race_time_sec || 0;
 
         // Calculate projected distance (24h projection)
+        // Formula: (distance / elapsed_time) * 86400 seconds
         const projectedKm =
-          lap.avg_pace > 0
-            ? ((86400 / lap.avg_pace) * lap.distance_km) / lap.race_time_sec
-            : 0;
+          elapsedSeconds > 0 ? (lap.distance_km / elapsedSeconds) * 86400 : 0;
 
         return {
           time: elapsedSeconds,
           distanceKm: lap.distance_km,
-          projectedKm: Number(projectedKm.toFixed(3)),
+          projectedKm: Number(projectedKm.toFixed(2)),
           avgPace: lap.avg_pace,
           bib: lap.bib,
         };
@@ -150,6 +147,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
-
-

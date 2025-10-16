@@ -18,7 +18,17 @@ export function useLeaderboard(
   const fetchLeaderboard = useCallback(async () => {
     try {
       const filterParam = filter === "watchlist" ? "overall" : filter;
-      const res = await fetch(`/api/race/leaderboard?filter=${filterParam}`);
+      // Add cache-busting timestamp to ensure fresh data
+      const timestamp = Date.now();
+      const res = await fetch(
+        `/api/race/leaderboard?filter=${filterParam}&_t=${timestamp}`,
+        {
+          cache: "no-store",
+          headers: {
+            "Cache-Control": "no-cache",
+          },
+        }
+      );
 
       if (!res.ok) {
         throw new Error("Failed to fetch leaderboard");
@@ -45,15 +55,13 @@ export function useLeaderboard(
   useEffect(() => {
     fetchLeaderboard();
 
-    // Only poll if race is live
+    // Always poll - the API will return current state
     const interval = setInterval(() => {
-      if (data?.raceState === "live") {
-        fetchLeaderboard();
-      }
+      fetchLeaderboard();
     }, pollInterval);
 
     return () => clearInterval(interval);
-  }, [fetchLeaderboard, pollInterval, data?.raceState]);
+  }, [fetchLeaderboard, pollInterval]);
 
   return {
     data,
@@ -62,6 +70,3 @@ export function useLeaderboard(
     refetch: fetchLeaderboard,
   };
 }
-
-
-
