@@ -84,10 +84,18 @@ export default function AdminNewsPage() {
 
   async function handleCreate() {
     try {
+      // Convert datetime-local to ISO string (datetime-local is in local timezone)
+      const publishedAtISO = formData.published_at
+        ? new Date(formData.published_at).toISOString()
+        : null;
+
       const response = await fetch("/api/news", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          published_at: publishedAtISO,
+        }),
       });
 
       if (response.ok) {
@@ -148,10 +156,18 @@ export default function AdminNewsPage() {
 
   async function handleUpdate(id: number) {
     try {
+      // Convert datetime-local to ISO string (datetime-local is in local timezone)
+      const publishedAtISO = formData.published_at
+        ? new Date(formData.published_at).toISOString()
+        : null;
+
       const response = await fetch(`/api/news/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          published_at: publishedAtISO,
+        }),
         cache: "no-store",
       });
 
@@ -322,9 +338,18 @@ export default function AdminNewsPage() {
   function startEdit(item: NewsItem) {
     setEditing(item);
     // Format published_at to datetime-local input format (YYYY-MM-DDTHH:MM)
-    const formattedPublishedAt = item.published_at
-      ? new Date(item.published_at).toISOString().slice(0, 16)
-      : "";
+    // datetime-local needs local time, so we convert from UTC to local
+    let formattedPublishedAt = "";
+    if (item.published_at) {
+      const date = new Date(item.published_at);
+      // Get local date/time components
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      const hours = String(date.getHours()).padStart(2, "0");
+      const minutes = String(date.getMinutes()).padStart(2, "0");
+      formattedPublishedAt = `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
     setFormData({
       title: item.title,
       content: item.content,
