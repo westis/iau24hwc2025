@@ -21,6 +21,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import ReactCountryFlag from "react-country-flag";
 import { getCountryCodeForFlag } from "@/lib/utils/country-codes";
 import type { RaceInfo } from "@/types/race";
+import type { LeaderboardEntry } from "@/types/live-race";
 import dynamic from "next/dynamic";
 
 // Dynamically import RaceMap to avoid SSR issues with Leaflet
@@ -146,11 +147,11 @@ export default function MapPage() {
     if (selectionMode === "country" && selectedCountry && leaderboardData) {
       const filtered = leaderboardData.entries
         .filter(
-          (e) =>
+          (e: LeaderboardEntry) =>
             e.country === selectedCountry &&
             (selectedGender === "m" ? e.gender === "m" : e.gender === "w")
         )
-        .map((e) => e.bib);
+        .map((e: LeaderboardEntry) => e.bib);
       return filtered.length > 0 ? filtered : undefined;
     }
 
