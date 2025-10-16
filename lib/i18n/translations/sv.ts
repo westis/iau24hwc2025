@@ -260,6 +260,7 @@ export const sv: Translations = {
     likes: "Gillningar",
     bannedFromLiking: "Du är avstängd från att gilla artiklar",
     save: "Spara",
+    cancel: "Avbryt",
   },
   admin: {
     manageNews: "Hantera nyheter",

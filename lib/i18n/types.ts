@@ -255,6 +255,7 @@ export interface Translations {
     likes: string;
     bannedFromLiking: string;
     save: string;
+    cancel: string;
   };
   admin: {
     manageNews: string;
