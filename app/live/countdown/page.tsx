@@ -173,211 +173,216 @@ export default function CountdownPage() {
 
   return (
     <>
-      <PageTitle title={`${t.live?.countdown || "Countdown"} | ${t.live?.title || "Live"}`} />
+      <PageTitle
+        title={`${t.live?.countdown || "Countdown"} | ${
+          t.live?.title || "Live"
+        }`}
+      />
       <div className="min-h-screen bg-background">
         {simulationMode && <SimulationBanner />}
         <LiveNavigation />
-      <div className="container mx-auto py-4 px-4 space-y-4">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <h1 className="text-2xl font-bold">
-            {t.live?.countdown || "Countdown"}
-          </h1>
-          <RaceClock race={raceInfo} />
-        </div>
+        <div className="container mx-auto py-4 px-4 space-y-4">
+          {/* Header */}
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <h1 className="text-2xl font-bold">
+              {t.live?.countdown || "Countdown"}
+            </h1>
+            <RaceClock race={raceInfo} />
+          </div>
 
-        {/* Tabs and Team Selection */}
-        <Tabs defaultValue="team" className="w-full">
-          <div className="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between mb-4">
-            <TabsList>
-              <TabsTrigger value="team">
-                <Users className="h-4 w-4 mr-2" />
-                {t.live?.team || "Team"}
-              </TabsTrigger>
-              <TabsTrigger value="watchlist">
-                <Star className="h-4 w-4 mr-2" />
-                {t.live?.watchlist || "Watchlist"} ({watchlist.length})
-              </TabsTrigger>
-            </TabsList>
+          {/* Tabs and Team Selection */}
+          <Tabs defaultValue="team" className="w-full">
+            <div className="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between mb-4">
+              <TabsList>
+                <TabsTrigger value="team">
+                  <Users className="h-4 w-4 mr-2" />
+                  {t.live?.team || "Team"}
+                </TabsTrigger>
+                <TabsTrigger value="watchlist">
+                  <Star className="h-4 w-4 mr-2" />
+                  {t.live?.watchlist || "Watchlist"} ({watchlist.length})
+                </TabsTrigger>
+              </TabsList>
 
-            {/* View Toggle and Team Selection */}
-            <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-end">
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant={viewLayout === "grid" ? "default" : "outline"}
-                  onClick={() => setViewLayout("grid")}
-                >
-                  <Grid3x3 className="h-4 w-4" />
-                </Button>
-                <Button
-                  size="sm"
-                  variant={viewLayout === "table" ? "default" : "outline"}
-                  onClick={() => setViewLayout("table")}
-                >
-                  <List className="h-4 w-4" />
-                </Button>
-              </div>
-              <div className="flex-1 sm:min-w-[200px]">
-                <Label className="text-xs">
-                  {t.live?.selectTeam || "Select Team"}
-                </Label>
-                <Select
-                  value={selectedCountry}
-                  onValueChange={setSelectedCountry}
-                >
-                  <SelectTrigger>
-                    <SelectValue
-                      placeholder={
-                        t.runners?.allCountries || "Select country..."
-                      }
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {countries.map((country) => (
-                      <SelectItem key={country} value={country}>
-                        <div className="flex items-center gap-2">
-                          <ReactCountryFlag
-                            countryCode={getCountryCodeForFlag(country)}
-                            svg
-                            style={{ width: "1.5em", height: "1em" }}
-                          />
-                          {country}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label className="text-xs">
-                  {t.common?.gender || "Gender"}
-                </Label>
-                <div className="flex gap-1">
+              {/* View Toggle and Team Selection */}
+              <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-end">
+                <div className="flex gap-2">
                   <Button
                     size="sm"
-                    variant={selectedGender === "all" ? "default" : "outline"}
-                    onClick={() => setSelectedGender("all")}
+                    variant={viewLayout === "grid" ? "default" : "outline"}
+                    onClick={() => setViewLayout("grid")}
                   >
-                    {t.common?.all || "All"}
+                    <Grid3x3 className="h-4 w-4" />
                   </Button>
                   <Button
                     size="sm"
-                    variant={selectedGender === "m" ? "default" : "outline"}
-                    onClick={() => setSelectedGender("m")}
+                    variant={viewLayout === "table" ? "default" : "outline"}
+                    onClick={() => setViewLayout("table")}
                   >
-                    {t.common?.men || "Men"}
+                    <List className="h-4 w-4" />
                   </Button>
-                  <Button
-                    size="sm"
-                    variant={selectedGender === "w" ? "default" : "outline"}
-                    onClick={() => setSelectedGender("w")}
+                </div>
+                <div className="flex-1 sm:min-w-[200px]">
+                  <Label className="text-xs">
+                    {t.live?.selectTeam || "Select Team"}
+                  </Label>
+                  <Select
+                    value={selectedCountry}
+                    onValueChange={setSelectedCountry}
                   >
-                    {t.common?.women || "Women"}
-                  </Button>
+                    <SelectTrigger>
+                      <SelectValue
+                        placeholder={
+                          t.runners?.allCountries || "Select country..."
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {countries.map((country) => (
+                        <SelectItem key={country} value={country}>
+                          <div className="flex items-center gap-2">
+                            <ReactCountryFlag
+                              countryCode={getCountryCodeForFlag(country)}
+                              svg
+                              style={{ width: "1.5em", height: "1em" }}
+                            />
+                            {country}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">
+                    {t.common?.gender || "Gender"}
+                  </Label>
+                  <div className="flex gap-1">
+                    <Button
+                      size="sm"
+                      variant={selectedGender === "all" ? "default" : "outline"}
+                      onClick={() => setSelectedGender("all")}
+                    >
+                      {t.common?.all || "All"}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={selectedGender === "m" ? "default" : "outline"}
+                      onClick={() => setSelectedGender("m")}
+                    >
+                      {t.common?.men || "Men"}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={selectedGender === "w" ? "default" : "outline"}
+                      onClick={() => setSelectedGender("w")}
+                    >
+                      {t.common?.women || "Women"}
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Team Tab */}
-          <TabsContent value="team" className="space-y-4">
-            {/* Team Results */}
-            {!selectedCountry && (
-              <div className="text-center py-12 border rounded-lg bg-muted/30">
-                <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-lg font-semibold mb-2">
-                  {t.live?.noTeamSelected || "No Team Selected"}
-                </h3>
-                <p className="text-muted-foreground">
-                  {t.live?.selectTeamToView ||
-                    "Select a country and gender to view countdown"}
-                </p>
-              </div>
-            )}
-
-            {selectedCountry && loadingCountdown && !countdownData && (
-              <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-foreground mx-auto mb-4"></div>
-                <p className="text-muted-foreground">
-                  {t.live?.loading || "Laddar..."}
-                </p>
-              </div>
-            )}
-
-            {selectedCountry && error && (
-              <div className="bg-destructive/10 text-destructive px-4 py-3 rounded-lg">
-                {t.common?.error || "Error"}: {error}
-              </div>
-            )}
-
-            {selectedCountry &&
-              countdownData &&
-              countdownData.predictions.length === 0 && (
+            {/* Team Tab */}
+            <TabsContent value="team" className="space-y-4">
+              {/* Team Results */}
+              {!selectedCountry && (
                 <div className="text-center py-12 border rounded-lg bg-muted/30">
+                  <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                  <h3 className="text-lg font-semibold mb-2">
+                    {t.live?.noTeamSelected || "No Team Selected"}
+                  </h3>
                   <p className="text-muted-foreground">
-                    {t.live?.noRunnersFound || "No runners found for this team"}
+                    {t.live?.selectTeamToView ||
+                      "Select a country and gender to view countdown"}
                   </p>
                 </div>
               )}
 
-            {selectedCountry &&
-            countdownData &&
-            countdownData.predictions.length > 0 ? (
-              <>
-                {viewLayout === "grid" ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
-                    {[...countdownData.predictions]
-                      .sort(
-                        (a, b) => a.timeUntilTimingMat - b.timeUntilTimingMat
-                      )
-                      .map((prediction) => (
-                        <CountdownCard
-                          key={prediction.bib}
-                          prediction={prediction}
-                          crewSpotOffset={effectiveCrewOffset}
-                        />
-                      ))}
-                  </div>
-                ) : (
-                  <CountdownTable
-                    predictions={[...countdownData.predictions].sort(
-                      (a, b) => a.timeUntilTimingMat - b.timeUntilTimingMat
-                    )}
-                    crewSpotOffset={effectiveCrewOffset}
-                  />
-                )}
-              </>
-            ) : selectedCountry &&
-              countdownData &&
-              countdownData.predictions.length === 0 &&
-              !loadingCountdown ? (
-              <Card className="p-8 text-center">
-                <p className="text-muted-foreground">
-                  No runners found for selected filters.
-                </p>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Try refreshing or check if the simulation is running.
-                </p>
-              </Card>
-            ) : null}
-          </TabsContent>
+              {selectedCountry && loadingCountdown && !countdownData && (
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-foreground mx-auto mb-4"></div>
+                  <p className="text-muted-foreground">
+                    {t.live?.loading || "Laddar..."}
+                  </p>
+                </div>
+              )}
 
-          {/* Watchlist Tab */}
-          <TabsContent value="watchlist" className="space-y-4">
-            <WatchlistCountdown
-              watchlist={watchlist}
-              effectiveCrewOffset={effectiveCrewOffset}
-              fetchCountdownData={fetchCountdownData}
-              loadingCountdown={loadingCountdown}
-              countdownData={countdownData}
-              error={error}
-              viewLayout={viewLayout}
-            />
-          </TabsContent>
-        </Tabs>
+              {selectedCountry && error && (
+                <div className="bg-destructive/10 text-destructive px-4 py-3 rounded-lg">
+                  {t.common?.error || "Error"}: {error}
+                </div>
+              )}
+
+              {selectedCountry &&
+                countdownData &&
+                countdownData.predictions.length === 0 && (
+                  <div className="text-center py-12 border rounded-lg bg-muted/30">
+                    <p className="text-muted-foreground">
+                      {t.live?.noRunnersFound ||
+                        "No runners found for this team"}
+                    </p>
+                  </div>
+                )}
+
+              {selectedCountry &&
+              countdownData &&
+              countdownData.predictions.length > 0 ? (
+                <>
+                  {viewLayout === "grid" ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
+                      {[...countdownData.predictions]
+                        .sort(
+                          (a, b) => a.timeUntilTimingMat - b.timeUntilTimingMat
+                        )
+                        .map((prediction) => (
+                          <CountdownCard
+                            key={prediction.bib}
+                            prediction={prediction}
+                            crewSpotOffset={effectiveCrewOffset}
+                          />
+                        ))}
+                    </div>
+                  ) : (
+                    <CountdownTable
+                      predictions={[...countdownData.predictions].sort(
+                        (a, b) => a.timeUntilTimingMat - b.timeUntilTimingMat
+                      )}
+                      crewSpotOffset={effectiveCrewOffset}
+                    />
+                  )}
+                </>
+              ) : selectedCountry &&
+                countdownData &&
+                countdownData.predictions.length === 0 &&
+                !loadingCountdown ? (
+                <Card className="p-8 text-center">
+                  <p className="text-muted-foreground">
+                    No runners found for selected filters.
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Try refreshing or check if the simulation is running.
+                  </p>
+                </Card>
+              ) : null}
+            </TabsContent>
+
+            {/* Watchlist Tab */}
+            <TabsContent value="watchlist" className="space-y-4">
+              <WatchlistCountdown
+                watchlist={watchlist}
+                effectiveCrewOffset={effectiveCrewOffset}
+                fetchCountdownData={fetchCountdownData}
+                loadingCountdown={loadingCountdown}
+                countdownData={countdownData}
+                error={error}
+                viewLayout={viewLayout}
+              />
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
-    </div>
     </>
   );
 }
@@ -465,10 +470,18 @@ function CountdownTable({
               const isOverdueTimingMat = currentTimeUntilTimingMat < 0;
               const isOverdueCrewSpot = currentTimeUntilCrewSpot < 0;
 
+              // Determine row background color based on time until timing mat
+              const getRowColorClass = () => {
+                if (isOverdueTimingMat) return "bg-red-50 dark:bg-red-950/20";
+                if (currentTimeUntilTimingMat <= 60) return "bg-green-50 dark:bg-green-950/20"; // <= 1 minute
+                if (currentTimeUntilTimingMat <= 120) return "bg-yellow-50 dark:bg-yellow-950/20"; // <= 2 minutes
+                return "";
+              };
+
               return (
                 <tr
                   key={prediction.bib}
-                  className="border-b last:border-b-0 hover:bg-muted/30 transition-colors"
+                  className={`border-b last:border-b-0 hover:bg-muted/30 transition-colors ${getRowColorClass()}`}
                 >
                   <td className="p-2 font-bold text-muted-foreground">
                     #{prediction.bib}

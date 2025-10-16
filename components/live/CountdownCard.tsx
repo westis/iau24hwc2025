@@ -78,6 +78,14 @@ export function CountdownCard({
     Math.max(0, (timeSinceLastPassing / prediction.predictedLapTime) * 100)
   );
 
+  // Determine card background color based on time until timing mat
+  const getCardColorClass = () => {
+    if (isOverdueTimingMat) return "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900";
+    if (currentTimeUntilTimingMat <= 60) return "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-900"; // <= 1 minute
+    if (currentTimeUntilTimingMat <= 120) return "bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-900"; // <= 2 minutes
+    return "";
+  };
+
   // Determine confidence level
   const confidenceLevel =
     prediction.confidence >= 0.8
@@ -94,7 +102,7 @@ export function CountdownCard({
       : "text-orange-500";
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className={`hover:shadow-md transition-all ${getCardColorClass()}`}>
       <CardContent className="p-3">
         {/* Header Row - Compact */}
         <div className="flex items-center justify-between mb-2">

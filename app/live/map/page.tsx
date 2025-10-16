@@ -64,45 +64,47 @@ export default function MapPage() {
 
   return (
     <>
-      <PageTitle title={`${t.live?.map || "Map"} | ${t.live?.title || "Live"}`} />
+      <PageTitle
+        title={`${t.live?.map || "Map"} | ${t.live?.title || "Live"}`}
+      />
       <div className="min-h-screen bg-background">
         {simulationMode && <SimulationBanner />}
         <LiveNavigation />
-      <div className="container mx-auto py-4 px-4 space-y-6">
-        <RaceClock race={raceInfo} />
+        <div className="container mx-auto py-4 px-4 space-y-6">
+          <RaceClock race={raceInfo} />
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Virtual Course Map</CardTitle>
-            <CardDescription>
-              Live runner positions on the course (Coming Soon)
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="h-96 flex items-center justify-center text-muted-foreground">
-            <div className="text-center space-y-2">
-              <p>
-                Virtual map with live runner tracking will be displayed here
-              </p>
-              <p className="text-sm">
-                Upload course GPX file in admin panel to enable this feature
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Virtual Course Map</CardTitle>
+              <CardDescription>
+                Live runner positions on the course (Coming Soon)
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="h-96 flex items-center justify-center text-muted-foreground">
+              <div className="text-center space-y-2">
+                <p>
+                  Virtual map with live runner tracking will be displayed here
+                </p>
+                <p className="text-sm">
+                  Upload course GPX file in admin panel to enable this feature
+                </p>
+              </div>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Crew Countdown</CardTitle>
-            <CardDescription>
-              Timing point countdown for watchlist runners (Coming Soon)
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="h-48 flex items-center justify-center text-muted-foreground">
-            Crew countdown feature will be added here
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Crew Countdown</CardTitle>
+              <CardDescription>
+                Timing point countdown for watchlist runners (Coming Soon)
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="h-48 flex items-center justify-center text-muted-foreground">
+              Crew countdown feature will be added here
+            </CardContent>
+          </Card>
+        </div>
       </div>
-    </div>
     </>
   );
 }

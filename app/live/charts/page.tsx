@@ -38,7 +38,7 @@ export default function ChartsPage() {
   const [showCustomSelection, setShowCustomSelection] = useState(false);
 
   const { watchlist } = useWatchlist();
-  
+
   // Fetch leaderboard based on top6 gender selection
   const leaderboardFilter = selectionMode === "top6" ? top6Gender : "overall";
   const { data: leaderboardData } = useLeaderboard(
@@ -139,134 +139,141 @@ export default function ChartsPage() {
 
   return (
     <>
-      <PageTitle title={`${t.live?.charts || "Charts"} | ${t.live?.title || "Live"}`} />
+      <PageTitle
+        title={`${t.live?.charts || "Charts"} | ${t.live?.title || "Live"}`}
+      />
       <div className="min-h-screen bg-background">
         {simulationMode && <SimulationBanner />}
         <LiveNavigation />
         <div className="container mx-auto py-4 px-4 space-y-4">
-        {/* Compact Header: Race Clock + Runner Selection */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-card border rounded-lg p-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-3 flex-wrap">
-              <span className="text-sm font-medium text-muted-foreground">
-                {t.live?.runnerSelection || "Välj löpare"}:
-              </span>
-              <div className="flex gap-2 flex-wrap items-center">
-                <Button
-                  size="sm"
-                  variant={selectionMode === "top6" ? "default" : "outline"}
-                  onClick={() => setSelectionMode("top6")}
-                >
-                  {t.live?.top6Overall || "Topp 6"}
-                </Button>
-                
-                {/* Gender selector for Top 6 */}
-                {selectionMode === "top6" && (
-                  <div className="flex gap-1 border rounded-md">
-                    <Button
-                      size="sm"
-                      variant={top6Gender === "men" ? "default" : "ghost"}
-                      onClick={() => setTop6Gender("men")}
-                      className="rounded-r-none"
-                    >
-                      {t.common?.men || "Herrar"}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={top6Gender === "women" ? "default" : "ghost"}
-                      onClick={() => setTop6Gender("women")}
-                      className="rounded-l-none"
-                    >
-                      {t.common?.women || "Damer"}
-                    </Button>
-                  </div>
-                )}
-                
-                <Button
-                  size="sm"
-                  variant={
-                    selectionMode === "watchlist" ? "default" : "outline"
-                  }
-                  onClick={() => setSelectionMode("watchlist")}
-                  disabled={watchlist.length === 0}
-                >
-                  ⭐ {watchlist.length}
-                </Button>
-                <Button
-                  size="sm"
-                  variant={selectionMode === "custom" ? "default" : "outline"}
-                  onClick={() => {
-                    setSelectionMode("custom");
-                    setShowCustomSelection(true);
-                  }}
-                >
-                  {t.live?.custom || "Anpassad"}
-                </Button>
-                {selectionMode === "custom" && (
+          {/* Compact Header: Race Clock + Runner Selection */}
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-card border rounded-lg p-4">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 flex-wrap">
+                <span className="text-sm font-medium text-muted-foreground">
+                  {t.live?.runnerSelection || "Välj löpare"}:
+                </span>
+                <div className="flex gap-2 flex-wrap items-center">
                   <Button
                     size="sm"
-                    variant="ghost"
-                    onClick={() => setShowCustomSelection(!showCustomSelection)}
+                    variant={selectionMode === "top6" ? "default" : "outline"}
+                    onClick={() => setSelectionMode("top6")}
                   >
-                    {showCustomSelection ? "▼" : "▶"}
+                    {t.live?.top6Overall || "Topp 6"}
                   </Button>
-                )}
+
+                  {/* Gender selector for Top 6 */}
+                  {selectionMode === "top6" && (
+                    <div className="flex gap-1 border rounded-md">
+                      <Button
+                        size="sm"
+                        variant={top6Gender === "men" ? "default" : "ghost"}
+                        onClick={() => setTop6Gender("men")}
+                        className="rounded-r-none"
+                      >
+                        {t.common?.men || "Herrar"}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={top6Gender === "women" ? "default" : "ghost"}
+                        onClick={() => setTop6Gender("women")}
+                        className="rounded-l-none"
+                      >
+                        {t.common?.women || "Damer"}
+                      </Button>
+                    </div>
+                  )}
+
+                  <Button
+                    size="sm"
+                    variant={
+                      selectionMode === "watchlist" ? "default" : "outline"
+                    }
+                    onClick={() => setSelectionMode("watchlist")}
+                    disabled={watchlist.length === 0}
+                  >
+                    ⭐ {watchlist.length}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={selectionMode === "custom" ? "default" : "outline"}
+                    onClick={() => {
+                      setSelectionMode("custom");
+                      setShowCustomSelection(true);
+                    }}
+                  >
+                    {t.live?.custom || "Anpassad"}
+                  </Button>
+                  {selectionMode === "custom" && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() =>
+                        setShowCustomSelection(!showCustomSelection)
+                      }
+                    >
+                      {showCustomSelection ? "▼" : "▶"}
+                    </Button>
+                  )}
+                </div>
+                <span className="text-xs text-muted-foreground">
+                  ({selectedBibs.length} {t.live?.runners || "löpare"})
+                </span>
               </div>
-              <span className="text-xs text-muted-foreground">
-                ({selectedBibs.length} {t.live?.runners || "löpare"})
-              </span>
+
+              {selectionMode === "custom" &&
+                showCustomSelection &&
+                leaderboardData && (
+                  <div className="mt-3 border rounded-lg p-3 max-h-48 overflow-y-auto bg-muted/20">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
+                      {leaderboardData.entries.map((entry) => (
+                        <div
+                          key={entry.bib}
+                          className="flex items-center gap-2"
+                        >
+                          <Checkbox
+                            id={`runner-${entry.bib}`}
+                            checked={selectedBibs.includes(entry.bib)}
+                            onCheckedChange={() => toggleBib(entry.bib)}
+                          />
+                          <Label
+                            htmlFor={`runner-${entry.bib}`}
+                            className="text-xs cursor-pointer truncate"
+                            title={`#${entry.bib} ${entry.name}`}
+                          >
+                            #{entry.bib} {entry.name.split(" ")[0]}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
             </div>
 
-            {selectionMode === "custom" &&
-              showCustomSelection &&
-              leaderboardData && (
-                <div className="mt-3 border rounded-lg p-3 max-h-48 overflow-y-auto bg-muted/20">
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
-                    {leaderboardData.entries.map((entry) => (
-                      <div key={entry.bib} className="flex items-center gap-2">
-                        <Checkbox
-                          id={`runner-${entry.bib}`}
-                          checked={selectedBibs.includes(entry.bib)}
-                          onCheckedChange={() => toggleBib(entry.bib)}
-                        />
-                        <Label
-                          htmlFor={`runner-${entry.bib}`}
-                          className="text-xs cursor-pointer truncate"
-                          title={`#${entry.bib} ${entry.name}`}
-                        >
-                          #{entry.bib} {entry.name.split(" ")[0]}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+            <RaceClock race={raceInfo} />
           </div>
 
-          <RaceClock race={raceInfo} />
+          {/* Chart Tabs */}
+          <Tabs defaultValue="distance-pace" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="distance-pace">
+                {t.live?.distanceAndPace || "Distance & Pace"}
+              </TabsTrigger>
+              <TabsTrigger value="gap-analysis">
+                {t.live?.gapAnalysis || "Gap Analysis"}
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="distance-pace" className="mt-6">
+              <DistancePaceChart bibs={selectedBibs} />
+            </TabsContent>
+
+            <TabsContent value="gap-analysis" className="mt-6">
+              <GapAnalysisChart bibs={selectedBibs} />
+            </TabsContent>
+          </Tabs>
         </div>
-
-        {/* Chart Tabs */}
-        <Tabs defaultValue="distance-pace" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="distance-pace">
-              {t.live?.distanceAndPace || "Distance & Pace"}
-            </TabsTrigger>
-            <TabsTrigger value="gap-analysis">
-              {t.live?.gapAnalysis || "Gap Analysis"}
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="distance-pace" className="mt-6">
-            <DistancePaceChart bibs={selectedBibs} />
-          </TabsContent>
-
-          <TabsContent value="gap-analysis" className="mt-6">
-            <GapAnalysisChart bibs={selectedBibs} />
-          </TabsContent>
-        </Tabs>
       </div>
-    </div>
     </>
   );
 }
