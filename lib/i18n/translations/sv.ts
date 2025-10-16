@@ -480,5 +480,18 @@ export const sv: Translations = {
     simulationMode: "SIMULERINGSLÄGE",
     simulationModeDesc:
       "Detta är inte live-data från loppet. Klockan och data är simulerade för testning.",
+    countdown: "Nedräkning",
+    timingMat: "Tidtagningsmatta",
+    crewSpot: "Depåplats",
+    estimatedLapTime: "Beräknad varvtid",
+    confidence: "Tillförlitlighet",
+    overdue: "Försenad",
+    crewSpotOffset: "Depåplatsavstånd",
+    selectTeam: "Välj lag",
+    noTeamSelected: "Inget lag valt",
+    selectTeamToView: "Välj land och kön för att visa nedräkning",
+    team: "Lag",
+    runnerOverdueMessage: "Löparen kan vara på paus eller försenad",
+    ago: "sedan",
   },
 };

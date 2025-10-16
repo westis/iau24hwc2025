@@ -390,8 +390,8 @@ export function GapAnalysisChart({ bibs }: GapAnalysisChartProps) {
           },
         },
         zoom: {
-        pan: {
-          enabled: true,
+          pan: {
+            enabled: true,
             mode: "x",
           },
           zoom: {
@@ -487,7 +487,7 @@ export function GapAnalysisChart({ bibs }: GapAnalysisChartProps) {
           },
         },
         y: {
-        title: {
+          title: {
             display: true,
             text:
               t.live?.gapFromBaseline ||
@@ -500,9 +500,9 @@ export function GapAnalysisChart({ bibs }: GapAnalysisChartProps) {
               const numValue = Number(value);
               const sign = numValue >= 0 ? "+" : "";
               return `${sign}${numValue.toFixed(0)}`;
-        },
-      },
-      grid: {
+            },
+          },
+          grid: {
             color: gridColor,
           },
         },

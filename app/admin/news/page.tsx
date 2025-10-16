@@ -455,7 +455,7 @@ export default function AdminNewsPage() {
                   {t.news.published} ({t.news.publishedDesc})
                 </label>
               </div>
-              
+
               {/* Publish Date/Time */}
               <div className="space-y-1.5">
                 <label
@@ -474,10 +474,11 @@ export default function AdminNewsPage() {
                   className="w-full px-3 py-2 border border-border rounded-md bg-background"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Controls the display order (most recent first). Leave empty to use creation time.
+                  Controls the display order (most recent first). Leave empty to
+                  use creation time.
                 </p>
               </div>
-              
+
               <div className="flex items-center gap-2">
                 <input
                   type="checkbox"

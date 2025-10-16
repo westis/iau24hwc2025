@@ -78,6 +78,7 @@ export async function PATCH(request: NextRequest) {
       raceState,
       courseGeojson,
       courseDistanceKm,
+      crewSpotOffsetMeters,
       currentRaceTimeSec,
       simulationMode,
       simulationStartTime,
@@ -103,6 +104,8 @@ export async function PATCH(request: NextRequest) {
     if (raceState) updates.race_state = raceState;
     if (courseGeojson) updates.course_geojson = courseGeojson;
     if (courseDistanceKm) updates.course_distance_km = courseDistanceKm;
+    if (typeof crewSpotOffsetMeters !== "undefined")
+      updates.crew_spot_offset_meters = crewSpotOffsetMeters;
     if (typeof currentRaceTimeSec !== "undefined")
       updates.current_race_time_sec = currentRaceTimeSec;
     if (typeof simulationMode !== "undefined")

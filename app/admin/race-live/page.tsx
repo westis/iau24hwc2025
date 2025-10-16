@@ -209,7 +209,8 @@ export default function RaceLiveAdminPage() {
 }`}
                 />
                 <p className="text-sm text-muted-foreground">
-                  Paste JSON with &quot;laps&quot; and &quot;leaderboard&quot; arrays
+                  Paste JSON with &quot;laps&quot; and &quot;leaderboard&quot;
+                  arrays
                 </p>
               </div>
 
@@ -359,6 +360,99 @@ export default function RaceLiveAdminPage() {
                     This distance is used for calculating total distance from
                     lap counts. Currently set to 0.821 km (official Albi
                     course).
+                  </p>
+                </div>
+                <div className="space-y-3 pt-3 border-t">
+                  <div className="flex gap-2 items-end">
+                    <div className="flex-1">
+                      <Label htmlFor="crew-spot-offset">
+                        Crew Spot Offset (meters)
+                      </Label>
+                      <Input
+                        id="crew-spot-offset"
+                        type="number"
+                        step="10"
+                        placeholder="0"
+                        defaultValue="0"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            const input = e.currentTarget;
+                            const value = parseInt(input.value);
+                            if (!isNaN(value)) {
+                              setLoading(true);
+                              fetch("/api/race/config", {
+                                method: "PATCH",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                  crewSpotOffsetMeters: value,
+                                }),
+                              })
+                                .then(() => {
+                                  toast({
+                                    title: "Crew spot offset updated",
+                                    description: `Set to ${
+                                      value > 0 ? "+" : ""
+                                    }${value}m`,
+                                  });
+                                })
+                                .catch(() => {
+                                  toast({
+                                    title: "Error",
+                                    description:
+                                      "Failed to update crew spot offset",
+                                    variant: "destructive",
+                                  });
+                                })
+                                .finally(() => setLoading(false));
+                            }
+                          }
+                        }}
+                      />
+                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        const input = document.getElementById(
+                          "crew-spot-offset"
+                        ) as HTMLInputElement;
+                        const value = parseInt(input.value);
+                        if (!isNaN(value)) {
+                          setLoading(true);
+                          fetch("/api/race/config", {
+                            method: "PATCH",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                              crewSpotOffsetMeters: value,
+                            }),
+                          })
+                            .then(() => {
+                              toast({
+                                title: "Crew spot offset updated",
+                                description: `Set to ${
+                                  value > 0 ? "+" : ""
+                                }${value}m`,
+                              });
+                            })
+                            .catch(() => {
+                              toast({
+                                title: "Error",
+                                description:
+                                  "Failed to update crew spot offset",
+                                variant: "destructive",
+                              });
+                            })
+                            .finally(() => setLoading(false));
+                        }
+                      }}
+                      disabled={loading}
+                    >
+                      Update
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Offset in meters for crew spot from timing mat. Positive =
+                    after timing mat, Negative = before timing mat. Used for
+                    crew countdown predictions.
                   </p>
                 </div>
               </div>

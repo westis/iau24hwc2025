@@ -53,6 +53,7 @@ export interface RaceConfig {
   courseGeojson?: any; // GeoJSON of course loop
   courseDistanceKm?: number; // Loop distance
   timingPointOffset?: number; // Offset in meters from start
+  crewSpotOffsetMeters?: number; // Offset in meters for crew spot (positive = after timing mat, negative = before)
   lastDataFetch?: string;
   dataSource?: string;
   createdAt: string;
@@ -109,7 +110,25 @@ export interface ChartDataResponse {
   currentTime: string;
 }
 
+export interface NextLapPrediction {
+  bib: number;
+  name: string;
+  country: string;
+  gender: "m" | "w";
+  lastPassingTime: string; // ISO timestamp
+  timeSinceLastPassing: number; // seconds
+  predictedLapTime: number; // seconds
+  timeUntilTimingMat: number; // seconds (can be negative if overdue)
+  timeUntilCrewSpot: number; // seconds (can be negative)
+  confidence: number; // 0-1, based on lap consistency
+  recentLaps: number[]; // lap times used for prediction
+  distanceKm: number; // total distance covered
+  genderRank: number; // current gender rank
+}
 
-
-
-
+export interface CountdownResponse {
+  predictions: NextLapPrediction[];
+  crewSpotOffset: number; // meters
+  lapDistance: number; // km
+  lastUpdate: string;
+}

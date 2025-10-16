@@ -304,8 +304,3 @@ simulateLiveRace().catch((error) => {
   console.error("\n❌ Error:", error.message);
   process.exit(1);
 });
-
- 
- e x p o r t   { } ; 
- 
- 

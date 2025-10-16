@@ -481,5 +481,18 @@ export const en: Translations = {
     emptyWatchlistMessage:
       "Add runners to your watchlist by clicking the star icon next to their name.",
     viewAllRunners: "View All Runners",
+    countdown: "Countdown",
+    timingMat: "Timing Mat",
+    crewSpot: "Crew Spot",
+    estimatedLapTime: "Est. Lap Time",
+    confidence: "Confidence",
+    overdue: "Overdue",
+    crewSpotOffset: "Crew Spot Offset",
+    selectTeam: "Select Team",
+    noTeamSelected: "No Team Selected",
+    selectTeamToView: "Select a country and gender to view countdown",
+    team: "Team",
+    runnerOverdueMessage: "Runner may be on break or delayed",
+    ago: "ago",
   },
 };

@@ -468,5 +468,18 @@ export interface Translations {
     viewAllRunners: string;
     simulationMode: string;
     simulationModeDesc: string;
+    countdown: string;
+    timingMat: string;
+    crewSpot: string;
+    estimatedLapTime: string;
+    confidence: string;
+    overdue: string;
+    crewSpotOffset: string;
+    selectTeam: string;
+    noTeamSelected: string;
+    selectTeamToView: string;
+    team: string;
+    runnerOverdueMessage: string;
+    ago: string;
   };
 }
