@@ -259,6 +259,7 @@ export const sv: Translations = {
     like: "Gilla",
     likes: "Gillningar",
     bannedFromLiking: "Du är avstängd från att gilla artiklar",
+    save: "Spara",
   },
   admin: {
     manageNews: "Hantera nyheter",

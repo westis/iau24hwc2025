@@ -259,6 +259,7 @@ export const en: Translations = {
     like: "Like",
     likes: "Likes",
     bannedFromLiking: "You are banned from liking articles",
+    save: "Save",
   },
   admin: {
     manageNews: "Manage News",

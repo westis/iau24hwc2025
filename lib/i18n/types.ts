@@ -254,6 +254,7 @@ export interface Translations {
     like: string;
     likes: string;
     bannedFromLiking: string;
+    save: string;
   };
   admin: {
     manageNews: string;
