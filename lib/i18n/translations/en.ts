@@ -311,7 +311,8 @@ export const en: Translations = {
     signIn: "Sign In",
     createAccount: "Create Account",
     signInDescription: "Sign in to comment, like, and chat",
-    createAccountDescription: "Create an account to interact with the community",
+    createAccountDescription:
+      "Create an account to interact with the community",
     email: "Email",
     password: "Password",
     displayName: "Display Name",

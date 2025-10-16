@@ -28,16 +28,15 @@ export function UserMenu() {
           </Button>
         </Link>
         <Link href="/chat/signup">
-          <Button size="sm">
-            {t.chat.createAccount}
-          </Button>
+          <Button size="sm">{t.chat.createAccount}</Button>
         </Link>
       </div>
     );
   }
 
   // If logged in, show user menu
-  const displayName = chatUser?.display_name || user.email?.split("@")[0] || "User";
+  const displayName =
+    chatUser?.display_name || user.email?.split("@")[0] || "User";
   const initials = displayName
     .split(" ")
     .map((n) => n[0])
@@ -57,24 +56,29 @@ export function UserMenu() {
               {initials}
             </AvatarFallback>
           </Avatar>
-          <span className="hidden md:inline text-sm font-medium">{displayName}</span>
+          <span className="hidden md:inline text-sm font-medium">
+            {displayName}
+          </span>
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuItem asChild>
-          <Link href="/chat" className="cursor-pointer flex items-center">
+          <Link href="/chat/profile" className="cursor-pointer flex items-center">
             <User className="h-4 w-4 mr-2" />
             {t.chat.profile}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/chat" className="cursor-pointer flex items-center">
+          <Link href="/chat/profile" className="cursor-pointer flex items-center">
             <Settings className="h-4 w-4 mr-2" />
             {t.chat.settings}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => signOut()} className="cursor-pointer flex items-center">
+        <DropdownMenuItem
+          onClick={() => signOut()}
+          className="cursor-pointer flex items-center"
+        >
           <LogOut className="h-4 w-4 mr-2" />
           {t.chat.logout}
         </DropdownMenuItem>
@@ -82,4 +86,3 @@ export function UserMenu() {
     </DropdownMenu>
   );
 }
-

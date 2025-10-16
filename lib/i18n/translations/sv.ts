@@ -311,7 +311,8 @@ export const sv: Translations = {
     signIn: "Logga in",
     createAccount: "Skapa konto",
     signInDescription: "Logga in för att kommentera, gilla och chatta",
-    createAccountDescription: "Skapa ett konto för att interagera med communityn",
+    createAccountDescription:
+      "Skapa ett konto för att interagera med communityn",
     email: "E-post",
     password: "Lösenord",
     displayName: "Visningsnamn",
