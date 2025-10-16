@@ -307,11 +307,11 @@ export const en: Translations = {
   chat: {
     title: "Race Chat",
     online: "online",
-    joinChat: "Join the race chat",
+    joinChat: "Create Account",
     signIn: "Sign In",
     createAccount: "Create Account",
-    signInDescription: "Sign in to join the race chat",
-    createAccountDescription: "Join the chat community",
+    signInDescription: "Sign in to comment, like, and chat",
+    createAccountDescription: "Create an account to interact with the community",
     email: "Email",
     password: "Password",
     displayName: "Display Name",
@@ -346,6 +346,8 @@ export const en: Translations = {
     banned: "You have been banned from the chat",
     bannedReason: "Reason",
     logout: "Log out",
+    profile: "Profile",
+    settings: "Settings",
   },
   live: {
     title: "Live",

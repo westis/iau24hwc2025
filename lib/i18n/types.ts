@@ -307,6 +307,8 @@ export interface Translations {
     createAccount: string;
     signInDescription: string;
     createAccountDescription: string;
+    profile: string;
+    settings: string;
     email: string;
     password: string;
     displayName: string;

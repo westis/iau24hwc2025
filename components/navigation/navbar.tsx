@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { UserMenu } from "@/components/navigation/UserMenu";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -87,12 +88,14 @@ export function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
+            <UserMenu />
             <LanguageSwitcher />
             <ThemeToggle />
           </div>
 
           {/* Mobile Menu Button */}
           <div className="flex items-center gap-2 md:hidden">
+            <UserMenu />
             <LanguageSwitcher />
             <ThemeToggle />
             <button
