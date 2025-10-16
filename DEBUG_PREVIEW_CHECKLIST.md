@@ -154,3 +154,4 @@ Send me the output of:
 1. The SQL query results
 2. The API response from browser console
 3. Any console errors
+

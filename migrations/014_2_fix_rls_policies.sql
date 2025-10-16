@@ -34,3 +34,4 @@ CREATE POLICY "Enable read access for all users"
   TO authenticated, anon
   USING (true);
 
+

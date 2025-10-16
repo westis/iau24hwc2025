@@ -70,3 +70,4 @@ RESEND_FROM_EMAIL=noreply@ultramarathon.se
 - Unsubscribe link in every email
 - Admin can see subscriber count
 - Better error handling and feedback
+

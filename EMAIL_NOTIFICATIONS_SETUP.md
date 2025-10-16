@@ -248,3 +248,4 @@ Users can choose:
 - ✅ Email (works everywhere, especially iOS!)
 - ✅ Push (instant on desktop/Android)
 - ✅ Both (maximum reach)
+

@@ -28,3 +28,4 @@ export interface ChatMessageCreate {
 export interface BanUserRequest {
   reason?: string;
 }
+

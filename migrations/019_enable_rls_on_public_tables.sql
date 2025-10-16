@@ -58,3 +58,4 @@ USING (TRUE);
 -- These tables are managed server-side via API routes with SUPABASE_SERVICE_ROLE_KEY
 -- No INSERT/UPDATE/DELETE policies needed as client-side writes are not allowed
 
+

@@ -149,3 +149,4 @@ If you still get errors after creating the bucket, check:
 3. **Check browser console** for more specific error
 
 Let me know if you need help! 🚀
+

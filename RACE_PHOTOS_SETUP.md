@@ -104,3 +104,4 @@ The race photos bucket is used for:
 - Verify you're logged in as an admin user
 - Check that the authenticated write policies are properly configured
 
+

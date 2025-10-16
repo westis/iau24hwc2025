@@ -23,3 +23,4 @@ WHERE confirmation_token IS NULL;
 -- Uncomment the line below if you want to grandfather in existing subscribers:
 -- UPDATE email_subscriptions SET confirmed = TRUE, confirmed_at = NOW() WHERE confirmed = FALSE;
 
+

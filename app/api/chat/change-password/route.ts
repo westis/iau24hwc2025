@@ -49,3 +49,4 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Internt serverfel" }, { status: 500 });
   }
 }
+

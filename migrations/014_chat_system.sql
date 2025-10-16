@@ -143,3 +143,4 @@ COMMENT ON TABLE chat_messages IS 'Chat messages with soft delete support';
 COMMENT ON COLUMN chat_messages.deleted_at IS 'Timestamp of soft deletion (NULL = not deleted)';
 COMMENT ON COLUMN chat_users.is_admin IS 'Admin users can moderate chat (delete messages, ban users)';
 
+

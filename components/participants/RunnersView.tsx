@@ -144,7 +144,7 @@ export function RunnersView({
           <div className="h-full bg-primary animate-pulse" />
         </div>
       )}
-      
+
       {showHeader && (
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-3xl font-bold">{t.runners.title}</h1>
@@ -328,7 +328,11 @@ export function RunnersView({
         </div>
       </div>
 
-      <div className={`transition-opacity duration-200 ${isRefreshing ? "opacity-60" : "opacity-100"}`}>
+      <div
+        className={`transition-opacity duration-200 ${
+          isRefreshing ? "opacity-60" : "opacity-100"
+        }`}
+      >
         <RunnerTable
           runners={runners}
           metric={selectedMetric}

@@ -206,3 +206,4 @@ If you encounter issues:
 ---
 
 **Note**: The chat is now live on all pages! Users will see it after scrolling down to avoid blocking important content on page load.
+

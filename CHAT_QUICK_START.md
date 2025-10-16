@@ -64,3 +64,4 @@ Everything runs on Supabase free tier!
 ---
 
 For detailed setup and troubleshooting, see `CHAT_SETUP_GUIDE.md`
+

@@ -172,7 +172,11 @@ export function TeamsView({
       </div>
 
       {/* Teams */}
-      <div className={`mb-8 transition-opacity duration-200 ${isRefreshing ? "opacity-60" : "opacity-100"}`}>
+      <div
+        className={`mb-8 transition-opacity duration-200 ${
+          isRefreshing ? "opacity-60" : "opacity-100"
+        }`}
+      >
         <h2 className="text-lg font-semibold mb-3">
           {gender === "M" ? t.teams.men : t.teams.women} ({teams.length})
         </h2>
