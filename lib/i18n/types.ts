@@ -441,6 +441,7 @@ export interface Translations {
     distanceAndPaceDesc: string;
     gapAnalysis: string;
     gapAnalysisDesc: string;
+    gapFromBaseline: string;
     baselineMode: string;
     worldRecord: string;
     manualDistance: string;

@@ -390,8 +390,8 @@ export function GapAnalysisChart({ bibs }: GapAnalysisChartProps) {
           },
         },
         zoom: {
-          pan: {
-            enabled: true,
+        pan: {
+          enabled: true,
             mode: "x",
           },
           zoom: {
@@ -411,7 +411,8 @@ export function GapAnalysisChart({ bibs }: GapAnalysisChartProps) {
       scales: {
         x: {
           type: "linear",
-          // No min/max - auto-scale to data range by default
+          min: 0,
+          max: 24 * 3600 * 1000, // Hard limit: 0-24 hours
           title: {
             display: true,
             text: t.live?.raceTime || "Race Time",
@@ -486,7 +487,7 @@ export function GapAnalysisChart({ bibs }: GapAnalysisChartProps) {
           },
         },
         y: {
-          title: {
+        title: {
             display: true,
             text:
               t.live?.gapFromBaseline ||
@@ -499,9 +500,9 @@ export function GapAnalysisChart({ bibs }: GapAnalysisChartProps) {
               const numValue = Number(value);
               const sign = numValue >= 0 ? "+" : "";
               return `${sign}${numValue.toFixed(0)}`;
-            },
-          },
-          grid: {
+        },
+      },
+      grid: {
             color: gridColor,
           },
         },

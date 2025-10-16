@@ -337,7 +337,8 @@ export function DistancePaceChart({ bibs }: DistancePaceChartProps) {
       scales: {
         x: {
           type: "linear",
-          // No min/max - auto-scale to data range by default
+          min: 0,
+          max: 24 * 3600 * 1000, // Hard limit: 0-24 hours
           title: {
             display: true,
             text: t.live?.raceTime || "Race Time",

@@ -450,6 +450,7 @@ export const sv: Translations = {
     distanceAndPaceDesc: "Beräknad distans över tävlingstid",
     gapAnalysis: "Gapanalys",
     gapAnalysisDesc: "Avstånd från referensdistans",
+    gapFromBaseline: "Gap från referens (km)",
     baselineMode: "Referensläge",
     worldRecord: "Världsrekord",
     manualDistance: "Manuell distans",

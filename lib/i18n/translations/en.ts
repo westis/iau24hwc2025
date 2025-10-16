@@ -454,6 +454,7 @@ export const en: Translations = {
       "Projected distance (left) and average pace (right) over race time",
     gapAnalysis: "Gap Analysis",
     gapAnalysisDesc: "Gap from baseline distance",
+    gapFromBaseline: "Gap from baseline (km)",
     baselineMode: "Baseline Mode",
     worldRecord: "World Record",
     manualDistance: "Manual Distance",
