@@ -63,13 +63,19 @@ export function UserMenu() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuItem asChild>
-          <Link href="/chat/profile" className="cursor-pointer flex items-center">
+          <Link
+            href="/chat/profile?tab=profile"
+            className="cursor-pointer flex items-center"
+          >
             <User className="h-4 w-4 mr-2" />
             {t.chat.profile}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/chat/profile" className="cursor-pointer flex items-center">
+          <Link
+            href="/chat/profile?tab=settings"
+            className="cursor-pointer flex items-center"
+          >
             <Settings className="h-4 w-4 mr-2" />
             {t.chat.settings}
           </Link>
