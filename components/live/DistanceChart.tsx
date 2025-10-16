@@ -11,16 +11,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import type { ChartDataResponse } from "@/types/live-race";
 
@@ -102,155 +92,20 @@ export function DistanceChart({
     );
   }
 
+  // Deprecated Recharts-based chart. Kept as a stub to avoid build errors.
   return (
     <Card>
       <CardHeader>
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <CardTitle>
-              {t.live?.distanceOverTime || "Distance Over Time"}
-            </CardTitle>
-            <CardDescription>
-              {t.live?.projectedDistance ||
-                "Projected 24h distance based on current pace"}
-            </CardDescription>
-          </div>
-
-          <div className="flex gap-2">
-            <Button
-              variant={range === "6h" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setRange("6h")}
-            >
-              6h
-            </Button>
-            <Button
-              variant={range === "12h" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setRange("12h")}
-            >
-              12h
-            </Button>
-            <Button
-              variant={range === "24h" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setRange("24h")}
-            >
-              24h
-            </Button>
-          </div>
-        </div>
+        <CardTitle>
+          {t.live?.distanceOverTime || "Distance Over Time"}
+        </CardTitle>
+        <CardDescription>
+          {t.live?.projectedDistance ||
+            "This chart has been deprecated. Please use the new ApexCharts-based charts."}
+        </CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {/* Controls */}
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="show-forecast"
-              checked={showForecast}
-              onCheckedChange={(checked) => setShowForecast(checked === true)}
-            />
-            <Label htmlFor="show-forecast" className="text-sm cursor-pointer">
-              {t.live?.showForecast || "Show Forecast"}
-            </Label>
-          </div>
-
-          {/* Chart */}
-          <div className="h-96 w-full">
-            {data && data.runners.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    className="stroke-muted"
-                  />
-                  <XAxis
-                    dataKey="time"
-                    type="number"
-                    domain={["dataMin", "dataMax"]}
-                    tickFormatter={(value) => {
-                      const hours = Math.floor(value / 60);
-                      const minutes = Math.round(value % 60);
-                      return `${hours}:${minutes.toString().padStart(2, "0")}`;
-                    }}
-                    label={{
-                      value: "Race Time (h:mm)",
-                      position: "insideBottom",
-                      offset: -5,
-                    }}
-                  />
-                  <YAxis
-                    label={{
-                      value: "Distance (km)",
-                      angle: -90,
-                      position: "insideLeft",
-                    }}
-                  />
-                  <Tooltip
-                    content={({ active, payload }) => {
-                      if (!active || !payload || payload.length === 0)
-                        return null;
-                      const data = payload[0].payload;
-                      const hours = Math.floor(data.time / 60);
-                      const minutes = Math.round(data.time % 60);
-                      return (
-                        <div className="bg-background border rounded-lg shadow-lg p-3 space-y-1">
-                          <p className="font-semibold">
-                            Time: {hours}h {minutes}m
-                          </p>
-                          {payload.map((entry: any) => (
-                            <p
-                              key={entry.name}
-                              style={{ color: entry.color }}
-                              className="text-sm"
-                            >
-                              {entry.name}: {entry.value.toFixed(2)} km
-                            </p>
-                          ))}
-                        </div>
-                      );
-                    }}
-                  />
-                  <Legend />
-                  {data.runners.map((runner) => (
-                    <Line
-                      key={runner.bib}
-                      type="monotone"
-                      data={runner.data}
-                      dataKey="distance"
-                      stroke={runner.color}
-                      name={`#${runner.bib} ${runner.name}`}
-                      strokeWidth={2}
-                      dot={false}
-                      activeDot={{ r: 6 }}
-                    />
-                  ))}
-                </LineChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-full flex items-center justify-center border rounded-lg bg-muted/20">
-                <p className="text-muted-foreground">No data available</p>
-              </div>
-            )}
-          </div>
-
-          {/* Legend */}
-          {data && (
-            <div className="flex flex-wrap gap-4 justify-center">
-              {data.runners.map((runner) => (
-                <div key={runner.bib} className="flex items-center gap-2">
-                  <div
-                    className="w-4 h-4 rounded"
-                    style={{ backgroundColor: runner.color }}
-                  />
-                  <span className="text-sm font-medium">
-                    #{runner.bib} {runner.name}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+      <CardContent className="h-32 flex items-center justify-center text-muted-foreground">
+        {t.common?.comingSoon || "Replaced by DistancePaceChart and GapAnalysisChart"}
       </CardContent>
     </Card>
   );
