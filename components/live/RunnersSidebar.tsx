@@ -26,7 +26,13 @@ function formatDuration(seconds: number): string {
   return `${secs}s`;
 }
 
-function RunnerItem({ runner, showOverdue }: { runner: RunnerPosition; showOverdue?: boolean }) {
+function RunnerItem({
+  runner,
+  showOverdue,
+}: {
+  runner: RunnerPosition;
+  showOverdue?: boolean;
+}) {
   return (
     <div className="flex items-center justify-between p-2 bg-muted/30 rounded border border-muted">
       <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -39,12 +45,11 @@ function RunnerItem({ runner, showOverdue }: { runner: RunnerPosition; showOverd
           style={{ width: "1.2em", height: "0.8em" }}
           className="shrink-0"
         />
-        <div className="flex flex-col min-w-0">
-          <span className="text-sm font-medium truncate">
-            {runner.name}
-          </span>
+        <div className="flex flex-col min-w-0 flex-1">
+          <span className="text-sm font-medium truncate">{runner.name}</span>
           <span className="text-xs text-muted-foreground">
-            P{runner.rank} • {runner.gender === "m" ? "M" : "W"}{runner.genderRank}
+            {runner.gender === "m" ? "M" : "W"}
+            {runner.genderRank} • {runner.distanceKm.toFixed(2)} km
           </span>
         </div>
       </div>
@@ -60,7 +65,10 @@ function RunnerItem({ runner, showOverdue }: { runner: RunnerPosition; showOverd
   );
 }
 
-export function RunnersSidebar({ runnersOnTrack, runnersOnBreak }: RunnersSidebarProps) {
+export function RunnersSidebar({
+  runnersOnTrack,
+  runnersOnBreak,
+}: RunnersSidebarProps) {
   const { t } = useLanguage();
 
   return (
@@ -80,8 +88,8 @@ export function RunnersSidebar({ runnersOnTrack, runnersOnBreak }: RunnersSideba
             </p>
           ) : (
             runnersOnTrack.map((runner) => (
-              <RunnerItem 
-                key={runner.bib} 
+              <RunnerItem
+                key={runner.bib}
                 runner={runner}
                 showOverdue={runner.status === "overdue"}
               />
@@ -105,11 +113,7 @@ export function RunnersSidebar({ runnersOnTrack, runnersOnBreak }: RunnersSideba
             </p>
           ) : (
             runnersOnBreak.map((runner) => (
-              <RunnerItem 
-                key={runner.bib} 
-                runner={runner}
-                showOverdue={true}
-              />
+              <RunnerItem key={runner.bib} runner={runner} showOverdue={true} />
             ))
           )}
         </CardContent>
@@ -117,4 +121,3 @@ export function RunnersSidebar({ runnersOnTrack, runnersOnBreak }: RunnersSideba
     </div>
   );
 }
-

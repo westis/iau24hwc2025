@@ -12,11 +12,13 @@ export interface RunnerPosition {
   bib: number;
   name: string;
   country: string;
+  gender: "m" | "w";
   lat: number;
   lon: number;
   status: RunnerStatus;
   rank: number;
   genderRank: number;
+  distanceKm: number;
   timeSinceLastPassing: number;
   predictedLapTime: number;
   progressPercent: number;
@@ -108,11 +110,13 @@ export function calculateRunnerPosition(
     bib: leaderboardEntry.bib,
     name: leaderboardEntry.name,
     country: leaderboardEntry.country,
+    gender: leaderboardEntry.gender,
     lat,
     lon,
     status,
     rank: leaderboardEntry.rank,
     genderRank: leaderboardEntry.genderRank,
+    distanceKm: leaderboardEntry.distanceKm,
     timeSinceLastPassing,
     predictedLapTime: prediction.predictedLapTime,
     progressPercent,
