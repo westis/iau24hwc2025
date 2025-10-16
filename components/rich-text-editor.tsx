@@ -25,6 +25,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 interface RichTextEditorProps {
   value: string;
@@ -38,6 +46,9 @@ export function RichTextEditor({
   placeholder,
 }: RichTextEditorProps) {
   const [showImageDialog, setShowImageDialog] = useState(false);
+  const [showImageEditDialog, setShowImageEditDialog] = useState(false);
+  const [editingImageWidth, setEditingImageWidth] = useState("100%");
+  const [selectedImagePos, setSelectedImagePos] = useState<number | null>(null);
 
   const editor = useEditor({
     extensions: [
@@ -90,7 +101,21 @@ export function RichTextEditor({
     editorProps: {
       attributes: {
         class:
-          "prose prose-sm dark:prose-invert max-w-none min-h-[200px] px-3 py-2 focus:outline-none [&_h1]:text-foreground [&_h2]:text-foreground [&_h3]:text-foreground [&_p]:text-foreground [&_img]:max-w-full [&_img]:h-auto",
+          "prose prose-sm dark:prose-invert max-w-none min-h-[200px] px-3 py-2 focus:outline-none [&_h1]:text-foreground [&_h2]:text-foreground [&_h3]:text-foreground [&_p]:text-foreground [&_img]:max-w-full [&_img]:h-auto [&_img]:cursor-pointer [&_img]:mx-auto [&_img]:block [&_img]:hover:ring-2 [&_img]:hover:ring-primary [&_img]:transition-all",
+      },
+      handleClickOn: (view, pos, node, nodePos, event) => {
+        if (node.type.name === "image") {
+          event.preventDefault();
+          const currentStyle = node.attrs.style || "";
+          const widthMatch = currentStyle.match(/width:\s*([^;]+)/);
+          if (widthMatch) {
+            setEditingImageWidth(widthMatch[1].trim());
+          }
+          setSelectedImagePos(nodePos);
+          setShowImageEditDialog(true);
+          return true;
+        }
+        return false;
       },
     },
   });
@@ -107,16 +132,45 @@ export function RichTextEditor({
   };
 
   const handleImageUpload = (url: string, width?: string) => {
-    // Insert image - style will be handled by CSS or inline HTML later if needed
+    // Insert image with width and centering styles
     editor
       .chain()
       .focus()
       .setImage({
         src: url,
+        style: `width: ${
+          width || "100%"
+        }; max-width: 100%; height: auto; margin: 1rem auto; display: block;`,
       })
       .run();
 
     setShowImageDialog(false);
+  };
+
+  const handleDeleteImage = () => {
+    if (editor && selectedImagePos !== null) {
+      const tr = editor.state.tr;
+      tr.delete(selectedImagePos, selectedImagePos + 1);
+      editor.view.dispatch(tr);
+      setShowImageEditDialog(false);
+      setSelectedImagePos(null);
+    }
+  };
+
+  const applyImageWidth = () => {
+    if (editor && selectedImagePos !== null) {
+      const node = editor.state.doc.nodeAt(selectedImagePos);
+      if (node && node.type.name === "image") {
+        const tr = editor.state.tr;
+        tr.setNodeMarkup(selectedImagePos, undefined, {
+          ...node.attrs,
+          style: `width: ${editingImageWidth}; max-width: 100%; height: auto; margin: 1rem auto; display: block;`,
+        });
+        editor.view.dispatch(tr);
+        setShowImageEditDialog(false);
+        setSelectedImagePos(null);
+      }
+    }
   };
 
   return (
@@ -230,6 +284,62 @@ export function RichTextEditor({
             onUploadComplete={handleImageUpload}
             allowCrop={true}
           />
+        </DialogContent>
+      </Dialog>
+
+      {/* Image Edit Dialog */}
+      <Dialog
+        open={showImageEditDialog}
+        onOpenChange={(open) => {
+          setShowImageEditDialog(open);
+          if (!open) {
+            setSelectedImagePos(null);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Redigera bild</DialogTitle>
+            <DialogDescription>
+              Ändra bildbredd eller ta bort bilden
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-image-width">Bildbredd:</Label>
+              <Select
+                value={editingImageWidth}
+                onValueChange={setEditingImageWidth}
+              >
+                <SelectTrigger id="edit-image-width">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="100%">Full bredd (100%)</SelectItem>
+                  <SelectItem value="75%">Stor (75%)</SelectItem>
+                  <SelectItem value="50%">Medium (50%)</SelectItem>
+                  <SelectItem value="33%">Liten (33%)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex gap-2 justify-between">
+              <Button variant="destructive" onClick={handleDeleteImage}>
+                Ta bort bild
+              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowImageEditDialog(false);
+                    setSelectedImagePos(null);
+                  }}
+                >
+                  Avbryt
+                </Button>
+                <Button onClick={applyImageWidth}>Tillämpa</Button>
+              </div>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </>
