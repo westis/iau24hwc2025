@@ -138,7 +138,7 @@ export default function MapPage() {
       const genderFilter = selectedGender === "m" ? "m" : "w";
       const filtered = leaderboardData.entries
         .filter((e: LeaderboardEntry) => e.gender === genderFilter)
-        .sort((a, b) => a.genderRank - b.genderRank) // Sort by gender rank!
+        .sort((a: LeaderboardEntry, b: LeaderboardEntry) => a.genderRank - b.genderRank) // Sort by gender rank!
         .slice(0, 6)
         .map((e: LeaderboardEntry) => e.bib);
       return filtered.length > 0 ? filtered : undefined;
