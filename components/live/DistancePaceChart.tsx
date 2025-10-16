@@ -8,53 +8,79 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import dynamic from "next/dynamic";
+import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import type { ChartDataResponse } from "@/types/live-race";
-import type { ApexOptions } from "apexcharts";
+import dynamic from "next/dynamic";
+import type { ChartOptions } from "chart.js";
 
-// Dynamic import to avoid SSR issues with ApexCharts
-const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
+// Dynamic import to avoid SSR issues with Chart.js and hammerjs
+const Line = dynamic(() => import("react-chartjs-2").then((mod) => mod.Line), {
+  ssr: false,
+});
 
-// Extend Window interface for ApexCharts
-declare global {
-  interface Window {
-    ApexCharts: any;
-  }
+// Import and register Chart.js components only on client side
+let ChartJS: any;
+let chartRegistered = false;
+
+if (typeof window !== "undefined") {
+  import("chart.js").then((mod) => {
+    ChartJS = mod.Chart;
+    mod.Chart.register(
+      mod.CategoryScale,
+      mod.LinearScale,
+      mod.PointElement,
+      mod.LineElement,
+      mod.Tooltip,
+      mod.Legend
+    );
+  });
+
+  import("chartjs-plugin-zoom").then((mod) => {
+    if (ChartJS && !chartRegistered) {
+      ChartJS.register(mod.default);
+      chartRegistered = true;
+    }
+  });
 }
 
 interface DistancePaceChartProps {
   bibs: number[];
 }
 
-// Format pace from seconds/km to mm:ss/km
-function formatPace(paceSec: number): string {
-  if (!paceSec || paceSec <= 0) return "-";
-  const minutes = Math.floor(paceSec / 60);
-  const seconds = Math.floor(paceSec % 60);
-  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+interface ChartDataPoint {
+  x: number;
+  y: number;
 }
+
+const TIME_RANGES = [
+  { label: "1h", hours: 1 },
+  { label: "3h", hours: 3 },
+  { label: "6h", hours: 6 },
+  { label: "12h", hours: 12 },
+  { label: "24h", hours: 24 },
+];
 
 export function DistancePaceChart({ bibs }: DistancePaceChartProps) {
   const { t } = useLanguage();
   const { theme } = useTheme();
   const [data, setData] = useState<ChartDataResponse | null>(null);
   const [loading, setLoading] = useState(true);
-  const hasInitialData = useRef(false);
-  const initialSeriesRef = useRef<any[]>([]);
-  const lastXBySeriesRef = useRef<Record<string, number>>({});
-  const labelGranularityRef = useRef<"hour" | "half">("hour");
+  const chartRef = useRef<any>(null);
+  const lastTimestampByBib = useRef<Record<number, number>>({});
+  const prevBibs = useRef<string>("");
 
   // Fetch data with auto-refresh
   useEffect(() => {
     if (bibs.length === 0) {
       setLoading(false);
+      setData(null);
       return;
     }
 
-    async function fetchData() {
-      setLoading(true);
+    async function fetchData(isInitial: boolean = false) {
+      if (isInitial) setLoading(true);
       try {
         const url = `/api/race/chart-data?bibs=${bibs.join(
           ","
@@ -65,236 +91,344 @@ export function DistancePaceChart({ bibs }: DistancePaceChartProps) {
       } catch (err) {
         console.error("Failed to fetch chart data:", err);
       } finally {
-        setLoading(false);
+        if (isInitial) setLoading(false);
       }
     }
 
-    fetchData();
+    fetchData(true);
 
     // Auto-refresh every 30 seconds
-    const interval = setInterval(fetchData, 30000);
+    const interval = setInterval(() => fetchData(false), 30000);
     return () => clearInterval(interval);
   }, [bibs]);
 
-  // Transform data to ApexCharts series format
-  // Use useMemo to prevent unnecessary recalculations that could trigger re-renders
-  const series = useMemo(
-    () =>
-      data?.runners
-        .sort((a, b) => a.bib - b.bib) // Stable order required for appendData
-        .map((runner) => ({
-          name: `#${runner.bib} ${runner.name}`,
-          data: runner.data.map((point) => ({
-            x: point.time * 1000, // Convert to milliseconds for ApexCharts
-            y: point.projectedKm,
-            pace: point.avgPace,
-          })),
-          color: runner.color,
-        })) || [],
-    [data]
-  );
-
-  // Freeze initial series for Chart prop to prevent remounts/resets
-  if (!hasInitialData.current && series.length > 0) {
-    initialSeriesRef.current = series;
-    hasInitialData.current = true;
-    // Initialize last seen x per series
-    lastXBySeriesRef.current = series.reduce(
-      (acc: Record<string, number>, s: any) => {
-        const last = s.data[s.data.length - 1];
-        acc[s.name] = last ? last.x : -1;
-        return acc;
-      },
-      {}
+  // Get max time from data for time range buttons
+  const maxTime = useMemo(() => {
+    if (!data?.runners.length) return 24 * 3600 * 1000;
+    const allTimes = data.runners.flatMap((r) =>
+      r.data.map((p) => p.time * 1000)
     );
-  }
+    return Math.max(...allTimes, 0);
+  }, [data]);
 
-  // Update series imperatively to preserve zoom/pan (using chart ID, not ref!)
-  useEffect(() => {
-    if (series.length === 0 || !hasInitialData.current) return;
+  // Handle time range button clicks
+  const handleTimeRange = (hours: number | null) => {
+    if (!chartRef.current) return;
+    const chart = chartRef.current;
 
-    // Build append payload with only new points per series (preserves zoom)
-    const payload = series.map((s) => {
-      const lastX = lastXBySeriesRef.current[s.name] ?? -1;
-      const newPoints = s.data.filter((pt: any) => pt.x > lastX);
-      return { data: newPoints.map((pt: any) => ({ x: pt.x, y: pt.y })) };
-    });
-
-    const hasAnyNew = payload.some((p) => p.data.length > 0);
-    if (!hasAnyNew) return;
-
-    // Update lastX cache
-    series.forEach((s) => {
-      const last = s.data[s.data.length - 1];
-      if (last) lastXBySeriesRef.current[s.name] = last.x;
-    });
-
-    if (typeof window !== "undefined" && window.ApexCharts) {
-      setTimeout(() => {
-        try {
-          window.ApexCharts.exec("distance-pace-chart", "appendData", payload);
-        } catch (error) {
-          console.error("Failed to append data to chart:", error);
-        }
-      }, 0);
+    if (hours === null) {
+      // Reset to auto-scaled data range
+      chart.resetZoom();
+    } else if (hours === 24) {
+      // Show full 24 hours explicitly
+      if (chart.options.scales?.x) {
+        chart.options.scales.x.min = 0;
+        chart.options.scales.x.max = 24 * 3600 * 1000;
+        chart.update("none");
+      }
+    } else {
+      // Zoom to time range (last X hours of data)
+      const rangeMs = hours * 3600 * 1000;
+      const min = Math.max(0, maxTime - rangeMs);
+      const max = Math.min(24 * 3600 * 1000, maxTime + 600000); // Add 10 min buffer
+      if (chart.options.scales?.x) {
+        chart.options.scales.x.min = min;
+        chart.options.scales.x.max = max;
+        chart.update("none");
+      }
     }
-  }, [series]);
+  };
 
-  // ApexCharts options - memoized to prevent chart recreation
-  const options: ApexOptions = useMemo(
-    () => ({
-      chart: {
-        id: "distance-pace-chart",
-        type: "line",
-        height: 500,
-        zoom: {
-          enabled: true,
-          type: "x",
-          autoScaleYaxis: true,
-        },
-        toolbar: {
-          show: true,
-          tools: {
-            download: true,
-            selection: true,
-            zoom: true,
-            zoomin: true,
-            zoomout: true,
-            pan: true,
-            reset: true,
-          },
-          autoSelected: "pan",
-        },
-        animations: {
-          enabled: false, // Disable for better performance with live updates
-        },
-        pan: {
-          enabled: true,
-          mode: "x",
-        },
-        events: {
-          // Prevent zoom/pan from going before 0
-          beforeZoom: (_chartContext: any, { xaxis }: any) => {
-            const min = Math.max(0, xaxis?.min ?? 0);
-            // Switch label granularity based on visible range
-            const rangeMs = (xaxis?.max ?? min) - min;
-            // Use half-hour labels if zoomed in to under 6 hours, else hourly
-            labelGranularityRef.current =
-              rangeMs <= 6 * 3600000 ? "half" : "hour";
-            return { xaxis: { min, max: xaxis?.max } };
-          },
-          scrolled: (_chartContext: any, { xaxis }: any) => {
-            // Update labels when user pans via wheel or drag
-            const min = Math.max(0, xaxis?.min ?? 0);
-            const rangeMs = (xaxis?.max ?? min) - min;
-            labelGranularityRef.current =
-              rangeMs <= 6 * 3600000 ? "half" : "hour";
-          },
-        } as any,
-      } as any, // Type assertion needed for pan property
-      theme: {
-        mode: theme === "dark" ? "dark" : "light",
-      },
-      stroke: {
-        width: 2,
-        curve: "smooth",
-      },
-      xaxis: {
-        type: "numeric",
-        min: 0,
-        // 48 half-hour intervals in 24 hours for clean alignment
-        tickAmount: 48,
-        labels: {
-          formatter: (val) => {
-            const value = Number(val);
-            const totalMinutes = Math.round(value / 60000);
-            const minutes = totalMinutes % 60;
-            const hours = Math.floor(totalMinutes / 60);
-            const mode = labelGranularityRef.current;
-            // Show either hourly or half-hour marks depending on zoom level
-            const show =
-              mode === "half" ? minutes % 30 === 0 : minutes % 60 === 0;
-            return show
-              ? `${hours}:${minutes.toString().padStart(2, "0")}`
-              : "";
-          },
-        },
-        title: {
-          text: "Race Time",
-        },
-      },
-      yaxis: {
-        title: {
-          text: "Projected Distance (km)",
-        },
-        labels: {
-          formatter: (value) => Math.round(value).toString(),
-        },
-      },
-      tooltip: {
-        shared: false,
-        custom: ({ series, seriesIndex, dataPointIndex, w }) => {
-          const point = w.config.series[seriesIndex].data[dataPointIndex];
-          const runnerName = w.config.series[seriesIndex].name;
-          const seriesColor =
-            w.config.series[seriesIndex].color || w.globals.colors[seriesIndex];
-          const time = point.x / 1000; // Convert back to seconds
-          const hours = Math.floor(time / 3600);
-          const minutes = Math.floor((time % 3600) / 60);
-          const pace = point.pace;
+  // Update chart data when new data arrives
+  useEffect(() => {
+    if (!data || !chartRef.current) return;
 
-          return `
-          <div class="apexcharts-tooltip-custom" style="padding: 10px; background: ${
-            theme === "dark" ? "#1f2937" : "#ffffff"
-          }; border: 1px solid ${
-            theme === "dark" ? "#374151" : "#e5e7eb"
-          }; border-radius: 6px;">
-            <div style="font-weight: 600; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid ${
-              theme === "dark" ? "#374151" : "#e5e7eb"
-            };">
-              Time: ${hours}h ${minutes}m
-            </div>
-            <div style="color: ${seriesColor}; margin-bottom: 4px;">
-              ${runnerName}
-            </div>
-            <div>Projected: ${point.y.toFixed(2)} km</div>
-            <div>Pace: ${formatPace(pace)}</div>
-          </div>
-        `;
-        },
-      },
-      legend: {
-        show: true,
-        position: "top",
-        horizontalAlign: "center",
-      },
-      grid: {
-        borderColor: theme === "dark" ? "#374151" : "#e5e7eb",
-        strokeDashArray: 3,
-        xaxis: {
-          lines: {
-            show: false, // Hide default gridlines; we'll draw hourly via annotations
-          },
-        },
-      },
-      annotations: {
-        xaxis: Array.from({ length: 25 }, (_v, hour) => ({
-          x: hour * 3600000,
-          strokeDashArray: hour % 6 === 0 ? 0 : 4,
-          borderColor: theme === "dark" ? "#4b5563" : "#9ca3af",
-          borderWidth: hour % 6 === 0 ? 2 : 1,
-          opacity: hour % 6 === 0 ? 0.75 : 0.25,
+    const chart = chartRef.current;
+    const currentBibsKey = bibs.sort().join(",");
+
+    // If runner selection changed, do full rebuild
+    if (prevBibs.current !== currentBibsKey) {
+      console.log("Runner selection changed, rebuilding chart");
+      prevBibs.current = currentBibsKey;
+      lastTimestampByBib.current = {};
+
+      // Full dataset replacement
+      chart.data.datasets = data.runners
+        .sort((a, b) => a.bib - b.bib)
+        .map((runner) => ({
+          label: `#${runner.bib} ${runner.name}`,
+          data: runner.data.map((point) => ({
+            x: point.time * 1000,
+            y: point.projectedKm,
+          })),
+          borderColor: runner.color,
+          backgroundColor: runner.color,
+          borderWidth: 2,
+          pointRadius: 0,
+          tension: 0.4,
+        }));
+
+      // Update last timestamps
+      data.runners.forEach((runner) => {
+        const lastPoint = runner.data[runner.data.length - 1];
+        if (lastPoint) {
+          lastTimestampByBib.current[runner.bib] = lastPoint.time * 1000;
+        }
+      });
+
+      chart.update("none");
+      return;
+    }
+
+    // Append only new data points
+    let hasNewData = false;
+    data.runners.forEach((runner, idx) => {
+      const lastKnownTime = lastTimestampByBib.current[runner.bib] || -1;
+      const newPoints = runner.data
+        .filter((p) => p.time * 1000 > lastKnownTime)
+        .map((p) => ({ x: p.time * 1000, y: p.projectedKm }));
+
+      if (newPoints.length > 0) {
+        hasNewData = true;
+        const dataset = chart.data.datasets[idx];
+        if (dataset) {
+          (dataset.data as ChartDataPoint[]).push(...newPoints);
+          const lastPoint = runner.data[runner.data.length - 1];
+          if (lastPoint) {
+            lastTimestampByBib.current[runner.bib] = lastPoint.time * 1000;
+          }
+        }
+      }
+    });
+
+    if (hasNewData) {
+      console.log("Appending new data to chart");
+      chart.update("none"); // Preserve zoom/pan
+    }
+  }, [data, bibs]);
+
+  // Update theme colors
+  useEffect(() => {
+    if (!chartRef.current) return;
+    const chart = chartRef.current;
+    const isDark = theme === "dark";
+    const textColor = isDark ? "#e5e7eb" : "#111827";
+    const gridColor = isDark ? "#374151" : "#e5e7eb";
+
+    if (chart.options.scales?.x && chart.options.scales?.y) {
+      // Update x-axis colors
+      if (chart.options.scales.x.ticks) {
+        chart.options.scales.x.ticks.color = textColor;
+      }
+      if (chart.options.scales.x.title) {
+        chart.options.scales.x.title.color = textColor;
+      }
+      if (chart.options.scales.x.grid) {
+        chart.options.scales.x.grid.color = gridColor;
+      }
+
+      // Update y-axis colors
+      if (chart.options.scales.y.ticks) {
+        chart.options.scales.y.ticks.color = textColor;
+      }
+      if (chart.options.scales.y.title) {
+        chart.options.scales.y.title.color = textColor;
+      }
+      if (chart.options.scales.y.grid) {
+        chart.options.scales.y.grid.color = gridColor;
+      }
+
+      // Update legend colors
+      if (chart.options.plugins?.legend?.labels) {
+        chart.options.plugins.legend.labels.color = textColor;
+      }
+
+      chart.update("none");
+    }
+  }, [theme]);
+
+  // Chart configuration
+  const chartData = useMemo(() => {
+    if (!data) {
+      return { datasets: [] };
+    }
+
+    return {
+      datasets: data.runners
+        .sort((a, b) => a.bib - b.bib)
+        .map((runner) => ({
+          label: `#${runner.bib} ${runner.name}`,
+          data: runner.data.map((point) => ({
+            x: point.time * 1000,
+            y: point.projectedKm,
+          })),
+          borderColor: runner.color,
+          backgroundColor: runner.color,
+          borderWidth: 2,
+          pointRadius: 0,
+          tension: 0.4,
         })),
+    };
+  }, [data]);
+
+  const chartOptions: ChartOptions<"line"> = useMemo(() => {
+    const isDark = theme === "dark";
+    const textColor = isDark ? "#e5e7eb" : "#111827";
+    const gridColor = isDark ? "#374151" : "#e5e7eb";
+
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      interaction: {
+        mode: "nearest",
+        axis: "x",
+        intersect: false,
       },
-    }),
-    [theme]
-  ); // Only recreate options when theme changes
+      plugins: {
+        legend: {
+          display: true,
+          position: "bottom",
+          labels: {
+            color: textColor,
+            usePointStyle: true,
+            padding: 15,
+          },
+        },
+        tooltip: {
+          enabled: true,
+          mode: "index",
+          intersect: false,
+          callbacks: {
+            title: (context) => {
+              const time = context[0].parsed.x;
+              const hours = Math.floor(time / 3600000);
+              const minutes = Math.floor((time % 3600000) / 60000);
+              const seconds = Math.floor((time % 60000) / 1000);
+              return `${hours}h ${minutes}m ${seconds}s`;
+            },
+            label: (context) => {
+              const label = context.dataset.label || "";
+              const distance = context.parsed.y.toFixed(2);
+              return `${label}: ${distance} km`;
+            },
+          },
+        },
+        zoom: {
+          pan: {
+            enabled: true,
+            mode: "x",
+          },
+          zoom: {
+            wheel: {
+              enabled: true,
+            },
+            pinch: {
+              enabled: true,
+            },
+            mode: "x",
+          },
+          limits: {
+            x: { min: 0, max: 24 * 3600 * 1000 },
+          },
+        },
+      },
+      scales: {
+        x: {
+          type: "linear",
+          // No min/max - auto-scale to data range by default
+          title: {
+            display: true,
+            text: t.live?.raceTime || "Race Time",
+            color: textColor,
+          },
+          ticks: {
+            color: textColor,
+            callback: (value) => {
+              // Convert milliseconds to hours:minutes
+              const totalSeconds = Number(value) / 1000;
+              const hours = Math.floor(totalSeconds / 3600);
+              const minutes = Math.floor((totalSeconds % 3600) / 60);
+              return `${hours}:${minutes.toString().padStart(2, "0")}`;
+            },
+            maxRotation: 0,
+            autoSkip: false,
+            stepSize: 1800000, // 30 minutes in milliseconds
+          },
+          afterBuildTicks: (axis: any) => {
+            const min = axis.min || 0;
+            const max = axis.max || 24 * 3600 * 1000;
+            const rangeHours = (max - min) / 3600000;
+
+            // Choose label interval based on visible range
+            let labelIntervalMs: number;
+            if (rangeHours <= 3) {
+              labelIntervalMs = 1800000; // 30 minutes for short ranges
+            } else if (rangeHours <= 6) {
+              labelIntervalMs = 3600000; // 1 hour for medium ranges
+            } else if (rangeHours <= 12) {
+              labelIntervalMs = 7200000; // 2 hours for larger ranges
+            } else {
+              labelIntervalMs = 10800000; // 3 hours for full 24h view
+            }
+
+            // Always generate ticks for every hour (for gridlines)
+            const hourMs = 3600000;
+            const startHour = Math.ceil(min / hourMs) * hourMs;
+
+            const ticks = [];
+            for (let value = startHour; value <= max; value += hourMs) {
+              // Only show label if it matches our label interval
+              const shouldShowLabel = value % labelIntervalMs === 0;
+              ticks.push({
+                value,
+                label: shouldShowLabel ? undefined : "", // Empty string hides label
+              });
+            }
+
+            axis.ticks = ticks;
+          },
+          grid: {
+            color: (context) => {
+              if (!context.tick) return gridColor;
+              const hours = context.tick.value / 3600000;
+              // Darker line every 6 hours
+              return hours % 6 === 0
+                ? theme === "dark"
+                  ? "#6b7280"
+                  : "#9ca3af"
+                : gridColor;
+            },
+            lineWidth: (context) => {
+              if (!context.tick) return 1;
+              const hours = context.tick.value / 3600000;
+              // Thicker line every 6 hours
+              return hours % 6 === 0 ? 2 : 1;
+            },
+          },
+        },
+        y: {
+          title: {
+            display: true,
+            text: t.live?.projectedDistance || "Projected Distance (km)",
+            color: textColor,
+          },
+          ticks: {
+            color: textColor,
+          },
+          grid: {
+            color: gridColor,
+          },
+        },
+      },
+    };
+  }, [theme, t]);
 
   if (bibs.length === 0) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>{t.live?.distanceOverTime || "Distance & Pace"}</CardTitle>
+          <CardTitle>{t.live?.distanceAndPace || "Distance & Pace"}</CardTitle>
           <CardDescription>
             {t.live?.selectRunnersDesc ||
               "Select runners to view their progress"}
@@ -311,7 +445,7 @@ export function DistancePaceChart({ bibs }: DistancePaceChartProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>{t.live?.distanceOverTime || "Distance & Pace"}</CardTitle>
+          <CardTitle>{t.live?.distanceAndPace || "Distance & Pace"}</CardTitle>
         </CardHeader>
         <CardContent className="h-96 flex items-center justify-center">
           <div className="text-center">
@@ -333,25 +467,41 @@ export function DistancePaceChart({ bibs }: DistancePaceChartProps) {
         </CardTitle>
         <CardDescription>
           {t.live?.distanceAndPaceDesc ||
-            "Projected distance over race time. Use the toolbar above the chart to zoom, pan, and reset the view."}
+            "Projected distance over race time. Use mouse wheel to zoom, drag to pan."}
         </CardDescription>
+
+        {/* Time Range Buttons */}
+        <div className="flex flex-wrap gap-2 pt-4">
+          <span className="text-sm font-medium text-muted-foreground self-center">
+            {t.live?.timeRange || "Time Range"}:
+          </span>
+          {TIME_RANGES.map((range) => (
+            <Button
+              key={range.hours}
+              size="sm"
+              variant="outline"
+              onClick={() => handleTimeRange(range.hours)}
+            >
+              {range.label}
+            </Button>
+          ))}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => handleTimeRange(null)}
+          >
+            {t.live?.reset || "Reset"}
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="h-[500px] w-full">
-          {initialSeriesRef.current.length > 0 ? (
-            <Chart
-              options={options}
-              series={initialSeriesRef.current}
-              type="line"
-              height="100%"
-              width="100%"
-            />
+          {chartData.datasets.length > 0 ? (
+            <Line ref={chartRef} data={chartData} options={chartOptions} />
           ) : (
             <div className="h-full flex items-center justify-center border rounded-lg bg-muted/20">
               <p className="text-muted-foreground">
-                {loading
-                  ? t.live?.loadingChartData || "Loading..."
-                  : "No data available"}
+                {t.live?.noData || "No data available"}
               </p>
             </div>
           )}

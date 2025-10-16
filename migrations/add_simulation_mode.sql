@@ -19,3 +19,4 @@ COMMENT ON COLUMN race_config.current_race_time_sec IS 'Current simulated race t
 COMMENT ON COLUMN race_config.simulation_start_time IS 'When simulation started (for reference)';
 
 
+

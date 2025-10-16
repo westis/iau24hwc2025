@@ -450,6 +450,8 @@ export interface Translations {
     loadingChartData: string;
     projectedDistance: string;
     showForecast: string;
+    timeRange: string;
+    reset: string;
     paceAnalysis: string;
     paceAnalysisDesc: string;
     paceAnalysisComingSoon: string;

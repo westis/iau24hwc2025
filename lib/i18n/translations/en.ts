@@ -464,6 +464,8 @@ export const en: Translations = {
     loadingChartData: "Loading chart data...",
     projectedDistance: "Projected 24h distance based on current pace",
     showForecast: "Show Forecast",
+    timeRange: "Time Range",
+    reset: "Reset",
     paceAnalysis: "Pace Analysis",
     paceAnalysisDesc: "Rolling pace and forecast (Coming Soon)",
     paceAnalysisComingSoon: "Pace analysis chart will be added here",

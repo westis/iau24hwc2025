@@ -445,13 +445,9 @@ export const sv: Translations = {
     custom: "Anpassad",
     selected: "Vald",
     runners: "löpare",
-    simulationMode: "SIMULERINGSLÄGE",
-    simulationModeDesc:
-      "Detta är inte live-data från loppet. Klockan och data är simulerade för testning.",
     distanceOverTime: "Distans över tid",
     distanceAndPace: "Distans- och tempoanalys",
-    distanceAndPaceDesc:
-      "Beräknad distans (vänster) och genomsnittstempo (höger) över tävlingstid",
+    distanceAndPaceDesc: "Beräknad distans över tävlingstid",
     gapAnalysis: "Gapanalys",
     gapAnalysisDesc: "Avstånd från referensdistans",
     baselineMode: "Referensläge",
@@ -462,8 +458,10 @@ export const sv: Translations = {
       "Välj löpare från resultatlistan för att se deras framsteg",
     noRunnersSelected: "Inga löpare valda",
     loadingChartData: "Laddar diagramdata...",
-    projectedDistance: "Beräknad 24h-distans baserad på nuvarande tempo",
+    projectedDistance: "Beräknad slutdistans",
     showForecast: "Visa prognos",
+    timeRange: "Tidsperiod",
+    reset: "Återställ",
     paceAnalysis: "Tempoanalys",
     paceAnalysisDesc: "Rullande tempo och prognos (Kommer snart)",
     paceAnalysisComingSoon: "Tempoanalysdiagram kommer att läggas till här",
@@ -477,5 +475,8 @@ export const sv: Translations = {
     emptyWatchlistMessage:
       "Lägg till löpare i din favoritlista genom att klicka på stjärnan bredvid deras namn.",
     viewAllRunners: "Visa alla löpare",
+    simulationMode: "SIMULERINGSLÄGE",
+    simulationModeDesc:
+      "Detta är inte live-data från loppet. Klockan och data är simulerade för testning.",
   },
 };
