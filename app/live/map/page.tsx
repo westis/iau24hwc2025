@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { RaceClock } from "@/components/live/RaceClock";
 import { LiveNavigation } from "@/components/live/LiveNavigation";
@@ -43,7 +43,7 @@ const RaceMap = dynamic(
   }
 );
 
-export default function MapPage() {
+function MapPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { t } = useLanguage();
@@ -138,7 +138,10 @@ export default function MapPage() {
       const genderFilter = selectedGender === "m" ? "m" : "w";
       const filtered = leaderboardData.entries
         .filter((e: LeaderboardEntry) => e.gender === genderFilter)
-        .sort((a: LeaderboardEntry, b: LeaderboardEntry) => a.genderRank - b.genderRank) // Sort by gender rank!
+        .sort(
+          (a: LeaderboardEntry, b: LeaderboardEntry) =>
+            a.genderRank - b.genderRank
+        ) // Sort by gender rank!
         .slice(0, 6)
         .map((e: LeaderboardEntry) => e.bib);
       return filtered.length > 0 ? filtered : undefined;
@@ -298,5 +301,22 @@ export default function MapPage() {
         </div>
       </div>
     </>
+  );
+}
+
+export default function MapPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground mx-auto mb-2"></div>
+            <p className="text-sm text-muted-foreground">Loading...</p>
+          </div>
+        </div>
+      }
+    >
+      <MapPageContent />
+    </Suspense>
   );
 }
