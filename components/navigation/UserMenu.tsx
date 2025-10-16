@@ -18,19 +18,30 @@ export function UserMenu() {
   const { user, chatUser, signOut } = useSupabaseAuth();
   const { t } = useLanguage();
 
-  // If not logged in, show sign in / sign up buttons
+  // If not logged in, show user icon with login/signup dropdown
   if (!user) {
     return (
-      <div className="flex items-center gap-2">
-        <Link href="/chat/login">
-          <Button variant="ghost" size="sm">
-            {t.chat.signIn}
-          </Button>
-        </Link>
-        <Link href="/chat/signup">
-          <Button size="sm">{t.chat.createAccount}</Button>
-        </Link>
-      </div>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button className="flex items-center justify-center h-8 w-8 rounded-full hover:bg-accent transition-colors">
+            <User className="h-5 w-5" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuItem asChild>
+            <Link href="/chat/login" className="cursor-pointer flex items-center">
+              <User className="h-4 w-4 mr-2" />
+              {t.chat.signIn}
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/chat/signup" className="cursor-pointer flex items-center">
+              <User className="h-4 w-4 mr-2" />
+              {t.chat.createAccount}
+            </Link>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     );
   }
 
