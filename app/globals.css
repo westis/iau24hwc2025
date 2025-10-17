@@ -120,6 +120,11 @@
   @apply text-lg font-bold mb-2 mt-4;
 }
 
+/* Simple smooth transition for runner markers */
+.custom-runner-marker {
+  transition: transform 2s ease-out !important;
+}
+
 /* Pulse animation for overdue runners */
 @keyframes pulse {
   0%, 100% {

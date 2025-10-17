@@ -9,7 +9,7 @@ import { AlertCircle } from "lucide-react";
 import type { RunnerPosition } from "@/types/live-race";
 import { renderToString } from "react-dom/server";
 import { getMarkerColor, getTextColor } from "@/lib/utils/runner-marker-colors";
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 
 interface RunnerMarkerProps {
   runner: RunnerPosition;
@@ -26,12 +26,6 @@ export function RunnerMarker({ runner, courseTrack }: RunnerMarkerProps) {
   const { t } = useLanguage();
   const color = getMarkerColor(runner.genderRank, runner.status);
   const markerRef = useRef<L.Marker>(null);
-  const prevPositionRef = useRef<[number, number] | null>(null);
-  const animationRef = useRef<number | null>(null);
-  const [displayPosition, setDisplayPosition] = useState<[number, number]>([
-    runner.lat,
-    runner.lon,
-  ]);
 
   // Calculate distance between two lat/lon points using Haversine formula
   const calculateDistance = (
@@ -54,161 +48,32 @@ export function RunnerMarker({ runner, courseTrack }: RunnerMarkerProps) {
     return R * c; // Distance in meters
   };
 
-  // Find nearest point index on course track
+  // Find nearest point on course track to snap runner position
   const findNearestPointOnTrack = (
     lat: number,
     lon: number
-  ): number => {
-    let minDist = Infinity;
-    let nearestIdx = 0;
+  ): { lat: number; lon: number } => {
+    if (courseTrack.length === 0) {
+      return { lat, lon };
+    }
 
-    courseTrack.forEach((point, idx) => {
+    let minDist = Infinity;
+    let nearestPoint = courseTrack[0];
+
+    courseTrack.forEach((point) => {
       const dist = calculateDistance(lat, lon, point.lat, point.lon);
       if (dist < minDist) {
         minDist = dist;
-        nearestIdx = idx;
+        nearestPoint = point;
       }
     });
 
-    return nearestIdx;
+    return nearestPoint;
   };
 
-  // Get path segments along course track between two indices
-  const getPathAlongTrack = (
-    startIdx: number,
-    endIdx: number
-  ): { lat: number; lon: number }[] => {
-    const path: { lat: number; lon: number }[] = [];
-
-    if (startIdx === endIdx) {
-      return [courseTrack[startIdx]];
-    }
-
-    // Check which direction is shorter (forward or backward/wrap-around)
-    const forwardDist =
-      endIdx >= startIdx
-        ? endIdx - startIdx
-        : courseTrack.length - startIdx + endIdx;
-    const backwardDist =
-      startIdx >= endIdx
-        ? startIdx - endIdx
-        : courseTrack.length - endIdx + startIdx;
-
-    // Go the shorter direction
-    if (forwardDist <= backwardDist) {
-      // Forward direction
-      let idx = startIdx;
-      while (idx !== endIdx) {
-        path.push(courseTrack[idx]);
-        idx = (idx + 1) % courseTrack.length;
-      }
-      path.push(courseTrack[endIdx]);
-    } else {
-      // Backward direction
-      let idx = startIdx;
-      while (idx !== endIdx) {
-        path.push(courseTrack[idx]);
-        idx = idx === 0 ? courseTrack.length - 1 : idx - 1;
-      }
-      path.push(courseTrack[endIdx]);
-    }
-
-    return path;
-  };
-
-  // Animate runner along course path
-  useEffect(() => {
-    if (courseTrack.length === 0) return;
-
-    const targetPos: [number, number] = [runner.lat, runner.lon];
-    const prevPos = prevPositionRef.current;
-
-    // First render - just set position
-    if (!prevPos) {
-      setDisplayPosition(targetPos);
-      prevPositionRef.current = targetPos;
-      return;
-    }
-
-    // Calculate distance to determine if this is a large jump (lap completion)
-    const distance = calculateDistance(
-      prevPos[0],
-      prevPos[1],
-      targetPos[0],
-      targetPos[1]
-    );
-
-    // If large jump (>100m), instantly update without animation
-    if (distance > 100) {
-      setDisplayPosition(targetPos);
-      prevPositionRef.current = targetPos;
-      return;
-    }
-
-    // Find nearest points on track for both positions
-    const startIdx = findNearestPointOnTrack(prevPos[0], prevPos[1]);
-    const endIdx = findNearestPointOnTrack(targetPos[0], targetPos[1]);
-
-    // Get path along track
-    const path = getPathAlongTrack(startIdx, endIdx);
-
-    // If path is too short, just move directly
-    if (path.length < 2) {
-      setDisplayPosition(targetPos);
-      prevPositionRef.current = targetPos;
-      return;
-    }
-
-    // Animate along the path over 10 seconds
-    const duration = 10000; // 10 seconds to match refresh interval
-    const startTime = Date.now();
-
-    const animate = () => {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-
-      // Calculate position along path
-      const totalSegments = path.length - 1;
-      const segmentProgress = progress * totalSegments;
-      const currentSegment = Math.floor(segmentProgress);
-      const segmentFraction = segmentProgress - currentSegment;
-
-      if (currentSegment >= totalSegments) {
-        // Animation complete
-        setDisplayPosition(targetPos);
-        prevPositionRef.current = targetPos;
-        return;
-      }
-
-      // Interpolate between current segment points
-      const p1 = path[currentSegment];
-      const p2 = path[currentSegment + 1];
-      const lat = p1.lat + (p2.lat - p1.lat) * segmentFraction;
-      const lon = p1.lon + (p2.lon - p1.lon) * segmentFraction;
-
-      setDisplayPosition([lat, lon]);
-
-      if (progress < 1) {
-        animationRef.current = requestAnimationFrame(animate);
-      } else {
-        prevPositionRef.current = targetPos;
-      }
-    };
-
-    // Cancel any existing animation
-    if (animationRef.current) {
-      cancelAnimationFrame(animationRef.current);
-    }
-
-    // Start animation
-    animate();
-
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, [runner.lat, runner.lon, courseTrack]);
+  // Snap runner to nearest point on course track
+  const snappedPosition = findNearestPointOnTrack(runner.lat, runner.lon);
+  const displayPosition: [number, number] = [snappedPosition.lat, snappedPosition.lon];
 
   // Create custom divIcon with bib number
   const createCustomIcon = () => {
