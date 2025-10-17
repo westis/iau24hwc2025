@@ -1,13 +1,26 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Cloud, CloudRain, CloudMoon, CloudSun, Sun, Moon } from "lucide-react";
+import {
+  Cloud,
+  CloudRain,
+  CloudMoon,
+  CloudSun,
+  Sun,
+  Moon,
+  Wind,
+  Droplets,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 interface WeatherHour {
   time: string;
   temp: number;
+  feelsLike: number;
+  humidity: number;
+  windSpeed: number;
+  precipitation: number;
   icon: string;
   description: string;
 }
@@ -87,32 +100,67 @@ export function WeatherForecast() {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="relative">
-          <div className="overflow-x-auto pb-2">
-            <div className="flex gap-2 min-w-max">
-              {forecast.map((hour, index) => {
-                const time = new Date(hour.time);
-                const hourLabel = time.toLocaleTimeString("en-US", {
-                  hour: "numeric",
-                  hour12: false,
-                });
+        {forecast.length === 0 ? (
+          <div className="text-sm text-muted-foreground text-center py-4">
+            {t.live?.noWeatherData || "No weather data available"}
+          </div>
+        ) : (
+          <div className="relative">
+            <div className="overflow-x-auto pb-2">
+              <div className="flex gap-3 min-w-max">
+                {forecast.map((hour, index) => {
+                  const time = new Date(hour.time);
+                  const hourLabel = time.toLocaleTimeString("en-US", {
+                    hour: "numeric",
+                    hour12: false,
+                  });
+                  const dayLabel = time.toLocaleDateString("en-US", {
+                    weekday: "short",
+                  });
 
-                return (
-                  <div
-                    key={index}
-                    className="flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-muted/50 min-w-[60px]"
-                  >
-                    <div className="text-xs text-muted-foreground">
-                      {hourLabel}:00
+                  // Show day label for midnight or first hour
+                  const showDay = time.getHours() === 0 || index === 0;
+
+                  return (
+                    <div
+                      key={index}
+                      className="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-muted/50 border border-border/50 min-w-[85px]"
+                    >
+                      {showDay && (
+                        <div className="text-xs font-semibold text-muted-foreground">
+                          {dayLabel}
+                        </div>
+                      )}
+                      <div className="text-sm font-medium">{hourLabel}:00</div>
+                      <WeatherIcon icon={hour.icon} className="h-7 w-7" />
+                      <div className="text-lg font-bold">{hour.temp}°</div>
+                      <div className="text-xs text-muted-foreground">
+                        {t.live?.feelsLike || "Feels"} {hour.feelsLike}°
+                      </div>
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Wind className="h-3 w-3" />
+                        <span>{hour.windSpeed} km/h</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Droplets className="h-3 w-3" />
+                        <span>{hour.humidity}%</span>
+                      </div>
+                      {hour.precipitation > 0 && (
+                        <div className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+                          {hour.precipitation}mm
+                        </div>
+                      )}
                     </div>
-                    <WeatherIcon icon={hour.icon} className="h-6 w-6" />
-                    <div className="text-sm font-medium">{hour.temp}°C</div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
+            </div>
+            <div className="mt-3 text-xs text-muted-foreground text-center">
+              {t.live?.weatherNote ||
+                "Hourly forecast for race period. Updated every 30 minutes."}
             </div>
           </div>
-        </div>
+        )}
       </CardContent>
     </Card>
   );

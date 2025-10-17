@@ -519,6 +519,8 @@ export const en: Translations = {
     timeUnitsMinute: "minute",
     timeUnitsHour: "hour",
     timeUnitsDay: "day",
+    noWeatherData: "No weather data available",
+    weatherNote: "Hourly forecast for race period. Updated every 30 minutes.",
   },
   footer: {
     siteBy: "Site by",

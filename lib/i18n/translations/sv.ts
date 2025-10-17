@@ -506,7 +506,7 @@ export const sv: Translations = {
     team: "Lag",
     runnerOverdueMessage: "Löparen kan vara på paus eller försenad",
     ago: "sedan",
-    officialTimingLink: "Visa officiella tidtagningsresultat",
+    officialTimingLink: "Officiell tidtagning",
     staleDataWarning: "Tidtagningsdata kanske inte är aktuell",
     staleDataLastUpdated: "Senast uppdaterad för {time} sedan",
     staleDataUnknownTime: "Kunde inte fastställa senaste uppdateringstid",
@@ -518,6 +518,8 @@ export const sv: Translations = {
     timeUnitsMinute: "minut",
     timeUnitsHour: "timme",
     timeUnitsDay: "dag",
+    noWeatherData: "Ingen väderdata tillgänglig",
+    weatherNote: "Timprognos för lopp. Uppdateras var 30:e minut.",
   },
   footer: {
     siteBy: "Sajt av",

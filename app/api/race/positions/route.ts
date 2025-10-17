@@ -178,6 +178,50 @@ export async function GET(request: NextRequest) {
 
     const { track, coursePoints } = cachedGPXData;
 
+    // Calculate crew spot position based on offset from timing mat
+    // This should always be calculated, regardless of whether there are runners
+    let crewSpotPosition = null;
+    if (
+      raceConfig.crew_spot_offset_meters &&
+      raceConfig.crew_spot_offset_meters > 0
+    ) {
+      // Find point on track at crew_spot_offset_meters distance from start (timing mat)
+      const targetDistance = raceConfig.crew_spot_offset_meters;
+      let accumulatedDistance = 0;
+      let crewSpotPoint = null;
+
+      for (let i = 0; i < track.points.length - 1; i++) {
+        const nextDistance =
+          accumulatedDistance +
+          (track.points[i + 1].distanceFromStart -
+            track.points[i].distanceFromStart);
+
+        if (nextDistance >= targetDistance) {
+          // Interpolate between current and next point
+          const segmentDistance =
+            track.points[i + 1].distanceFromStart -
+            track.points[i].distanceFromStart;
+          const remainingDistance = targetDistance - accumulatedDistance;
+          const ratio =
+            segmentDistance > 0 ? remainingDistance / segmentDistance : 0;
+
+          const lat =
+            track.points[i].lat +
+            (track.points[i + 1].lat - track.points[i].lat) * ratio;
+          const lon =
+            track.points[i].lon +
+            (track.points[i + 1].lon - track.points[i].lon) * ratio;
+
+          crewSpotPoint = { lat, lon };
+          break;
+        }
+
+        accumulatedDistance = nextDistance;
+      }
+
+      crewSpotPosition = crewSpotPoint;
+    }
+
     // Get leaderboard data
     let leaderboardQuery = supabase
       .from("race_leaderboard")
@@ -210,6 +254,7 @@ export async function GET(request: NextRequest) {
           lat: raceConfig.timing_mat_lat,
           lon: raceConfig.timing_mat_lon,
         },
+        crewSpotPosition: crewSpotPosition,
         courseTrack: coursePoints,
         lastUpdate: new Date().toISOString(),
       });
@@ -283,49 +328,6 @@ export async function GET(request: NextRequest) {
 
     // Group by status
     const grouped = groupRunnersByStatus(positions);
-
-    // Calculate crew spot position based on offset from timing mat
-    let crewSpotPosition = null;
-    if (
-      raceConfig.crew_spot_offset_meters &&
-      raceConfig.crew_spot_offset_meters > 0
-    ) {
-      // Find point on track at crew_spot_offset_meters distance from start (timing mat)
-      const targetDistance = raceConfig.crew_spot_offset_meters;
-      let accumulatedDistance = 0;
-      let crewSpotPoint = null;
-
-      for (let i = 0; i < track.points.length - 1; i++) {
-        const nextDistance =
-          accumulatedDistance +
-          (track.points[i + 1].distanceFromStart -
-            track.points[i].distanceFromStart);
-
-        if (nextDistance >= targetDistance) {
-          // Interpolate between current and next point
-          const segmentDistance =
-            track.points[i + 1].distanceFromStart -
-            track.points[i].distanceFromStart;
-          const remainingDistance = targetDistance - accumulatedDistance;
-          const ratio =
-            segmentDistance > 0 ? remainingDistance / segmentDistance : 0;
-
-          const lat =
-            track.points[i].lat +
-            (track.points[i + 1].lat - track.points[i].lat) * ratio;
-          const lon =
-            track.points[i].lon +
-            (track.points[i + 1].lon - track.points[i].lon) * ratio;
-
-          crewSpotPoint = { lat, lon };
-          break;
-        }
-
-        accumulatedDistance = nextDistance;
-      }
-
-      crewSpotPosition = crewSpotPoint;
-    }
 
     const response: PositionsResponse = {
       positions: [...grouped.racing, ...grouped.overdue],
