@@ -142,6 +142,83 @@ curl -X GET https://your-app.vercel.app/api/cron/fetch-race-data \
 
 ---
 
+## Option: Run Custom Scraper from Your Laptop (Alternative to External Cron)
+
+If you want faster scraping (10-30 seconds) or don't want to rely on external services, you can run a custom script directly from your Windows 11 laptop.
+
+### Windows 11 Setup
+
+**1. Open PowerShell or Command Prompt** (in the project directory):
+
+```bash
+cd iau24hwc-app
+```
+
+**2. Set environment variables and run**:
+
+```bash
+# For 10-second scraping (fast updates)
+set VERCEL_URL=https://your-app.vercel.app
+set CRON_SECRET=534bdef9ca6fa5fef4a324b8b895b17b8f942a8bd9c3f9ef10b61819a7e545ba
+set SCRAPE_INTERVAL=10
+npm run scrape
+```
+
+```bash
+# For 30-second scraping (balanced)
+set VERCEL_URL=https://your-app.vercel.app
+set CRON_SECRET=534bdef9ca6fa5fef4a324b8b895b17b8f942a8bd9c3f9ef10b61819a7e545ba
+set SCRAPE_INTERVAL=30
+npm run scrape
+```
+
+```bash
+# For 60-second scraping (conservative)
+set VERCEL_URL=https://your-app.vercel.app
+set CRON_SECRET=534bdef9ca6fa5fef4a324b8b895b17b8f942a8bd9c3f9ef10b61819a7e545ba
+set SCRAPE_INTERVAL=60
+npm run scrape
+```
+
+**3. What you'll see**:
+
+```
+================================================================================
+🏃 Race Data Scraper Started
+================================================================================
+Endpoint: https://your-app.vercel.app/api/cron/fetch-race-data
+Interval: 10 seconds
+Started: 2025-01-15T10:00:00.000Z
+================================================================================
+
+[2025-01-15T10:00:00.000Z] Fetching race data...
+✅ SUCCESS (234ms): {
+  "success": true,
+  "runnersUpdated": 150,
+  "lapsInserted": 12
+}
+   Stats: 1 successes, 0 errors
+```
+
+**4. Keep the window open** during the race - it will run continuously.
+
+**5. To stop**: Press `CTRL + C`
+
+### Choosing the Right Interval
+
+| Interval | Updates/min | Updates/hour | Recommended For |
+|----------|-------------|--------------|-----------------|
+| **10s** | 6 | 360 | Maximum responsiveness, crew notifications |
+| **20s** | 3 | 180 | Balanced speed and server load |
+| **30s** | 2 | 120 | Good balance, less aggressive |
+| **60s** | 1 | 60 | Conservative, minimal server load |
+
+**Recommendation**: Start with **10 seconds** for race day. If you notice issues (rate limiting, errors), increase to 20-30 seconds.
+
+**Note**: 10 seconds means runners passing timing mat will be confirmed within 10 seconds max. This gives crews immediate notifications.
+
+---
+
 ## Race Day Morning (Before Race Start)
 
 ### 1. Set Race State to "live"
