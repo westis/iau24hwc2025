@@ -80,15 +80,18 @@ export function RaceMap({ bibFilter, refreshInterval = 2000 }: RaceMapProps) {
   const [error, setError] = useState<string | null>(null);
 
   const fetchPositions = async () => {
+    // CRITICAL: Never fetch without valid bibs - prevents loading all runners
+    if (!bibFilter || bibFilter.length === 0) {
+      setLoading(false);
+      setData(null);
+      return;
+    }
+
     try {
       const params = new URLSearchParams();
-      if (bibFilter && bibFilter.length > 0) {
-        params.set("bibs", bibFilter.join(","));
-      }
+      params.set("bibs", bibFilter.join(","));
 
-      const url = `/api/race/positions${
-        params.toString() ? `?${params.toString()}` : ""
-      }`;
+      const url = `/api/race/positions?${params.toString()}`;
       const response = await fetch(url);
 
       if (!response.ok) {
@@ -108,8 +111,12 @@ export function RaceMap({ bibFilter, refreshInterval = 2000 }: RaceMapProps) {
 
   useEffect(() => {
     fetchPositions();
-    const interval = setInterval(fetchPositions, refreshInterval);
-    return () => clearInterval(interval);
+
+    // Only set up interval if we have valid bibs
+    if (bibFilter && bibFilter.length > 0) {
+      const interval = setInterval(fetchPositions, refreshInterval);
+      return () => clearInterval(interval);
+    }
   }, [bibFilter, refreshInterval]);
 
   if (loading) {
