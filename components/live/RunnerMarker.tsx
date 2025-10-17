@@ -9,7 +9,7 @@ import { AlertCircle } from "lucide-react";
 import type { RunnerPosition } from "@/types/live-race";
 import { renderToString } from "react-dom/server";
 import { getMarkerColor, getTextColor } from "@/lib/utils/runner-marker-colors";
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 
 interface RunnerMarkerProps {
   runner: RunnerPosition;
@@ -27,53 +27,74 @@ export function RunnerMarker({ runner, courseTrack }: RunnerMarkerProps) {
   const color = getMarkerColor(runner.genderRank, runner.status);
   const markerRef = useRef<L.Marker>(null);
 
-  // Calculate distance between two lat/lon points using Haversine formula
-  const calculateDistance = (
-    lat1: number,
-    lon1: number,
-    lat2: number,
-    lon2: number
-  ): number => {
-    const R = 6371e3; // Earth's radius in meters
-    const φ1 = (lat1 * Math.PI) / 180;
-    const φ2 = (lat2 * Math.PI) / 180;
-    const Δφ = ((lat2 - lat1) * Math.PI) / 180;
-    const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+  // State for interpolated position
+  const [currentProgress, setCurrentProgress] = useState(runner.progressPercent);
+  const apiProgressRef = useRef(runner.progressPercent);
+  const apiTimeRef = useRef(Date.now());
 
-    const a =
-      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-    return R * c; // Distance in meters
-  };
-
-  // Find nearest point on course track to snap runner position
-  const findNearestPointOnTrack = (
-    lat: number,
-    lon: number
-  ): { lat: number; lon: number } => {
+  // Get position at a given progress percent
+  const getPositionAtProgress = (progress: number): { lat: number; lon: number } => {
     if (courseTrack.length === 0) {
-      return { lat, lon };
+      return { lat: runner.lat, lon: runner.lon };
     }
 
-    let minDist = Infinity;
-    let nearestPoint = courseTrack[0];
+    // Clamp progress to 0-100
+    const clampedProgress = Math.max(0, Math.min(100, progress));
 
-    courseTrack.forEach((point) => {
-      const dist = calculateDistance(lat, lon, point.lat, point.lon);
-      if (dist < minDist) {
-        minDist = dist;
-        nearestPoint = point;
-      }
-    });
+    // Calculate index in course track
+    const index = (clampedProgress / 100) * (courseTrack.length - 1);
+    const lowerIndex = Math.floor(index);
+    const upperIndex = Math.ceil(index);
 
-    return nearestPoint;
+    if (lowerIndex === upperIndex || upperIndex >= courseTrack.length) {
+      return courseTrack[lowerIndex] || courseTrack[0];
+    }
+
+    // Interpolate between points
+    const fraction = index - lowerIndex;
+    const p1 = courseTrack[lowerIndex];
+    const p2 = courseTrack[upperIndex];
+
+    return {
+      lat: p1.lat + (p2.lat - p1.lat) * fraction,
+      lon: p1.lon + (p2.lon - p1.lon) * fraction,
+    };
   };
 
-  // Snap runner to nearest point on course track
-  const snappedPosition = findNearestPointOnTrack(runner.lat, runner.lon);
-  const displayPosition: [number, number] = [snappedPosition.lat, snappedPosition.lon];
+  // Update when runner data changes from API
+  useEffect(() => {
+    apiProgressRef.current = runner.progressPercent;
+    apiTimeRef.current = Date.now();
+    setCurrentProgress(runner.progressPercent);
+  }, [runner.progressPercent, runner.bib]);
+
+  // Client-side interpolation: update position every 2 seconds between API updates
+  useEffect(() => {
+    if (runner.status === "break") {
+      // Don't interpolate if on break
+      return;
+    }
+
+    const interval = setInterval(() => {
+      const now = Date.now();
+      const timeSinceApiUpdate = (now - apiTimeRef.current) / 1000; // seconds
+
+      // Calculate how much progress should have been made since API update
+      const progressPerSecond = (100 / runner.predictedLapTime);
+      const additionalProgress = timeSinceApiUpdate * progressPerSecond;
+
+      // New progress = API progress + additional progress from interpolation
+      const newProgress = Math.min(100, apiProgressRef.current + additionalProgress);
+
+      setCurrentProgress(newProgress);
+    }, 2000); // Update every 2 seconds
+
+    return () => clearInterval(interval);
+  }, [runner.predictedLapTime, runner.status]);
+
+  // Get display position based on current progress
+  const displayPosition = getPositionAtProgress(currentProgress);
+  const positionArray: [number, number] = [displayPosition.lat, displayPosition.lon];
 
   // Create custom divIcon with bib number
   const createCustomIcon = () => {
@@ -110,7 +131,7 @@ export function RunnerMarker({ runner, courseTrack }: RunnerMarkerProps) {
   return (
     <Marker
       ref={markerRef}
-      position={displayPosition}
+      position={positionArray}
       icon={createCustomIcon()}
     >
       <Popup>
