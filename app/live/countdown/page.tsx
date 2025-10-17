@@ -9,6 +9,7 @@ import { CountdownCard } from "@/components/live/CountdownCard";
 import { useWatchlist } from "@/lib/hooks/useWatchlist";
 import { useLeaderboard } from "@/lib/hooks/useLeaderboard";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { useLiveFilters } from "@/lib/hooks/useLiveFilters";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,11 +37,16 @@ export default function CountdownPage() {
   const [loadingRace, setLoadingRace] = useState(true);
   const [simulationMode, setSimulationMode] = useState(false);
 
-  // Team selection state
-  const [selectedCountry, setSelectedCountry] = useState<string>("");
-  const [selectedGender, setSelectedGender] = useState<"m" | "w" | "all">(
-    "all"
-  );
+  // Use persistent filters hook
+  const { filters, setFilter } = useLiveFilters("countdown", {
+    country: "",
+    gender: "all",
+    view: "grid",
+  });
+
+  const selectedCountry = filters.country || "";
+  const selectedGender = (filters.gender as "m" | "w" | "all") || "all";
+  const viewLayout = (filters.view as "grid" | "table") || "grid";
 
   // Countdown data
   const [countdownData, setCountdownData] = useState<CountdownResponse | null>(
@@ -49,7 +55,6 @@ export default function CountdownPage() {
   const [loadingCountdown, setLoadingCountdown] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [countries, setCountries] = useState<string[]>([]);
-  const [viewLayout, setViewLayout] = useState<"grid" | "table">("grid");
 
   // Fetch race info, simulation config, and countries
   useEffect(() => {
@@ -217,14 +222,14 @@ export default function CountdownPage() {
                     <Button
                       size="sm"
                       variant={viewLayout === "grid" ? "default" : "outline"}
-                      onClick={() => setViewLayout("grid")}
+                      onClick={() => setFilter("view", "grid")}
                     >
                       <Grid3x3 className="h-4 w-4" />
                     </Button>
                     <Button
                       size="sm"
                       variant={viewLayout === "table" ? "default" : "outline"}
-                      onClick={() => setViewLayout("table")}
+                      onClick={() => setFilter("view", "table")}
                     >
                       <List className="h-4 w-4" />
                     </Button>
@@ -240,21 +245,21 @@ export default function CountdownPage() {
                     <Button
                       size="sm"
                       variant={selectedGender === "all" ? "default" : "outline"}
-                      onClick={() => setSelectedGender("all")}
+                      onClick={() => setFilter("gender", "all")}
                     >
                       {t.common?.all || "All"}
                     </Button>
                     <Button
                       size="sm"
                       variant={selectedGender === "m" ? "default" : "outline"}
-                      onClick={() => setSelectedGender("m")}
+                      onClick={() => setFilter("gender", "m")}
                     >
                       {t.common?.men || "Men"}
                     </Button>
                     <Button
                       size="sm"
                       variant={selectedGender === "w" ? "default" : "outline"}
-                      onClick={() => setSelectedGender("w")}
+                      onClick={() => setFilter("gender", "w")}
                     >
                       {t.common?.women || "Women"}
                     </Button>
@@ -268,7 +273,7 @@ export default function CountdownPage() {
                   </Label>
                   <Select
                     value={selectedCountry}
-                    onValueChange={setSelectedCountry}
+                    onValueChange={(value) => setFilter("country", value)}
                   >
                     <SelectTrigger>
                       <SelectValue

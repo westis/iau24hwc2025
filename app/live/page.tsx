@@ -15,6 +15,7 @@ import {
 } from "@/lib/hooks/useLeaderboard";
 import { useWatchlist } from "@/lib/hooks/useWatchlist";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { useLiveFilters } from "@/lib/hooks/useLiveFilters";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { PageTitle } from "@/components/PageTitle";
@@ -55,34 +56,29 @@ interface TeamData {
 }
 
 function LivePageContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
   const { t, language } = useLanguage();
 
-  // Initialize state from URL parameters
-  const [viewMode, setViewMode] = useState<"individuals" | "teams">(
-    (searchParams?.get("view") as "individuals" | "teams") ||
-      "individuals"
-  );
-  const [filter, setFilter] = useState<LeaderboardFilter>(
-    (searchParams?.get("filter") as LeaderboardFilter) || "overall"
-  );
-  const [searchQuery, setSearchQuery] = useState(
-    searchParams?.get("search") || ""
-  );
-  const [countryFilter, setCountryFilter] = useState(
-    searchParams?.get("country") || "all"
-  );
+  // Use persistent filters hook
+  const { filters, updateFilters, setFilter: setFilterValue } = useLiveFilters("live", {
+    view: "individuals",
+    filter: "overall",
+    search: "",
+    country: "all",
+    gender: "m",
+    teamsView: "detailed",
+  });
+
+  const viewMode = (filters.view as "individuals" | "teams") || "individuals";
+  const filter = (filters.filter as LeaderboardFilter) || "overall";
+  const searchQuery = filters.search || "";
+  const countryFilter = filters.country || "all";
+  const teamsGender = (filters.gender as "m" | "w") || "m";
+  const teamsView = (filters.teamsView as "detailed" | "compact") || "detailed";
+
   const [countryComboboxOpen, setCountryComboboxOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(10); // Show 10 initially
   const [raceInfo, setRaceInfo] = useState<RaceInfo | null>(null);
   const [loadingRace, setLoadingRace] = useState(true);
-  const [teamsGender, setTeamsGender] = useState<"m" | "w">(
-    (searchParams?.get("gender") as "m" | "w") || "m"
-  );
-  const [teamsView, setTeamsView] = useState<"detailed" | "compact">(
-    (searchParams?.get("teamsView") as "detailed" | "compact") || "detailed"
-  );
   const [teams, setTeams] = useState<TeamData[]>([]);
   const [loadingTeams, setLoadingTeams] = useState(false);
   const [simulationMode, setSimulationMode] = useState(false);
@@ -95,19 +91,6 @@ function LivePageContent() {
     watchlist,
     10000 // Poll every 10 seconds for more responsive updates
   );
-
-  // Update URL parameters when filters change
-  const updateURL = (updates: Record<string, string>) => {
-    const params = new URLSearchParams(searchParams?.toString() || "");
-    Object.entries(updates).forEach(([key, value]) => {
-      if (value && value !== "all") {
-        params.set(key, value);
-      } else {
-        params.delete(key);
-      }
-    });
-    router.push(`/live?${params.toString()}`, { scroll: false });
-  };
 
   // Fetch race info and simulation config
   useEffect(() => {
@@ -254,9 +237,7 @@ function LivePageContent() {
             <Tabs
               value={viewMode}
               onValueChange={(v) => {
-                const newMode = v as "individuals" | "teams";
-                setViewMode(newMode);
-                updateURL({ view: newMode });
+                setFilterValue("view", v);
               }}
             >
               <TabsList>
@@ -280,9 +261,7 @@ function LivePageContent() {
                     <Tabs
                       value={filter}
                       onValueChange={(v) => {
-                        const newFilter = v as LeaderboardFilter;
-                        setFilter(newFilter);
-                        updateURL({ filter: newFilter });
+                        setFilterValue("filter", v);
                       }}
                     >
                       <TabsList className="w-full sm:w-auto">
@@ -361,8 +340,7 @@ function LivePageContent() {
                               <CommandItem
                                 value="all"
                                 onSelect={() => {
-                                  setCountryFilter("all");
-                                  updateURL({ country: "all" });
+                                  setFilterValue("country", "all");
                                   setCountryComboboxOpen(false);
                                 }}
                               >
@@ -386,8 +364,7 @@ function LivePageContent() {
                                     onSelect={(currentValue) => {
                                       const newCountry =
                                         currentValue.toUpperCase();
-                                      setCountryFilter(newCountry);
-                                      updateURL({ country: newCountry });
+                                      setFilterValue("country", newCountry);
                                       setCountryComboboxOpen(false);
                                     }}
                                   >
@@ -429,8 +406,7 @@ function LivePageContent() {
                         }
                         value={searchQuery}
                         onChange={(e) => {
-                          setSearchQuery(e.target.value);
-                          updateURL({ search: e.target.value });
+                          setFilterValue("search", e.target.value);
                         }}
                         className="pl-10"
                       />
@@ -516,8 +492,7 @@ function LivePageContent() {
                         <Button
                           variant="outline"
                           onClick={() => {
-                            setFilter("overall");
-                            updateURL({ filter: "overall" });
+                            setFilterValue("filter", "overall");
                           }}
                         >
                           {t.live?.viewAllRunners || "Visa alla löpare"}
@@ -584,8 +559,7 @@ function LivePageContent() {
                     variant={teamsGender === "m" ? "default" : "outline"}
                     size="sm"
                     onClick={() => {
-                      setTeamsGender("m");
-                      updateURL({ gender: "m" });
+                      setFilterValue("gender", "m");
                     }}
                   >
                     {t.live?.men || "Herrar"}
@@ -594,8 +568,7 @@ function LivePageContent() {
                     variant={teamsGender === "w" ? "default" : "outline"}
                     size="sm"
                     onClick={() => {
-                      setTeamsGender("w");
-                      updateURL({ gender: "w" });
+                      setFilterValue("gender", "w");
                     }}
                   >
                     {t.live?.women || "Damer"}
@@ -607,8 +580,7 @@ function LivePageContent() {
                     variant={teamsView === "detailed" ? "default" : "outline"}
                     size="sm"
                     onClick={() => {
-                      setTeamsView("detailed");
-                      updateURL({ teamsView: "detailed" });
+                      setFilterValue("teamsView", "detailed");
                     }}
                   >
                     <Grid3x3 className="h-4 w-4 mr-2" />
@@ -618,8 +590,7 @@ function LivePageContent() {
                     variant={teamsView === "compact" ? "default" : "outline"}
                     size="sm"
                     onClick={() => {
-                      setTeamsView("compact");
-                      updateURL({ teamsView: "compact" });
+                      setFilterValue("teamsView", "compact");
                     }}
                   >
                     <List className="h-4 w-4 mr-2" />

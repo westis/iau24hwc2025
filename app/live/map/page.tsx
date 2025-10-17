@@ -9,6 +9,7 @@ import { OfficialTimingBanner } from "@/components/live/OfficialTimingBanner";
 import { PageTitle } from "@/components/PageTitle";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { useWatchlist } from "@/lib/hooks/useWatchlist";
+import { useLiveFilters } from "@/lib/hooks/useLiveFilters";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
@@ -45,39 +46,25 @@ const RaceMap = dynamic(
 );
 
 function MapPageContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
   const { t } = useLanguage();
   const { watchlist } = useWatchlist();
   const [raceInfo, setRaceInfo] = useState<RaceInfo | null>(null);
   const [loadingRace, setLoadingRace] = useState(true);
   const [simulationMode, setSimulationMode] = useState(false);
 
-  // Selection mode state - initialize from URL parameters
-  const [selectionMode, setSelectionMode] = useState<
-    "top6" | "watchlist" | "country"
-  >((searchParams?.get("mode") as "top6" | "watchlist" | "country") || "top6");
-  const [selectedGender, setSelectedGender] = useState<"m" | "w" | "all">(
-    (searchParams?.get("gender") as "m" | "w" | "all") || "m"
-  );
-  const [selectedCountry, setSelectedCountry] = useState<string>(
-    searchParams?.get("country") || ""
-  );
+  // Use persistent filters hook
+  const { filters, updateFilters, setFilter } = useLiveFilters("map", {
+    mode: "top6",
+    gender: "m",
+    country: "",
+  });
+
+  const selectionMode = filters.mode as "top6" | "watchlist" | "country";
+  const selectedGender = filters.gender as "m" | "w" | "all";
+  const selectedCountry = filters.country || "";
+
   const [countries, setCountries] = useState<string[]>([]);
   const [leaderboardData, setLeaderboardData] = useState<any>(null);
-
-  // Update URL parameters when filters change
-  const updateURL = (updates: Record<string, string>) => {
-    const params = new URLSearchParams(searchParams?.toString() || "");
-    Object.entries(updates).forEach(([key, value]) => {
-      if (value) {
-        params.set(key, value);
-      } else {
-        params.delete(key);
-      }
-    });
-    router.push(`/live/map?${params.toString()}`, { scroll: false });
-  };
 
   // Fetch all countries from registered runners
   const fetchCountries = async () => {
@@ -212,9 +199,7 @@ function MapPageContent() {
                   <Tabs
                     value={selectionMode}
                     onValueChange={(v) => {
-                      const mode = v as "top6" | "watchlist" | "country";
-                      setSelectionMode(mode);
-                      updateURL({ mode });
+                      setFilter("mode", v);
                     }}
                   >
                     <TabsList className="w-full">
@@ -241,9 +226,7 @@ function MapPageContent() {
                     <Tabs
                       value={selectedGender === "all" ? "m" : selectedGender}
                       onValueChange={(v) => {
-                        const gender = v as "m" | "w";
-                        setSelectedGender(gender);
-                        updateURL({ gender });
+                        setFilter("gender", v);
                       }}
                     >
                       <TabsList className="w-full">
@@ -267,9 +250,7 @@ function MapPageContent() {
                     <Tabs
                       value={selectedGender}
                       onValueChange={(v) => {
-                        const gender = v as "m" | "w" | "all";
-                        setSelectedGender(gender);
-                        updateURL({ gender });
+                        setFilter("gender", v);
                       }}
                     >
                       <TabsList className="w-full">
@@ -296,8 +277,7 @@ function MapPageContent() {
                     <Select
                       value={selectedCountry}
                       onValueChange={(value) => {
-                        setSelectedCountry(value);
-                        updateURL({ country: value });
+                        setFilter("country", value);
                       }}
                     >
                       <SelectTrigger>
