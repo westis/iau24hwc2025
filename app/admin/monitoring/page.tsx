@@ -397,7 +397,7 @@ export default function MonitoringPage() {
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 rounded-full bg-gray-500"></div>
                 <span>
-                  <strong>Not Live:</strong> Race state is not "live" (cron not running)
+                  <strong>Not Live:</strong> Race state is not &quot;live&quot; (cron not running)
                 </span>
               </div>
             </div>
