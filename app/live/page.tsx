@@ -8,6 +8,7 @@ import { WeatherForecast } from "@/components/live/WeatherForecast";
 import { LiveNavigation } from "@/components/live/LiveNavigation";
 import { LiveTeamCard } from "@/components/live/LiveTeamCard";
 import { SimulationBanner } from "@/components/live/SimulationBanner";
+import { StaleDataBanner } from "@/components/live/StaleDataBanner";
 import dynamic from "next/dynamic";
 
 // Dynamically import RaceMap to avoid SSR issues with Leaflet
@@ -249,6 +250,9 @@ function LivePageContent() {
       <div className="min-h-screen bg-background">
         {simulationMode && <SimulationBanner />}
         <LiveNavigation />
+        <div className="container mx-auto px-4 pt-4">
+          <StaleDataBanner />
+        </div>
         <div className="container mx-auto py-4 px-4 space-y-4">
           {/* Race Clock and View Mode Tabs */}
           <div className="flex flex-row items-center justify-between gap-4">

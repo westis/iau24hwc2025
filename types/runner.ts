@@ -31,6 +31,7 @@ export interface Runner {
 
   // Participation status
   dns?: boolean; // Did Not Start - true if runner won't participate
+  bib?: number; // Race bib number for live timing identification
 
   // From DUV matching
   duvId: number | null; // DUV PersonID

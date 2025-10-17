@@ -284,6 +284,7 @@ export const en: Translations = {
     manageNews: "Manage News",
     editRaceInfo: "Edit Race Info",
     liveRaceControl: "Live Race Control",
+    bibNumbers: "Bib Numbers",
     sendNotifications: "Send Notifications",
     chatAdmin: "Chat Admin",
   },

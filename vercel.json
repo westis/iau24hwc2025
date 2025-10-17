@@ -2,10 +2,8 @@
   "crons": [
     {
       "path": "/api/cron/fetch-race-data",
-      "schedule": "* * * * *"
+      "schedule": "* * * * *",
+      "comment": "Every minute (Vercel's minimum interval). For 30-second updates, use client-side polling or upgrade to Pro plan for 30-second crons"
     }
   ]
 }
-
-
-
