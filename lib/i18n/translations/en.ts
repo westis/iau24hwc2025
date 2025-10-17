@@ -527,6 +527,7 @@ export const en: Translations = {
     secondPlace: "2nd Place",
     thirdPlace: "3rd Place",
     fourthToSixth: "4th-6th",
+    pendingConfirmation: "Awaiting confirmation",
   },
   footer: {
     siteBy: "Site by",

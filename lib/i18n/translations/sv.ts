@@ -526,6 +526,7 @@ export const sv: Translations = {
     secondPlace: "2:a plats",
     thirdPlace: "3:e plats",
     fourthToSixth: "4:e-6:e",
+    pendingConfirmation: "Väntar på bekräftelse",
   },
   footer: {
     siteBy: "Sajt av",
