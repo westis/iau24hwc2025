@@ -79,19 +79,26 @@ function MapPageContent() {
     router.push(`/live/map?${params.toString()}`, { scroll: false });
   };
 
-  // Fetch leaderboard data once for filtering
+  // Fetch all countries from registered runners
+  const fetchCountries = async () => {
+    try {
+      const res = await fetch("/api/runners/countries");
+      if (res.ok) {
+        const data = await res.json();
+        setCountries(data.countries || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch countries:", err);
+    }
+  };
+
+  // Fetch leaderboard data for filtering
   const fetchLeaderboardData = async () => {
     try {
       const res = await fetch("/api/race/leaderboard?filter=overall");
       if (res.ok) {
         const data = await res.json();
         setLeaderboardData(data);
-
-        // Extract countries
-        const uniqueCountries = Array.from(
-          new Set(data.entries.map((e: any) => e.country))
-        ).sort();
-        setCountries(uniqueCountries as string[]);
       }
     } catch (err) {
       console.error("Failed to fetch leaderboard:", err);
@@ -123,6 +130,7 @@ function MapPageContent() {
 
     fetchRaceInfo();
     fetchSimulationConfig();
+    fetchCountries();
     fetchLeaderboardData();
 
     // Poll for config and leaderboard updates every 10 seconds
