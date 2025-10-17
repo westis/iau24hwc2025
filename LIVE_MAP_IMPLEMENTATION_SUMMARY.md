@@ -261,3 +261,4 @@ See `LIVE_RACE_MAP_GUIDE.md` for detailed setup instructions.
 - [x] Fully localized (EN/SV)
 
 All features from the original plan have been successfully implemented!
+

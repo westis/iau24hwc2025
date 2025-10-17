@@ -7,13 +7,24 @@ import { AlertTriangle, Clock } from "lucide-react";
 import { useDataStaleness } from "@/lib/hooks/useDataStaleness";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { formatRelativeTimeString } from "@/lib/utils/time-format";
+import type { RaceState } from "@/types/live-race";
 
-export function StaleDataBanner() {
+interface StaleDataBannerProps {
+  raceState?: RaceState;
+}
+
+export function StaleDataBanner({ raceState }: StaleDataBannerProps) {
   const { isStale, minutesSinceLastFetch, loading } = useDataStaleness(30000);
   const { t } = useLanguage();
 
   // Don't show anything while loading or if data is fresh
   if (loading || !isStale) {
+    return null;
+  }
+
+  // Only show staleness warning when race is actually live or finished
+  // Don't show before race starts - of course there's no data yet!
+  if (raceState && raceState === "not_started") {
     return null;
   }
 
@@ -43,3 +54,4 @@ export function StaleDataBanner() {
     </div>
   );
 }
+

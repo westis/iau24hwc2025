@@ -10,26 +10,6 @@ import { LiveTeamCard } from "@/components/live/LiveTeamCard";
 import { SimulationBanner } from "@/components/live/SimulationBanner";
 import { StaleDataBanner } from "@/components/live/StaleDataBanner";
 import { OfficialTimingBanner } from "@/components/live/OfficialTimingBanner";
-import dynamic from "next/dynamic";
-
-// Dynamically import RaceMap to avoid SSR issues with Leaflet
-const RaceMap = dynamic(
-  () =>
-    import("@/components/live/RaceMap").then((mod) => ({
-      default: mod.RaceMap,
-    })),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="flex items-center justify-center h-[600px] bg-muted/20 rounded-lg">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground mx-auto mb-2"></div>
-          <p className="text-sm text-muted-foreground">Loading map...</p>
-        </div>
-      </div>
-    ),
-  }
-);
 import {
   useLeaderboard,
   type LeaderboardFilter,
@@ -66,7 +46,7 @@ import ReactCountryFlag from "react-country-flag";
 import { getCountryCodeForFlag } from "@/lib/utils/country-codes";
 import { cn } from "@/lib/utils";
 import type { RaceInfo } from "@/types/race";
-import type { LeaderboardEntry } from "@/types/live-race";
+import type { LeaderboardEntry, RaceState } from "@/types/live-race";
 
 interface TeamData {
   country: string;
@@ -81,8 +61,8 @@ function LivePageContent() {
   const { t, language } = useLanguage();
 
   // Initialize state from URL parameters
-  const [viewMode, setViewMode] = useState<"individuals" | "teams" | "map">(
-    (searchParams?.get("view") as "individuals" | "teams" | "map") ||
+  const [viewMode, setViewMode] = useState<"individuals" | "teams">(
+    (searchParams?.get("view") as "individuals" | "teams") ||
       "individuals"
   );
   const [filter, setFilter] = useState<LeaderboardFilter>(
@@ -107,6 +87,7 @@ function LivePageContent() {
   const [teams, setTeams] = useState<TeamData[]>([]);
   const [loadingTeams, setLoadingTeams] = useState(false);
   const [simulationMode, setSimulationMode] = useState(false);
+  const [raceState, setRaceState] = useState<RaceState>("not_started");
 
   const { watchlist, toggleWatchlist, isInWatchlist } = useWatchlist();
 
@@ -136,6 +117,19 @@ function LivePageContent() {
         const res = await fetch("/api/race");
         const data = await res.json();
         setRaceInfo(data);
+
+        // Calculate race state based on current time
+        const now = new Date();
+        const startTime = new Date(data.start_time);
+        const endTime = new Date(data.end_time);
+
+        let calculatedState: RaceState = "not_started";
+        if (now >= endTime) {
+          calculatedState = "finished";
+        } else if (now >= startTime) {
+          calculatedState = "live";
+        }
+        setRaceState(calculatedState);
       } catch (err) {
         console.error("Failed to fetch race info:", err);
       } finally {
@@ -253,7 +247,7 @@ function LivePageContent() {
         {simulationMode && <SimulationBanner />}
         <LiveNavigation />
         <div className="container mx-auto px-4 pt-4">
-          <StaleDataBanner />
+          <StaleDataBanner raceState={raceState} />
         </div>
         <div className="container mx-auto py-4 px-4 space-y-4">
           {/* Race Clock and View Mode Tabs */}
@@ -261,7 +255,7 @@ function LivePageContent() {
             <Tabs
               value={viewMode}
               onValueChange={(v) => {
-                const newMode = v as "individuals" | "teams" | "map";
+                const newMode = v as "individuals" | "teams";
                 setViewMode(newMode);
                 updateURL({ view: newMode });
               }}
@@ -273,7 +267,6 @@ function LivePageContent() {
                 <TabsTrigger value="teams">
                   {t.live?.teams || "Lag"}
                 </TabsTrigger>
-                <TabsTrigger value="map">{t.live?.map || "Map"}</TabsTrigger>
               </TabsList>
             </Tabs>
             <RaceClock race={raceInfo} />
@@ -728,12 +721,6 @@ function LivePageContent() {
                   ))}
                 </div>
               )}
-            </div>
-          )}
-
-          {viewMode === "map" && (
-            <div className="space-y-4">
-              <RaceMap />
             </div>
           )}
 

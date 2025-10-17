@@ -92,3 +92,4 @@ export function BreakPanel({ runnersOnBreak }: BreakPanelProps) {
     </Card>
   );
 }
+

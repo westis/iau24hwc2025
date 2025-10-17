@@ -11,3 +11,4 @@ ALTER TABLE race_config ADD COLUMN IF NOT EXISTS first_lap_distance_km NUMERIC(6
 COMMENT ON COLUMN race_leaderboard.last_known_distance_km IS 'Last recorded distance for lap change detection';
 COMMENT ON COLUMN race_config.first_lap_distance_km IS 'First lap distance in km (e.g., 0.100 for 100m start offset)';
 
+

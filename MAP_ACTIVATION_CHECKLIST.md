@@ -206,3 +206,4 @@ See `LIVE_RACE_MAP_GUIDE.md` for detailed documentation.
 3. Leaderboard entries exist with `last_passing` timestamps
 
 During testing, use simulation mode or mock data to populate these.
+

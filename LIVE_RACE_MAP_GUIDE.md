@@ -208,3 +208,4 @@ Potential improvements:
 - Heatmap showing runner density
 - Replay mode to visualize race history
 - Export runner tracks as GPX
+

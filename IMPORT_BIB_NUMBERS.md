@@ -144,3 +144,4 @@ SUPABASE_SERVICE_ROLE_KEY=your_key
 ---
 
 **Ready?** Run the migration, then execute `npm run import-bibs`!
+

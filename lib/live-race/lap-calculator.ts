@@ -257,3 +257,4 @@ export function getLapNumberFromDistance(
   const remainingDistance = distanceKm - config.firstLapDistanceKm;
   return 1 + Math.floor(remainingDistance / config.lapDistanceKm);
 }
+

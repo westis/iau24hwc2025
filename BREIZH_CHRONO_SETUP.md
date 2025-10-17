@@ -245,3 +245,4 @@ For issues:
 2. Check Supabase logs (Logs & Analytics)
 3. Review browser console for frontend errors
 4. Test scraper output: `npm run test-scraper`
+
