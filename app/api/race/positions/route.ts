@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
     const { data: raceConfig } = await supabase
       .from("race_config")
       .select(
-        "timing_mat_lat, timing_mat_lon, break_detection_threshold_multiplier, overdue_display_seconds, course_gpx_url, course_distance_km, reverse_track_direction, crew_spot_offset_m"
+        "timing_mat_lat, timing_mat_lon, break_detection_threshold_multiplier, overdue_display_seconds, course_gpx_url, course_distance_km, reverse_track_direction, crew_spot_offset_meters"
       )
       .eq("race_id", activeRace.id)
       .single();
@@ -286,28 +286,38 @@ export async function GET(request: NextRequest) {
 
     // Calculate crew spot position based on offset from timing mat
     let crewSpotPosition = null;
-    if (raceConfig.crew_spot_offset_m && raceConfig.crew_spot_offset_m > 0) {
-      // Find point on track at crew_spot_offset_m distance from start (timing mat)
-      const targetDistance = raceConfig.crew_spot_offset_m;
+    if (raceConfig.crew_spot_offset_meters && raceConfig.crew_spot_offset_meters > 0) {
+      // Find point on track at crew_spot_offset_meters distance from start (timing mat)
+      const targetDistance = raceConfig.crew_spot_offset_meters;
       let accumulatedDistance = 0;
       let crewSpotPoint = null;
 
       for (let i = 0; i < track.points.length - 1; i++) {
-        const nextDistance = accumulatedDistance + (track.points[i + 1].distanceFromStart - track.points[i].distanceFromStart);
-        
+        const nextDistance =
+          accumulatedDistance +
+          (track.points[i + 1].distanceFromStart -
+            track.points[i].distanceFromStart);
+
         if (nextDistance >= targetDistance) {
           // Interpolate between current and next point
-          const segmentDistance = track.points[i + 1].distanceFromStart - track.points[i].distanceFromStart;
+          const segmentDistance =
+            track.points[i + 1].distanceFromStart -
+            track.points[i].distanceFromStart;
           const remainingDistance = targetDistance - accumulatedDistance;
-          const ratio = segmentDistance > 0 ? remainingDistance / segmentDistance : 0;
-          
-          const lat = track.points[i].lat + (track.points[i + 1].lat - track.points[i].lat) * ratio;
-          const lon = track.points[i].lon + (track.points[i + 1].lon - track.points[i].lon) * ratio;
-          
+          const ratio =
+            segmentDistance > 0 ? remainingDistance / segmentDistance : 0;
+
+          const lat =
+            track.points[i].lat +
+            (track.points[i + 1].lat - track.points[i].lat) * ratio;
+          const lon =
+            track.points[i].lon +
+            (track.points[i + 1].lon - track.points[i].lon) * ratio;
+
           crewSpotPoint = { lat, lon };
           break;
         }
-        
+
         accumulatedDistance = nextDistance;
       }
 
