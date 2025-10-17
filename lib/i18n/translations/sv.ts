@@ -408,7 +408,7 @@ export const sv: Translations = {
     overall: "Totalt",
     men: "Herrar",
     women: "Damer",
-    watchlist: "Favoritlista",
+    watchlist: "Stjärnmärkta",
     view: "Vy",
     searchPlaceholder: "Sök efter namn, startnummer eller land...",
     status: "Status",
@@ -436,7 +436,8 @@ export const sv: Translations = {
     avgPace: "Totaltempo",
     noLapData: "Ingen varvdata tillgänglig",
     loadingLaps: "Laddar varv...",
-    weatherForecast: "Väderprognos",
+    weatherForecast: "Väder",
+    weatherDescription: "Timprognos för loppet",
     temperature: "Temperatur",
     feelsLike: "Känns som",
     hourly: "Timvis",
@@ -478,7 +479,7 @@ export const sv: Translations = {
     of: "av",
     emptyWatchlistTitle: "Ingen favorit vald",
     emptyWatchlistMessage:
-      "Lägg till löpare i din favoritlista genom att klicka på stjärnan bredvid deras namn.",
+      "Stjärnmärk löpare genom att klicka på stjärnan bredvid deras namn.",
     viewAllRunners: "Visa alla löpare",
     simulationMode: "SIMULERINGSLÄGE",
     simulationModeDesc:

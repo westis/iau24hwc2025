@@ -31,6 +31,8 @@ export default function AdminRacePage() {
     endDate: "",
     locationName: "",
     locationAddress: "",
+    locationLatitude: "",
+    locationLongitude: "",
     liveResultsUrl: "",
     registrationUrl: "",
     officialWebsiteUrl: "",
@@ -85,6 +87,8 @@ export default function AdminRacePage() {
           endDate: formatDateTimeForInput(data.endDate),
           locationName: data.locationName || "",
           locationAddress: data.locationAddress || "",
+          locationLatitude: data.locationLatitude?.toString() || "",
+          locationLongitude: data.locationLongitude?.toString() || "",
           liveResultsUrl: data.liveResultsUrl || "",
           registrationUrl: data.registrationUrl || "",
           officialWebsiteUrl: data.officialWebsiteUrl || "",
@@ -138,6 +142,12 @@ export default function AdminRacePage() {
           ...formData,
           startDate: datetimeLocalToISO(formData.startDate),
           endDate: datetimeLocalToISO(formData.endDate),
+          locationLatitude: formData.locationLatitude
+            ? parseFloat(formData.locationLatitude)
+            : null,
+          locationLongitude: formData.locationLongitude
+            ? parseFloat(formData.locationLongitude)
+            : null,
         }),
       });
 
@@ -307,6 +317,47 @@ export default function AdminRacePage() {
                   }
                   placeholder="Full address"
                 />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="locationLatitude">Latitude</Label>
+                  <Input
+                    id="locationLatitude"
+                    type="number"
+                    step="any"
+                    value={formData.locationLatitude}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        locationLatitude: e.target.value,
+                      })
+                    }
+                    placeholder="e.g., 43.928889"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Required for weather forecast
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="locationLongitude">Longitude</Label>
+                  <Input
+                    id="locationLongitude"
+                    type="number"
+                    step="any"
+                    value={formData.locationLongitude}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        locationLongitude: e.target.value,
+                      })
+                    }
+                    placeholder="e.g., 2.147778"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Required for weather forecast
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>

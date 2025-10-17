@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { List, BarChart3, Map, Timer } from "lucide-react";
+import { List, BarChart3, Map, Timer, CloudSun } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export function LiveNavigation() {
@@ -26,6 +26,11 @@ export function LiveNavigation() {
       href: "/live/countdown",
       label: t.live?.countdown || "Countdown",
       icon: Timer,
+    },
+    {
+      href: "/live/weather",
+      label: t.live?.weatherForecast || "Väder",
+      icon: CloudSun,
     },
   ];
 

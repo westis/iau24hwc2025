@@ -506,6 +506,9 @@ export interface Translations {
     timeUnitsMinute: string;
     timeUnitsHour: string;
     timeUnitsDay: string;
+    weatherDescription: string;
+    noWeatherData: string;
+    weatherNote: string;
   };
   footer: {
     siteBy: string;

@@ -34,26 +34,26 @@ const WeatherIcon = ({
 }) => {
   switch (icon) {
     case "sun":
-      return <Sun className={className} />;
+      return <Sun className={`${className} text-yellow-500`} />;
     case "moon":
-      return <Moon className={className} />;
+      return <Moon className={`${className} text-slate-400`} />;
     case "cloud":
-      return <Cloud className={className} />;
+      return <Cloud className={`${className} text-gray-400`} />;
     case "rain":
-      return <CloudRain className={className} />;
+      return <CloudRain className={`${className} text-blue-500`} />;
     case "cloud-sun":
-      return <CloudSun className={className} />;
+      return <CloudSun className={`${className} text-amber-500`} />;
     case "cloud-moon":
-      return <CloudMoon className={className} />;
+      return <CloudMoon className={`${className} text-slate-300`} />;
     default:
-      return <Cloud className={className} />;
+      return <Cloud className={`${className} text-gray-400`} />;
   }
 };
 
 export function WeatherForecast() {
   const [forecast, setForecast] = useState<WeatherHour[]>([]);
   const [loading, setLoading] = useState(true);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   useEffect(() => {
     async function fetchWeather() {
@@ -96,8 +96,11 @@ export function WeatherForecast() {
     <Card>
       <CardHeader>
         <CardTitle className="text-lg">
-          {t.live?.weatherForecast || "Väderprognos"}
+          {t.live?.weatherForecast || "Väder"}
         </CardTitle>
+        <p className="text-sm text-muted-foreground">
+          {t.live?.weatherDescription || "Timprognos för loppet"}
+        </p>
       </CardHeader>
       <CardContent>
         {forecast.length === 0 ? (
@@ -110,16 +113,18 @@ export function WeatherForecast() {
               <div className="flex gap-3 min-w-max">
                 {forecast.map((hour, index) => {
                   const time = new Date(hour.time);
-                  const hourLabel = time.toLocaleTimeString("en-US", {
+                  const locale = language === "sv" ? "sv-SE" : "en-US";
+                  const hourLabel = time.toLocaleTimeString(locale, {
                     hour: "numeric",
                     hour12: false,
                   });
-                  const dayLabel = time.toLocaleDateString("en-US", {
+                  const dayLabel = time.toLocaleDateString(locale, {
                     weekday: "short",
                   });
 
-                  // Show day label for midnight or first hour
-                  const showDay = time.getHours() === 0 || index === 0;
+                  // Show day label for first hour or when day changes
+                  const prevTime = index > 0 ? new Date(forecast[index - 1].time) : null;
+                  const showDay = index === 0 || (prevTime && time.getDate() !== prevTime.getDate());
 
                   return (
                     <div
@@ -139,7 +144,7 @@ export function WeatherForecast() {
                       </div>
                       <div className="flex items-center gap-1 text-xs text-muted-foreground">
                         <Wind className="h-3 w-3" />
-                        <span>{hour.windSpeed} km/h</span>
+                        <span>{hour.windSpeed} m/s</span>
                       </div>
                       <div className="flex items-center gap-1 text-xs text-muted-foreground">
                         <Droplets className="h-3 w-3" />

@@ -4,7 +4,6 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { RaceClock } from "@/components/live/RaceClock";
 import { LeaderboardTable } from "@/components/live/LeaderboardTable";
-import { WeatherForecast } from "@/components/live/WeatherForecast";
 import { LiveNavigation } from "@/components/live/LiveNavigation";
 import { LiveTeamCard } from "@/components/live/LiveTeamCard";
 import { SimulationBanner } from "@/components/live/SimulationBanner";
@@ -450,17 +449,17 @@ function LivePageContent() {
                 </div>
               </div>
 
-              {/* Race Status */}
-              {data && (
+              {/* Race Status - only show when live or in simulation */}
+              {data && (raceState === "live" || simulationMode) && (
                 <div className="flex items-center justify-between text-sm text-muted-foreground border-b pb-2">
                   <div className="flex items-center gap-4">
                     <span className="flex items-center gap-2">
-                      {data.raceState === "live" && (
+                      {(raceState === "live" || simulationMode) && (
                         <span className="h-2 w-2 bg-red-500 rounded-full animate-pulse" />
                       )}
                       {t.live?.status || "Status"}:{" "}
                       <span className="capitalize font-medium">
-                        {data.raceState.replace("_", " ")}
+                        {simulationMode ? "Simulation" : raceState.replace("_", " ")}
                       </span>
                     </span>
                     <span>
@@ -723,9 +722,6 @@ function LivePageContent() {
               )}
             </div>
           )}
-
-          {/* Weather Forecast - Moved to bottom */}
-          <WeatherForecast />
         </div>
       </div>
     </>
