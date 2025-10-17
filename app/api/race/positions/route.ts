@@ -344,7 +344,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(response, {
       headers: {
         "Cache-Control":
-          "public, max-age=5, s-maxage=5, stale-while-revalidate=10",
+          "public, max-age=2, s-maxage=2, stale-while-revalidate=5",
       },
     });
   } catch (error) {
