@@ -53,9 +53,8 @@ CREATE INDEX IF NOT EXISTS idx_race_events_bibs
 CREATE INDEX IF NOT EXISTS idx_race_events_countries
   ON race_events USING GIN(related_countries);
 
--- Prevent exact duplicate events within same minute
-CREATE UNIQUE INDEX IF NOT EXISTS idx_race_events_unique
-  ON race_events(race_id, event_type, related_bibs, date_trunc('minute', timestamp));
+-- Prevent exact duplicate events (no function in index - just check exact matches)
+-- Note: Duplicate prevention is handled in application logic instead
 
 -- Row Level Security
 ALTER TABLE race_events ENABLE ROW LEVEL SECURITY;

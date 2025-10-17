@@ -45,16 +45,25 @@ export function RunnerMarker({ runner, courseTrack, isTop6Mode = false }: Runner
     const textColor = getTextColor(runner.genderRank, runner.status, runner.gender, isTop6Mode);
     const initials = getInitials(runner.name);
 
+    // Responsive sizing - smaller on mobile to avoid clutter
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+    const avatarSize = isMobile ? 36 : 48;
+    const totalHeight = isMobile ? 44 : 56;
+    const fontSize = isMobile ? 12 : 16;
+    const bibFontSize = isMobile ? 9 : 11;
+    const bibPadding = isMobile ? "1px 4px" : "2px 6px";
+
     // Styling for pending state (dashed border, semi-transparent)
     const isPending = runner.status === "pending";
-    const borderStyle = isPending ? "3px dashed #fbbf24" : "2px solid white";
+    const borderWidth = isMobile ? 2 : (isPending ? 3 : 2);
+    const borderStyle = isPending ? `${borderWidth}px dashed #fbbf24` : `${borderWidth}px solid white`;
     const opacity = isPending ? "0.85" : "1";
 
     const iconHtml = `
       <div class="runner-marker-icon ${runner.status === "overdue" ? "overdue-pulse" : ""}" style="
         position: relative;
-        width: 48px;
-        height: 56px;
+        width: ${avatarSize}px;
+        height: ${totalHeight}px;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -64,8 +73,8 @@ export function RunnerMarker({ runner, courseTrack, isTop6Mode = false }: Runner
           background-color: ${color};
           border: ${borderStyle};
           border-radius: 50%;
-          width: 48px;
-          height: 48px;
+          width: ${avatarSize}px;
+          height: ${avatarSize}px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -92,7 +101,7 @@ export function RunnerMarker({ runner, courseTrack, isTop6Mode = false }: Runner
               align-items: center;
               justify-content: center;
               font-weight: bold;
-              font-size: 16px;
+              font-size: ${fontSize}px;
               color: ${textColor};
             ">
               ${initials}
@@ -100,7 +109,7 @@ export function RunnerMarker({ runner, courseTrack, isTop6Mode = false }: Runner
           ` : `
             <div style="
               font-weight: bold;
-              font-size: 16px;
+              font-size: ${fontSize}px;
               color: ${textColor};
             ">
               ${initials}
@@ -116,8 +125,8 @@ export function RunnerMarker({ runner, courseTrack, isTop6Mode = false }: Runner
           color: white;
           border: 1.5px solid white;
           border-radius: 4px;
-          padding: 2px 6px;
-          font-size: 11px;
+          padding: ${bibPadding};
+          font-size: ${bibFontSize}px;
           font-weight: bold;
           line-height: 1;
           box-shadow: 0 1px 3px rgba(0,0,0,0.4);
@@ -131,9 +140,9 @@ export function RunnerMarker({ runner, courseTrack, isTop6Mode = false }: Runner
     return L.divIcon({
       html: iconHtml,
       className: "custom-runner-marker",
-      iconSize: [48, 56],
-      iconAnchor: [24, 48],
-      popupAnchor: [0, -48],
+      iconSize: [avatarSize, totalHeight],
+      iconAnchor: [avatarSize / 2, avatarSize],
+      popupAnchor: [0, -avatarSize],
     });
   };
 

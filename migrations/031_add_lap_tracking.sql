@@ -13,3 +13,4 @@ COMMENT ON COLUMN race_config.first_lap_distance_km IS 'First lap distance in km
 
 
 
+
