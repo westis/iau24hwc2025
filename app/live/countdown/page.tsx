@@ -138,10 +138,15 @@ function CountdownPageContent() {
       }
 
       const data: CountdownResponse = await res.json();
-      setCountdownData(data);
+      // Only update if we got valid data - prevents flashing empty states
+      // If predictions is empty on refetch but we have previous data, keep showing it
+      if (data && (data.predictions.length > 0 || !countdownData)) {
+        setCountdownData(data);
+      }
     } catch (err) {
       console.error("Error fetching countdown:", err);
       setError(err instanceof Error ? err.message : "Unknown error");
+      // Don't clear countdownData on error - keep showing previous data
     } finally {
       setLoadingCountdown(false);
     }

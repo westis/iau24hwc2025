@@ -93,7 +93,10 @@ function MapPageContent() {
         const res = await fetch(`/api/race/leaderboard?filter=${genderFilter}`);
         if (res.ok) {
           const data = await res.json();
-          setLeaderboardData(data);
+          // Only update if we got valid data - prevents flashing
+          if (data && data.entries && data.entries.length > 0) {
+            setLeaderboardData(data);
+          }
         }
         return;
       }
@@ -103,11 +106,15 @@ function MapPageContent() {
         const res = await fetch("/api/race/leaderboard?filter=overall");
         if (res.ok) {
           const data = await res.json();
-          setLeaderboardData(data);
+          // Only update if we got valid data - prevents flashing
+          if (data && data.entries && data.entries.length > 0) {
+            setLeaderboardData(data);
+          }
         }
       }
     } catch (err) {
       console.error("Failed to fetch leaderboard:", err);
+      // Don't clear leaderboardData on error - keep showing previous data
     }
   };
 
