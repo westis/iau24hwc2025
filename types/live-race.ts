@@ -163,6 +163,7 @@ export interface PositionsResponse {
   positions: RunnerPosition[];
   onBreak: RunnerPosition[];
   timingMatPosition: { lat: number; lon: number };
+  crewSpotPosition: { lat: number; lon: number } | null;
   courseTrack: { lat: number; lon: number }[];
   lastUpdate: string;
 }

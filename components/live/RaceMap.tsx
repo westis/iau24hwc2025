@@ -55,6 +55,24 @@ const timingMatIcon = L.divIcon({
   popupAnchor: [0, -50],
 });
 
+// Custom crew spot icon - smaller pin
+const crewSpotIcon = L.divIcon({
+  html: `
+    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="36" viewBox="0 0 28 36" style="filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3));">
+      <path d="M14 0 C8 0, 2 5, 2 12 C2 18, 14 36, 14 36 C14 36, 26 18, 26 12 C26 5, 20 0, 14 0 Z" 
+            fill="#f59e0b" 
+            stroke="white" 
+            stroke-width="2"/>
+      <circle cx="14" cy="12" r="4" fill="white"/>
+      <text x="14" y="15.5" font-size="9" font-weight="bold" fill="#f59e0b" text-anchor="middle">C</text>
+    </svg>
+  `,
+  className: "crew-spot-marker",
+  iconSize: [28, 36],
+  iconAnchor: [14, 36], // Point at the bottom tip
+  popupAnchor: [0, -36],
+});
+
 export function RaceMap({ bibFilter, refreshInterval = 10000 }: RaceMapProps) {
   const { t } = useLanguage();
   const [data, setData] = useState<PositionsResponse | null>(null);
@@ -169,6 +187,25 @@ export function RaceMap({ bibFilter, refreshInterval = 10000 }: RaceMapProps) {
               </div>
             </Popup>
           </Marker>
+
+          {/* Crew spot marker */}
+          {data.crewSpotPosition && (
+            <Marker
+              position={[data.crewSpotPosition.lat, data.crewSpotPosition.lon]}
+              icon={crewSpotIcon}
+            >
+              <Popup>
+                <div className="text-center">
+                  <div className="font-semibold">
+                    {t.live?.crewSpot || "Crew Spot"}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {t.live?.crewSpotOffset || "Team support area"}
+                  </div>
+                </div>
+              </Popup>
+            </Marker>
+          )}
 
           {/* Runner markers */}
           {data.positions.map((runner) => (
