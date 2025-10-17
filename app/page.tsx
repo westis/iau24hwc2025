@@ -75,7 +75,7 @@ export default function Home() {
       <div className="bg-gradient-to-br from-primary/10 via-background to-secondary/10 py-12 md:py-16">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Title and Subtitle - Always Centered */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-6">
             <h1 className="text-3xl md:text-5xl font-bold mb-3">
               {t.home.title}
             </h1>
@@ -84,37 +84,77 @@ export default function Home() {
             </p>
           </div>
 
+          {/* Conditional Layout Based on Race State */}
+          {!loadingRaceState && (raceState === "live" || raceState === "finished") ? (
+            // RACE IS LIVE/FINISHED LAYOUT
+            <>
+              {/* Large Live Button - Full Width */}
+              <div className="flex justify-center mb-6">
+                <Link href="/live">
+                  <Button
+                    size="lg"
+                    className="text-2xl md:text-4xl font-bold py-8 px-12 h-auto bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 shadow-lg hover:shadow-xl transition-all duration-300"
+                  >
+                    <Activity className="w-8 h-8 md:w-12 md:h-12 mr-3 md:mr-4" />
+                    {raceState === "finished" ? t.race.viewLiveResults : t.race.raceInProgress}
+                  </Button>
+                </Link>
+              </div>
+
+              {/* Other Action Links Row */}
+              <div className="flex flex-wrap justify-center gap-3 mb-8">
+                <Link href="/participants?view=individual">
+                  <Button variant="default" size="lg" className="font-semibold">
+                    <Users className="w-5 h-5 mr-2" />
+                    {t.home.individualRunners}
+                  </Button>
+                </Link>
+                <Link href="/participants?view=teams">
+                  <Button variant="default" size="lg" className="font-semibold">
+                    <Trophy className="w-5 h-5 mr-2" />
+                    {t.home.teamPredictions}
+                  </Button>
+                </Link>
+              </div>
+            </>
+          ) : (
+            // RACE NOT STARTED LAYOUT
+            <>
+              {/* Quick Links - Full Width Row */}
+              <div className="flex flex-wrap justify-center gap-3 mb-8">
+                <Link href="/live">
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="text-lg font-semibold border-2"
+                  >
+                    <Activity className="w-5 h-5 mr-2" />
+                    {t.race.liveResults}
+                  </Button>
+                </Link>
+                <Link href="/participants?view=individual">
+                  <Button variant="default" size="lg" className="font-semibold">
+                    <Users className="w-5 h-5 mr-2" />
+                    {t.home.individualRunners}
+                  </Button>
+                </Link>
+                <Link href="/participants?view=teams">
+                  <Button variant="default" size="lg" className="font-semibold">
+                    <Trophy className="w-5 h-5 mr-2" />
+                    {t.home.teamPredictions}
+                  </Button>
+                </Link>
+              </div>
+            </>
+          )}
+
           {/* Two Column Layout on larger screens */}
           <div className="grid grid-cols-1 lg:grid-cols-[1fr,400px] gap-8 items-start">
-            {/* Left Column - Main Content */}
+            {/* Left Column - Countdown/Links & Official Links */}
             <div className="flex flex-col items-center text-center">
-              {/* Countdown or Live Link */}
-              {!loadingRaceState && (raceState === "live" || raceState === "finished") ? (
-                // Race has started - show large prominent live link
-                <div className="mb-8">
-                  <Link href="/live">
-                    <Button
-                      size="lg"
-                      className="text-2xl md:text-4xl font-bold py-8 px-12 h-auto bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 shadow-lg hover:shadow-xl transition-all duration-300"
-                    >
-                      <Activity className="w-8 h-8 md:w-12 md:h-12 mr-3 md:mr-4" />
-                      {raceState === "finished" ? t.race.viewLiveResults : t.race.raceInProgress}
-                    </Button>
-                  </Link>
-                </div>
-              ) : (
-                // Race hasn't started - show smaller countdown with live link
-                <div className="mb-8 space-y-4">
-                  <Link href="/live">
-                    <Button
-                      variant="default"
-                      size="lg"
-                      className="text-lg font-semibold mb-4"
-                    >
-                      <Activity className="w-5 h-5 mr-2" />
-                      {t.race.liveResults}
-                    </Button>
-                  </Link>
+              {/* Countdown (only when race hasn't started) */}
+              {!loadingRaceState && raceState === "not_started" && (
+                <div className="mb-6 w-full">
                   <div className="p-4 bg-background/50 backdrop-blur-sm rounded-lg border border-border/50">
                     <RaceCountdown
                       targetDate="2025-10-18T10:00:00+02:00"
@@ -125,7 +165,7 @@ export default function Home() {
               )}
 
               {/* Official Links */}
-              <div className="flex flex-wrap justify-center gap-3 text-sm md:text-base mb-6">
+              <div className="flex flex-wrap justify-center gap-3 text-sm md:text-base">
                 <a
                   href="https://iau-ultramarathon.org/2025-iau-24h-world-championships/"
                   target="_blank"
@@ -143,22 +183,6 @@ export default function Home() {
                 >
                   {t.home.organizerWebsite} <ExternalLink className="h-4 w-4" />
                 </a>
-              </div>
-
-              {/* Quick Links */}
-              <div className="flex gap-3">
-                <Link href="/participants?view=individual">
-                  <Button variant="default" size="lg" className="font-semibold">
-                    <Users className="w-5 h-5 mr-2" />
-                    {t.home.individualRunners}
-                  </Button>
-                </Link>
-                <Link href="/participants?view=teams">
-                  <Button variant="default" size="lg" className="font-semibold">
-                    <Trophy className="w-5 h-5 mr-2" />
-                    {t.home.teamPredictions}
-                  </Button>
-                </Link>
               </div>
             </div>
 

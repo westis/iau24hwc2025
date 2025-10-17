@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
     const body = await request.json();
-    const { raceId, simulationStartTime } = body;
+    const { raceId, simulationStartTime, clearAll } = body;
 
     // Validate race ID
     if (!raceId) {
@@ -57,8 +57,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Safety check: Only allow clearing if simulation mode was/is enabled
-    if (!config.simulation_mode && !simulationStartTime) {
+    // Safety check: Only allow clearing if simulation mode was/is enabled OR clearAll flag is true
+    if (!config.simulation_mode && !simulationStartTime && !clearAll) {
       return NextResponse.json(
         {
           error:

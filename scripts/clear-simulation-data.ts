@@ -6,24 +6,26 @@
  * while preserving real race data.
  *
  * Safety Features:
- * 1. Only clears data when simulation_mode is enabled
+ * 1. Only clears data when simulation_mode is enabled (unless --clear-all used)
  * 2. Uses simulation_start_time to identify simulation data
  * 3. Provides detailed confirmation before deletion
  * 4. Preserves runner information and race configuration
  * 5. Never deletes real timing data from actual races
  *
  * Usage:
- *   npm run clear-sim-data [--force]
+ *   npm run clear-sim-data [--force] [--clear-all]
  *
  * Examples:
- *   npm run clear-sim-data          # Interactive mode with confirmation
- *   npm run clear-sim-data --force  # Skip confirmation (use with caution)
+ *   npm run clear-sim-data               # Interactive mode with confirmation
+ *   npm run clear-sim-data --force       # Skip confirmation (use with caution)
+ *   npm run clear-sim-data --clear-all   # Clear ALL race data regardless of simulation mode
  */
 
 import * as readline from "readline";
 
 const API_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 const FORCE_MODE = process.argv.includes("--force");
+const CLEAR_ALL_MODE = process.argv.includes("--clear-all");
 
 interface RaceConfig {
   id: number;
@@ -78,12 +80,18 @@ async function clearSimulationData(
   };
 
   // Clear simulation data via API
+  // When in CLEAR_ALL_MODE and simulation is disabled, pass null to clear everything
+  const simulationStartTime = (CLEAR_ALL_MODE && !config.simulation_mode)
+    ? null
+    : config.simulation_start_time;
+
   const clearRes = await fetch(`${API_URL}/api/race/clear-simulation`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       raceId: config.race_id,
-      simulationStartTime: config.simulation_start_time,
+      simulationStartTime: simulationStartTime,
+      clearAll: CLEAR_ALL_MODE && !config.simulation_mode,
     }),
   });
 
@@ -125,39 +133,60 @@ async function main() {
     console.log("\n📊 Fetching race configuration...");
     const config = await fetchRaceConfig();
 
-    // Step 2: Safety check - only proceed if simulation mode is enabled
-    if (!config.simulation_mode) {
-      console.log("\n⚠️  SAFETY CHECK PASSED");
+    // Step 2: Safety check - only proceed if simulation mode is enabled OR --clear-all is used
+    if (!config.simulation_mode && !CLEAR_ALL_MODE) {
+      console.log("\n⚠️  SAFETY CHECK: No simulation mode detected");
+      console.log("─".repeat(70));
       console.log("✅ Simulation mode is NOT enabled");
-      console.log("✅ No simulation data to clear");
-      console.log("✅ Real race data is safe\n");
+      console.log("✅ No simulation data to clear with standard safety checks");
+      console.log("\n💡 If you have old mock data to clear, use:");
+      console.log("   npm run clear-sim-data --clear-all");
+      console.log("\n⚠️  WARNING: --clear-all will delete ALL race data (laps, leaderboard, updates)");
+      console.log("   Use only if you're certain the race hasn't started yet!\n");
       return;
     }
 
     // Step 3: Display current simulation state
-    console.log("\n⚠️  SIMULATION MODE DETECTED");
-    console.log("─".repeat(70));
-    console.log(`   Simulation Mode: ${config.simulation_mode ? "ENABLED" : "DISABLED"}`);
-    console.log(`   Race State: ${config.race_state}`);
-    console.log(
-      `   Simulation Start: ${
-        config.simulation_start_time
-          ? new Date(config.simulation_start_time).toLocaleString()
-          : "Not set"
-      }`
-    );
-    console.log(
-      `   Current Race Time: ${Math.floor(config.current_race_time_sec / 3600)}h ${Math.floor((config.current_race_time_sec % 3600) / 60)}m`
-    );
-    console.log("─".repeat(70));
+    if (CLEAR_ALL_MODE && !config.simulation_mode) {
+      console.log("\n🚨 CLEAR ALL MODE - BYPASSING SAFETY CHECKS");
+      console.log("─".repeat(70));
+      console.log(`   Simulation Mode: DISABLED`);
+      console.log(`   Race State: ${config.race_state}`);
+      console.log("   ⚠️  This will clear ALL race data regardless of origin");
+      console.log("─".repeat(70));
+    } else {
+      console.log("\n⚠️  SIMULATION MODE DETECTED");
+      console.log("─".repeat(70));
+      console.log(`   Simulation Mode: ENABLED`);
+      console.log(`   Race State: ${config.race_state}`);
+      console.log(
+        `   Simulation Start: ${
+          config.simulation_start_time
+            ? new Date(config.simulation_start_time).toLocaleString()
+            : "Not set"
+        }`
+      );
+      console.log(
+        `   Current Race Time: ${Math.floor(config.current_race_time_sec / 3600)}h ${Math.floor((config.current_race_time_sec % 3600) / 60)}m`
+      );
+      console.log("─".repeat(70));
+    }
 
     // Step 4: Explain what will be cleared
-    console.log("\n📝 The following simulation data will be CLEARED:");
-    console.log("   ✓ All lap times created during simulation");
-    console.log("   ✓ All leaderboard entries from simulation");
-    console.log("   ✓ All race updates generated during simulation");
-    console.log("   ✓ Simulation mode flag (will be disabled)");
-    console.log("   ✓ Current race time (will be reset to 0)");
+    if (CLEAR_ALL_MODE && !config.simulation_mode) {
+      console.log("\n🚨 The following data will be CLEARED:");
+      console.log("   ✓ ALL lap times");
+      console.log("   ✓ ALL leaderboard entries");
+      console.log("   ✓ ALL race updates");
+      console.log("   ✓ Race clock will be reset to 0");
+    } else {
+      console.log("\n📝 The following simulation data will be CLEARED:");
+      console.log("   ✓ All lap times created during simulation");
+      console.log("   ✓ All leaderboard entries from simulation");
+      console.log("   ✓ All race updates generated during simulation");
+      console.log("   ✓ Simulation mode flag (will be disabled)");
+      console.log("   ✓ Current race time (will be reset to 0)");
+    }
 
     console.log("\n🛡️  The following data will be PRESERVED:");
     console.log("   ✓ All runner information");
