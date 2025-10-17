@@ -285,6 +285,7 @@ export const sv: Translations = {
     manageNews: "Hantera nyheter",
     editRaceInfo: "Redigera tävlingsinformation",
     liveRaceControl: "Live-tävlingskontroll",
+    monitoring: "Övervakning",
     bibNumbers: "Startnummer",
     sendNotifications: "Skicka notiser",
     chatAdmin: "Chatt-admin",

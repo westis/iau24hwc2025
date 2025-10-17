@@ -280,6 +280,7 @@ export interface Translations {
     manageNews: string;
     editRaceInfo: string;
     liveRaceControl: string;
+    monitoring: string;
     bibNumbers: string;
     sendNotifications: string;
     chatAdmin: string;
