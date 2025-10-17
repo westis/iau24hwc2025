@@ -36,6 +36,7 @@ interface RaceMapProps {
   bibFilter?: number[]; // Optional filter for specific bibs
   refreshInterval?: number; // Milliseconds (default 5000)
   isTop6Mode?: boolean; // Whether top 6 selection mode is active
+  sortByOverallRank?: boolean; // Whether to sort sidebar by overall rank (vs gender rank)
 }
 
 // Custom timing mat icon - pin/teardrop shape pointing to exact location
@@ -77,7 +78,7 @@ const crewSpotIcon = L.divIcon({
   popupAnchor: [0, -36],
 });
 
-export function RaceMap({ bibFilter, refreshInterval = 2000, isTop6Mode = false }: RaceMapProps) {
+export function RaceMap({ bibFilter, refreshInterval = 2000, isTop6Mode = false, sortByOverallRank = false }: RaceMapProps) {
   const { t } = useLanguage();
   const [data, setData] = useState<PositionsResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -240,19 +241,19 @@ export function RaceMap({ bibFilter, refreshInterval = 2000, isTop6Mode = false 
               <>
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 rounded-full bg-[#FFD700] border-2 border-white" />
-                  <span>1st Place</span>
+                  <span>{t.live?.firstPlace || "1st Place"}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 rounded-full bg-[#C0C0C0] border-2 border-white" />
-                  <span>2nd Place</span>
+                  <span>{t.live?.secondPlace || "2nd Place"}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 rounded-full bg-[#CD7F32] border-2 border-white" />
-                  <span>3rd Place</span>
+                  <span>{t.live?.thirdPlace || "3rd Place"}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 rounded-full bg-[#3b82f6] border-2 border-white" />
-                  <span>4th-6th</span>
+                  <span>{t.live?.fourthToSixth || "4th-6th"}</span>
                 </div>
               </>
             ) : (
@@ -300,6 +301,7 @@ export function RaceMap({ bibFilter, refreshInterval = 2000, isTop6Mode = false 
           runnersOnTrack={data.positions}
           runnersOnBreak={data.onBreak}
           isTop6Mode={isTop6Mode}
+          sortByOverallRank={sortByOverallRank}
         />
       </div>
     </div>

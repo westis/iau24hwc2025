@@ -258,3 +258,4 @@ export function getLapNumberFromDistance(
   return 1 + Math.floor(remainingDistance / config.lapDistanceKm);
 }
 
+

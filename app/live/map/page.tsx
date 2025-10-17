@@ -361,7 +361,14 @@ function MapPageContent() {
           </Card>
 
           {/* Live Race Map */}
-          <RaceMap bibFilter={filteredBibs} isTop6Mode={selectionMode === "top6"} />
+          <RaceMap
+            bibFilter={filteredBibs}
+            isTop6Mode={selectionMode === "top6"}
+            sortByOverallRank={
+              selectionMode === "watchlist" ||
+              (selectionMode === "country" && selectedGender === "all")
+            }
+          />
         </div>
       </div>
     </>

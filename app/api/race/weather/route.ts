@@ -73,12 +73,35 @@ export async function GET() {
 
     const raceStart = new Date(startDate);
     const raceEnd = new Date(endDate);
+    const now = new Date();
 
-    // Transform to our format - filter for race period (start to end)
+    // Determine effective forecast period
+    // Strategy: Use race times if they overlap with the 5-day forecast window
+    // Otherwise, show next 24 hours from now
+    let effectiveStart: Date;
+    let effectiveEnd: Date;
+    let usingRaceTimes = false;
+
+    const fiveDaysFromNow = new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000);
+
+    // Check if race overlaps with forecast window
+    if (raceStart <= fiveDaysFromNow && raceEnd >= now) {
+      // Race is within forecast window (current or upcoming)
+      effectiveStart = raceStart < now ? now : raceStart;
+      effectiveEnd = raceEnd;
+      usingRaceTimes = true;
+    } else {
+      // Race is too far in future or past - show next 24 hours
+      effectiveStart = now;
+      effectiveEnd = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      usingRaceTimes = false;
+    }
+
+    // Transform to our format - filter for effective period
     const hourlyForecast: WeatherHour[] = data.list
       .filter((item: any) => {
         const itemTime = new Date(item.dt * 1000);
-        return itemTime >= raceStart && itemTime <= raceEnd;
+        return itemTime >= effectiveStart && itemTime <= effectiveEnd;
       })
       .map((item: any) => {
         const time = new Date(item.dt * 1000);
@@ -112,6 +135,9 @@ export async function GET() {
       forecast: hourlyForecast,
       raceStart: raceStart.toISOString(),
       raceEnd: raceEnd.toISOString(),
+      usingRaceTimes, // Indicates if showing race period or next 24h
+      forecastStart: effectiveStart.toISOString(),
+      forecastEnd: effectiveEnd.toISOString(),
     });
   } catch (error) {
     console.error("Error fetching weather:", error);
@@ -178,6 +204,7 @@ function generateMockWeather(): {
     raceEnd: raceEnd.toISOString(),
   };
 }
+
 
 
 

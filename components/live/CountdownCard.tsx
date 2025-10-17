@@ -80,12 +80,23 @@ export function CountdownCard({
 
   // Determine card background color based on time until timing mat
   const getCardColorClass = () => {
-    if (isOverdueTimingMat)
+    // PRIORITY 1: Runner is approaching crew spot (passed timing mat but not crew spot yet)
+    // Make this VERY visible with bright green
+    if (isOverdueTimingMat && !isOverdueCrewSpot)
+      return "bg-green-100 dark:bg-green-900/40 border-green-400 dark:border-green-700 border-2 shadow-lg shadow-green-200 dark:shadow-green-900/50";
+
+    // PRIORITY 2: Overdue at timing mat AND crew spot (past both)
+    if (isOverdueTimingMat && isOverdueCrewSpot)
       return "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900";
+
+    // PRIORITY 3: Approaching timing mat soon (<= 1 minute)
     if (currentTimeUntilTimingMat <= 60)
-      return "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-900"; // <= 1 minute
+      return "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-900";
+
+    // PRIORITY 4: Approaching timing mat (<= 2 minutes)
     if (currentTimeUntilTimingMat <= 120)
-      return "bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-900"; // <= 2 minutes
+      return "bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-900";
+
     return "";
   };
 

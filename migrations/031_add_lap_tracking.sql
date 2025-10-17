@@ -12,3 +12,4 @@ COMMENT ON COLUMN race_leaderboard.last_known_distance_km IS 'Last recorded dist
 COMMENT ON COLUMN race_config.first_lap_distance_km IS 'First lap distance in km (e.g., 0.100 for 100m start offset)';
 
 
+

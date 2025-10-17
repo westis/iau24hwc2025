@@ -11,3 +11,4 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_runners_bib ON runners(bib) WHERE bib IS N
 COMMENT ON COLUMN runners.bib IS 'Race bib number for live timing identification';
 
 
+

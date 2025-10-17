@@ -521,6 +521,10 @@ export const sv: Translations = {
     timeUnitsDay: "dag",
     noWeatherData: "Ingen väderdata tillgänglig",
     weatherNote: "Timprognos för lopp. Uppdateras var 30:e minut.",
+    firstPlace: "1:a plats",
+    secondPlace: "2:a plats",
+    thirdPlace: "3:e plats",
+    fourthToSixth: "4:e-6:e",
   },
   footer: {
     siteBy: "Sajt av",

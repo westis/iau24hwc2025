@@ -37,6 +37,7 @@ export function Navbar() {
     { href: "/admin/news", label: t.admin.manageNews },
     { href: "/admin/race", label: t.admin.editRaceInfo },
     { href: "/admin/race-live", label: t.admin.liveRaceControl },
+    { href: "/admin/monitoring", label: t.admin.monitoring || "Monitoring" },
     { href: "/admin/bib-numbers", label: t.admin.bibNumbers || "Bib Numbers" },
     { href: "/admin/notifications", label: t.admin.sendNotifications },
     { href: "/admin/chat", label: t.admin.chatAdmin },

@@ -19,7 +19,8 @@
     "test-scraper": "tsx scripts/test-breizh-scraper.ts",
     "parse-bibs": "tsx scripts/parse-bib-numbers.ts",
     "import-bibs": "tsx scripts/import-bib-numbers.ts",
-    "check-bibs": "tsx scripts/check-duplicate-bibs.ts"
+    "check-bibs": "tsx scripts/check-duplicate-bibs.ts",
+    "scrape": "node scripts/scrape-every-n-seconds.js"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.15",

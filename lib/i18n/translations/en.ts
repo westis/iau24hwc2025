@@ -522,6 +522,10 @@ export const en: Translations = {
     timeUnitsDay: "day",
     noWeatherData: "No weather data available",
     weatherNote: "Hourly forecast for race period. Updated every 30 minutes.",
+    firstPlace: "1st Place",
+    secondPlace: "2nd Place",
+    thirdPlace: "3rd Place",
+    fourthToSixth: "4th-6th",
   },
   footer: {
     siteBy: "Site by",

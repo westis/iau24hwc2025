@@ -8,3 +8,4 @@ COMMENT ON COLUMN race_config.reverse_track_direction IS
   'If true, runners progress in reverse order along GPX track (e.g., if GPX recorded clockwise but race runs counterclockwise)';
 
 
+

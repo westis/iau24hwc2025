@@ -12,6 +12,7 @@ interface RunnersSidebarProps {
   runnersOnTrack: RunnerPosition[];
   runnersOnBreak: RunnerPosition[];
   isTop6Mode?: boolean;
+  sortByOverallRank?: boolean; // Sort by overall rank instead of gender rank
 }
 
 function formatDuration(seconds: number): string {
@@ -87,15 +88,17 @@ export function RunnersSidebar({
   runnersOnTrack,
   runnersOnBreak,
   isTop6Mode = false,
+  sortByOverallRank = false,
 }: RunnersSidebarProps) {
   const { t } = useLanguage();
 
-  // Sort runners by gender rank (1 at top)
+  // Sort runners - use overall rank when showing all genders together
+  const sortField = sortByOverallRank ? "rank" : "genderRank";
   const sortedOnTrack = [...runnersOnTrack].sort(
-    (a, b) => a.genderRank - b.genderRank
+    (a, b) => a[sortField] - b[sortField]
   );
   const sortedOnBreak = [...runnersOnBreak].sort(
-    (a, b) => a.genderRank - b.genderRank
+    (a, b) => a[sortField] - b[sortField]
   );
 
   return (

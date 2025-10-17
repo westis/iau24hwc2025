@@ -27,3 +27,4 @@ WHERE world_records IS NULL OR world_records = '[]'::jsonb;
 
 
 
+
