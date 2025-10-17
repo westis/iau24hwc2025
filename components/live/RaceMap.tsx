@@ -56,7 +56,7 @@ const timingMatIcon = L.divIcon({
   popupAnchor: [0, -50],
 });
 
-// Custom crew spot icon - Swedish flag colors (yellow/gold with blue stripe)
+// Custom crew spot icon - Swedish flag colors (yellow/gold with blue horizontal stripe)
 const crewSpotIcon = L.divIcon({
   html: `
     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="36" viewBox="0 0 28 36" style="filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3));">
@@ -65,10 +65,10 @@ const crewSpotIcon = L.divIcon({
             fill="#FECC00"
             stroke="white"
             stroke-width="2"/>
-      <!-- Blue vertical stripe -->
-      <rect x="11" y="4" width="6" height="16" fill="#006AA7"/>
-      <!-- C for Crew in white on blue -->
-      <text x="14" y="14" font-size="10" font-weight="bold" fill="white" text-anchor="middle">C</text>
+      <!-- Blue horizontal stripe -->
+      <rect x="5" y="9" width="18" height="6" fill="#006AA7" rx="1"/>
+      <!-- C for Crew in white on blue - larger and bold -->
+      <text x="14" y="14.5" font-size="11" font-weight="bold" fill="white" text-anchor="middle" font-family="Arial, sans-serif">C</text>
     </svg>
   `,
   className: "crew-spot-marker",
