@@ -164,8 +164,8 @@ export async function GET(request: NextRequest) {
         prediction.predictedLapTime
       );
 
-      // Calculate time until crew spot
-      const timeUntilCrewSpot = timeUntilTimingMat - crewSpotTimeOffset;
+      // Calculate time until crew spot (ADD offset since crew spot is AFTER timing mat)
+      const timeUntilCrewSpot = timeUntilTimingMat + crewSpotTimeOffset;
 
       predictions.push({
         bib: runner.bib,
