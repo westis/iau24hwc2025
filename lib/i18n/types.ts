@@ -279,6 +279,7 @@ export interface Translations {
     manageNews: string;
     editRaceInfo: string;
     liveRaceControl: string;
+    bibNumbers: string;
     sendNotifications: string;
     chatAdmin: string;
   };
