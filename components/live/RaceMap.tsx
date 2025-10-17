@@ -55,16 +55,16 @@ const timingMatIcon = L.divIcon({
   popupAnchor: [0, -50],
 });
 
-// Custom crew spot icon - smaller pin
+// Custom crew spot icon - smaller pin with Swedish flag colors (Team Sweden)
 const crewSpotIcon = L.divIcon({
   html: `
     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="36" viewBox="0 0 28 36" style="filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3));">
-      <path d="M14 0 C8 0, 2 5, 2 12 C2 18, 14 36, 14 36 C14 36, 26 18, 26 12 C26 5, 20 0, 14 0 Z" 
-            fill="#f59e0b" 
-            stroke="white" 
+      <path d="M14 0 C8 0, 2 5, 2 12 C2 18, 14 36, 14 36 C14 36, 26 18, 26 12 C26 5, 20 0, 14 0 Z"
+            fill="#006AA7"
+            stroke="white"
             stroke-width="2"/>
-      <circle cx="14" cy="12" r="4" fill="white"/>
-      <text x="14" y="15.5" font-size="9" font-weight="bold" fill="#f59e0b" text-anchor="middle">C</text>
+      <circle cx="14" cy="12" r="4" fill="#FECC00"/>
+      <text x="14" y="15.5" font-size="9" font-weight="bold" fill="#006AA7" text-anchor="middle">C</text>
     </svg>
   `,
   className: "crew-spot-marker",
