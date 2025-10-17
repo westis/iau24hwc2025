@@ -57,8 +57,8 @@ function MapPageContent() {
   const [selectionMode, setSelectionMode] = useState<
     "top6" | "watchlist" | "country"
   >((searchParams?.get("mode") as "top6" | "watchlist" | "country") || "top6");
-  const [selectedGender, setSelectedGender] = useState<"m" | "w">(
-    (searchParams?.get("gender") as "m" | "w") || "m"
+  const [selectedGender, setSelectedGender] = useState<"m" | "w" | "all">(
+    (searchParams?.get("gender") as "m" | "w" | "all") || "m"
   );
   const [selectedCountry, setSelectedCountry] = useState<string>(
     searchParams?.get("country") || ""
@@ -125,8 +125,13 @@ function MapPageContent() {
     fetchSimulationConfig();
     fetchLeaderboardData();
 
-    const interval = setInterval(fetchSimulationConfig, 10000);
-    return () => clearInterval(interval);
+    // Poll for config and leaderboard updates every 10 seconds
+    const configInterval = setInterval(fetchSimulationConfig, 10000);
+    const leaderboardInterval = setInterval(fetchLeaderboardData, 10000);
+    return () => {
+      clearInterval(configInterval);
+      clearInterval(leaderboardInterval);
+    };
   }, []);
 
   // Calculate filtered bibs based on selection mode
@@ -153,7 +158,7 @@ function MapPageContent() {
         .filter(
           (e: LeaderboardEntry) =>
             e.country === selectedCountry &&
-            (selectedGender === "m" ? e.gender === "m" : e.gender === "w")
+            (selectedGender === "all" || e.gender === selectedGender)
         )
         .map((e: LeaderboardEntry) => e.bib);
       return filtered.length > 0 ? filtered : undefined;
@@ -220,13 +225,13 @@ function MapPageContent() {
                 </div>
 
                 {/* Gender Selection (for Top 6 and Country) */}
-                {(selectionMode === "top6" || selectionMode === "country") && (
+                {selectionMode === "top6" && (
                   <div className="w-full sm:w-auto sm:min-w-[180px]">
                     <Label className="text-sm font-medium mb-2 block">
                       {t.common?.gender || "Gender"}
                     </Label>
                     <Tabs
-                      value={selectedGender}
+                      value={selectedGender === "all" ? "m" : selectedGender}
                       onValueChange={(v) => {
                         const gender = v as "m" | "w";
                         setSelectedGender(gender);
@@ -234,6 +239,35 @@ function MapPageContent() {
                       }}
                     >
                       <TabsList className="w-full">
+                        <TabsTrigger value="m" className="flex-1">
+                          {t.common?.men || "Men"}
+                        </TabsTrigger>
+                        <TabsTrigger value="w" className="flex-1">
+                          {t.common?.women || "Women"}
+                        </TabsTrigger>
+                      </TabsList>
+                    </Tabs>
+                  </div>
+                )}
+
+                {/* Gender Selection with "All" option for Country */}
+                {selectionMode === "country" && (
+                  <div className="w-full sm:w-auto sm:min-w-[200px]">
+                    <Label className="text-sm font-medium mb-2 block">
+                      {t.common?.gender || "Gender"}
+                    </Label>
+                    <Tabs
+                      value={selectedGender}
+                      onValueChange={(v) => {
+                        const gender = v as "m" | "w" | "all";
+                        setSelectedGender(gender);
+                        updateURL({ gender });
+                      }}
+                    >
+                      <TabsList className="w-full">
+                        <TabsTrigger value="all" className="flex-1">
+                          {t.common?.all || "All"}
+                        </TabsTrigger>
                         <TabsTrigger value="m" className="flex-1">
                           {t.common?.men || "Men"}
                         </TabsTrigger>
@@ -263,7 +297,7 @@ function MapPageContent() {
                           placeholder={t.live?.selectTeam || "Select a country"}
                         />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="z-[9999]">
                         {countries.map((country) => (
                           <SelectItem key={country} value={country}>
                             <div className="flex items-center gap-2">
