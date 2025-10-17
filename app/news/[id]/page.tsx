@@ -33,8 +33,10 @@ export default function NewsArticlePage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        // Fetch news with runner links
-        const newsResponse = await fetch("/api/news?includeRunnerLinks=true");
+        // Fetch news with runner links (no cache to ensure fresh data after admin updates)
+        const newsResponse = await fetch("/api/news?includeRunnerLinks=true", {
+          cache: "no-store",
+        });
         if (!newsResponse.ok) {
           throw new Error("Failed to fetch news");
         }
@@ -50,7 +52,9 @@ export default function NewsArticlePage() {
         setNewsItem(item);
 
         // Fetch runners
-        const runnersResponse = await fetch("/api/runners");
+        const runnersResponse = await fetch("/api/runners", {
+          cache: "no-store",
+        });
         const runnersData = await runnersResponse.json();
         setRunners(runnersData.runners || []);
       } catch (err) {

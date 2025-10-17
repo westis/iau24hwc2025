@@ -19,7 +19,8 @@ export default function Home() {
   useEffect(() => {
     async function fetchNews() {
       try {
-        const response = await fetch("/api/news");
+        // No cache to ensure fresh data after admin updates
+        const response = await fetch("/api/news", { cache: "no-store" });
         const data = await response.json();
         // Get only the 3 most recent news items
         setNews(data.news.slice(0, 3));

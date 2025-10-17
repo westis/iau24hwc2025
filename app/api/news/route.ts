@@ -8,8 +8,8 @@ import {
 import type { NewsItemCreate } from "@/types/news";
 import { revalidatePath } from "next/cache";
 
-// Enable ISR: revalidate every 2 minutes
-export const revalidate = 120;
+// Force dynamic to prevent caching issues with client-side fetches
+export const dynamic = "force-dynamic";
 
 // GET /api/news - Get all news (published only by default, or all for admins)
 export async function GET(request: NextRequest) {
@@ -36,8 +36,10 @@ export async function GET(request: NextRequest) {
       },
       {
         headers: {
-          // Cache for 2 minutes, serve stale for 4 minutes while revalidating
-          "Cache-Control": "public, s-maxage=120, stale-while-revalidate=240",
+          // Prevent caching for client-side fetches - always fetch fresh data
+          "Cache-Control": "no-store, must-revalidate",
+          "Pragma": "no-cache",
+          "Expires": "0",
         },
       }
     );

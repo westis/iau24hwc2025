@@ -286,7 +286,10 @@ export async function GET(request: NextRequest) {
 
     // Calculate crew spot position based on offset from timing mat
     let crewSpotPosition = null;
-    if (raceConfig.crew_spot_offset_meters && raceConfig.crew_spot_offset_meters > 0) {
+    if (
+      raceConfig.crew_spot_offset_meters &&
+      raceConfig.crew_spot_offset_meters > 0
+    ) {
       // Find point on track at crew_spot_offset_meters distance from start (timing mat)
       const targetDistance = raceConfig.crew_spot_offset_meters;
       let accumulatedDistance = 0;
