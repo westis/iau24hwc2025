@@ -27,6 +27,7 @@ export function Navbar() {
     { href: "/", label: t.common.home },
     { href: "/participants", label: t.common.participants },
     { href: "/news", label: t.common.news },
+    { href: "/live", label: t.common.live },
     { href: "/loppet", label: t.common.loppet },
     { href: "/stats", label: t.common.stats },
   ];

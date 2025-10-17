@@ -6,6 +6,7 @@ export interface Translations {
     loppet: string;
     participants: string;
     news: string;
+    live: string;
     runners: string;
     teams: string;
     stats: string;
@@ -493,5 +494,10 @@ export interface Translations {
     predictedLapTime: string;
     onBreak: string;
     noRunnersOnBreak: string;
+  };
+  footer: {
+    siteBy: string;
+    contact: string;
+    contactName: string;
   };
 }

@@ -6,6 +6,7 @@ export const sv: Translations = {
     loppet: "Loppet",
     participants: "Deltagare",
     news: "Nyheter",
+    live: "Live",
     runners: "Löpare",
     teams: "Lag",
     stats: "Statistik",
@@ -305,7 +306,7 @@ export const sv: Translations = {
     contact: "Kontakt",
     download: "Ladda ner",
     viewLiveResults: "Visa liveresultat",
-    raceInProgress: "Loppet pågår!",
+    raceInProgress: "Följ tävlingen live nu",
     raceFinished: "Loppet avslutat",
     days: "dagar",
     hours: "timmar",
@@ -505,5 +506,10 @@ export const sv: Translations = {
     team: "Lag",
     runnerOverdueMessage: "Löparen kan vara på paus eller försenad",
     ago: "sedan",
+  },
+  footer: {
+    siteBy: "Sajt av",
+    contact: "Kontakt",
+    contactName: "Daniel Westergren",
   },
 };

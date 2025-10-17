@@ -6,31 +6,38 @@ import DOMPurify from "dompurify";
 interface SafeHtmlProps {
   html: string;
   className?: string;
+  hideImages?: boolean; // New prop to hide images in preview mode
 }
 
-export function SafeHtml({ html, className = "" }: SafeHtmlProps) {
+export function SafeHtml({ html, className = "", hideImages = false }: SafeHtmlProps) {
   const [sanitizedHtml, setSanitizedHtml] = useState("");
 
   useEffect(() => {
     // Only run DOMPurify on client side
     if (typeof window !== "undefined") {
+      const allowedTags = [
+        "p",
+        "br",
+        "strong",
+        "em",
+        "u",
+        "s",
+        "a",
+        "ul",
+        "ol",
+        "li",
+        "h1",
+        "h2",
+        "h3",
+      ];
+
+      // Only include img tag if we're not hiding images
+      if (!hideImages) {
+        allowedTags.push("img");
+      }
+
       const clean = DOMPurify.sanitize(html, {
-        ALLOWED_TAGS: [
-          "p",
-          "br",
-          "strong",
-          "em",
-          "u",
-          "s",
-          "a",
-          "ul",
-          "ol",
-          "li",
-          "h1",
-          "h2",
-          "h3",
-          "img",
-        ],
+        ALLOWED_TAGS: allowedTags,
         ALLOWED_ATTR: [
           "href",
           "target",
@@ -44,7 +51,7 @@ export function SafeHtml({ html, className = "" }: SafeHtmlProps) {
       });
       setSanitizedHtml(clean);
     }
-  }, [html]);
+  }, [html, hideImages]);
 
   return (
     <div

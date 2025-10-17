@@ -5,14 +5,17 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ExternalLink, Users, Trophy, Newspaper } from "lucide-react";
+import { ExternalLink, Users, Trophy, Newspaper, Activity } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { RaceCountdown } from "@/components/race/RaceCountdown";
 import type { NewsItem } from "@/types/news";
+import type { RaceState } from "@/types/live-race";
 
 export default function Home() {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loadingNews, setLoadingNews] = useState(true);
+  const [raceState, setRaceState] = useState<RaceState>("not_started");
+  const [loadingRaceState, setLoadingRaceState] = useState(true);
 
   const { t, language } = useLanguage();
 
@@ -34,6 +37,38 @@ export default function Home() {
     fetchNews();
   }, []);
 
+  useEffect(() => {
+    async function fetchRaceState() {
+      try {
+        const response = await fetch("/api/race");
+        const data = await response.json();
+
+        // Calculate race state based on current time
+        const now = new Date();
+        const startTime = new Date(data.start_time);
+        const endTime = new Date(data.end_time);
+
+        let calculatedState: RaceState = "not_started";
+        if (now >= endTime) {
+          calculatedState = "finished";
+        } else if (now >= startTime) {
+          calculatedState = "live";
+        }
+
+        setRaceState(calculatedState);
+      } catch (error) {
+        console.error("Failed to fetch race info:", error);
+      } finally {
+        setLoadingRaceState(false);
+      }
+    }
+
+    fetchRaceState();
+    // Poll race state every 30 seconds to detect when race starts
+    const interval = setInterval(fetchRaceState, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <main className="min-h-screen">
       {/* Hero Section */}
@@ -48,13 +83,41 @@ export default function Home() {
               {t.home.subtitle}
             </p>
 
-            {/* Countdown */}
-            <div className="mb-8 p-6 bg-background/50 backdrop-blur-sm rounded-lg border border-border/50">
-              <RaceCountdown
-                targetDate="2025-10-18T10:00:00+02:00"
-                size="large"
-              />
-            </div>
+            {/* Countdown or Live Link */}
+            {!loadingRaceState && (raceState === "live" || raceState === "finished") ? (
+              // Race has started - show large prominent live link
+              <div className="mb-8">
+                <Link href="/live">
+                  <Button
+                    size="lg"
+                    className="text-2xl md:text-4xl font-bold py-8 px-12 h-auto bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 shadow-lg hover:shadow-xl transition-all duration-300"
+                  >
+                    <Activity className="w-8 h-8 md:w-12 md:h-12 mr-3 md:mr-4" />
+                    {raceState === "finished" ? t.race.viewLiveResults : t.race.raceInProgress}
+                  </Button>
+                </Link>
+              </div>
+            ) : (
+              // Race hasn't started - show smaller countdown with live link
+              <div className="mb-8 space-y-4">
+                <Link href="/live">
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="text-lg font-semibold mb-4 hover:bg-primary/10 border-2"
+                  >
+                    <Activity className="w-5 h-5 mr-2" />
+                    {t.race.liveResults}
+                  </Button>
+                </Link>
+                <div className="p-4 bg-background/50 backdrop-blur-sm rounded-lg border border-border/50">
+                  <RaceCountdown
+                    targetDate="2025-10-18T10:00:00+02:00"
+                    size="medium"
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Official Links */}
             <div className="flex flex-wrap justify-center gap-3 text-sm md:text-base mb-6">

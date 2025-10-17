@@ -6,6 +6,7 @@ export const en: Translations = {
     loppet: "The Race",
     participants: "Participants",
     news: "News",
+    live: "Live",
     runners: "Runners",
     teams: "Teams",
     stats: "Stats",
@@ -506,5 +507,10 @@ export const en: Translations = {
     team: "Team",
     runnerOverdueMessage: "Runner may be on break or delayed",
     ago: "ago",
+  },
+  footer: {
+    siteBy: "Site by",
+    contact: "Contact",
+    contactName: "Daniel Westergren",
   },
 };

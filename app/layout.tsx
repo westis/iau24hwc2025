@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import "./globals.css";
 import { Navbar } from "@/components/navigation/navbar";
+import { Footer } from "@/components/Footer";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SeedDataLoader } from "@/components/seed-data-loader";
 import { AuthProvider } from "@/lib/auth/auth-context";
@@ -65,7 +66,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-screen bg-background font-sans antialiased">
+      <body className="min-h-screen bg-background font-sans antialiased flex flex-col">
         <noscript>
           <iframe
             src="https://www.googletagmanager.com/ns.html?id=GTM-N2MMWTD"
@@ -85,7 +86,10 @@ export default function RootLayout({
               <SupabaseAuthProvider>
                 <SeedDataLoader />
                 <Navbar />
-                {children}
+                <div className="flex-1">
+                  {children}
+                </div>
+                <Footer />
                 <ChatWidget />
               </SupabaseAuthProvider>
             </AuthProvider>

@@ -206,6 +206,7 @@ export default function NewsPage() {
                     <SafeHtml
                       html={item.content}
                       className="text-sm sm:text-base lg:text-lg leading-relaxed line-clamp-3"
+                      hideImages={true}
                     />
                   </CardContent>
                 </Card>
