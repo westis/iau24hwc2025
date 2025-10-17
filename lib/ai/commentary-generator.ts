@@ -7,10 +7,21 @@ import type { RaceEvent, CommentaryContext } from "@/types/live-race";
 import { assembleEventContext, assembleHourlySummaryContext } from "./context-assembler";
 import { SYSTEM_PROMPT, buildEventPrompt, buildHourlySummaryPrompt } from "./prompts";
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!,
-});
+// Lazy initialization of OpenAI client (only when needed, not at module import)
+let openaiClient: OpenAI | null = null;
+
+function getOpenAIClient(): OpenAI {
+  if (!openaiClient) {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error(
+        "OPENAI_API_KEY environment variable is not set. Please configure it in your Vercel project settings."
+      );
+    }
+    openaiClient = new OpenAI({ apiKey });
+  }
+  return openaiClient;
+}
 
 // Cost-optimized model selection
 const EVENT_MODEL = "gpt-4o-mini"; // $0.150 per 1M input tokens, $0.600 per 1M output tokens
@@ -31,6 +42,7 @@ export async function generateEventCommentary(event: RaceEvent): Promise<string>
     const userPrompt = buildEventPrompt(event, context);
 
     // Generate commentary
+    const openai = getOpenAIClient();
     const completion = await openai.chat.completions.create({
       model: EVENT_MODEL,
       messages: [
@@ -80,6 +92,7 @@ export async function generateHourlySummary(raceId: number): Promise<string> {
     const userPrompt = buildHourlySummaryPrompt(summaryData);
 
     // Generate summary with slightly more tokens
+    const openai = getOpenAIClient();
     const completion = await openai.chat.completions.create({
       model: SUMMARY_MODEL,
       messages: [
