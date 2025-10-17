@@ -9,7 +9,7 @@ import { AlertCircle } from "lucide-react";
 import type { RunnerPosition } from "@/types/live-race";
 import { renderToString } from "react-dom/server";
 import { getMarkerColor, getTextColor } from "@/lib/utils/runner-marker-colors";
-import { useRef, useState, useEffect } from "react";
+import { useRef } from "react";
 
 interface RunnerMarkerProps {
   runner: RunnerPosition;
@@ -27,74 +27,8 @@ export function RunnerMarker({ runner, courseTrack }: RunnerMarkerProps) {
   const color = getMarkerColor(runner.genderRank, runner.status);
   const markerRef = useRef<L.Marker>(null);
 
-  // State for interpolated position
-  const [currentProgress, setCurrentProgress] = useState(runner.progressPercent);
-  const apiProgressRef = useRef(runner.progressPercent);
-  const apiTimeRef = useRef(Date.now());
-
-  // Get position at a given progress percent
-  const getPositionAtProgress = (progress: number): { lat: number; lon: number } => {
-    if (courseTrack.length === 0) {
-      return { lat: runner.lat, lon: runner.lon };
-    }
-
-    // Clamp progress to 0-100
-    const clampedProgress = Math.max(0, Math.min(100, progress));
-
-    // Calculate index in course track
-    const index = (clampedProgress / 100) * (courseTrack.length - 1);
-    const lowerIndex = Math.floor(index);
-    const upperIndex = Math.ceil(index);
-
-    if (lowerIndex === upperIndex || upperIndex >= courseTrack.length) {
-      return courseTrack[lowerIndex] || courseTrack[0];
-    }
-
-    // Interpolate between points
-    const fraction = index - lowerIndex;
-    const p1 = courseTrack[lowerIndex];
-    const p2 = courseTrack[upperIndex];
-
-    return {
-      lat: p1.lat + (p2.lat - p1.lat) * fraction,
-      lon: p1.lon + (p2.lon - p1.lon) * fraction,
-    };
-  };
-
-  // Update when runner data changes from API
-  useEffect(() => {
-    apiProgressRef.current = runner.progressPercent;
-    apiTimeRef.current = Date.now();
-    setCurrentProgress(runner.progressPercent);
-  }, [runner.progressPercent, runner.bib]);
-
-  // Client-side interpolation: update position every 2 seconds between API updates
-  useEffect(() => {
-    if (runner.status === "break") {
-      // Don't interpolate if on break
-      return;
-    }
-
-    const interval = setInterval(() => {
-      const now = Date.now();
-      const timeSinceApiUpdate = (now - apiTimeRef.current) / 1000; // seconds
-
-      // Calculate how much progress should have been made since API update
-      const progressPerSecond = (100 / runner.predictedLapTime);
-      const additionalProgress = timeSinceApiUpdate * progressPerSecond;
-
-      // New progress = API progress + additional progress from interpolation
-      const newProgress = Math.min(100, apiProgressRef.current + additionalProgress);
-
-      setCurrentProgress(newProgress);
-    }, 2000); // Update every 2 seconds
-
-    return () => clearInterval(interval);
-  }, [runner.predictedLapTime, runner.status]);
-
-  // Get display position based on current progress
-  const displayPosition = getPositionAtProgress(currentProgress);
-  const positionArray: [number, number] = [displayPosition.lat, displayPosition.lon];
+  // Use position directly from API (already pace-calculated)
+  const positionArray: [number, number] = [runner.lat, runner.lon];
 
   // Create custom divIcon with bib number
   const createCustomIcon = () => {

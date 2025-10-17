@@ -73,7 +73,7 @@ const crewSpotIcon = L.divIcon({
   popupAnchor: [0, -36],
 });
 
-export function RaceMap({ bibFilter, refreshInterval = 10000 }: RaceMapProps) {
+export function RaceMap({ bibFilter, refreshInterval = 5000 }: RaceMapProps) {
   const { t } = useLanguage();
   const [data, setData] = useState<PositionsResponse | null>(null);
   const [loading, setLoading] = useState(true);

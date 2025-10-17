@@ -122,7 +122,7 @@
 
 /* Simple smooth transition for runner markers */
 .custom-runner-marker {
-  transition: transform 2s ease-out !important;
+  transition: transform 5s linear !important;
 }
 
 /* Pulse animation for overdue runners */
