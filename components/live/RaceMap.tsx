@@ -85,18 +85,15 @@ export function RaceMap({ bibFilter, refreshInterval = 2000, isTop6Mode = false,
   const [error, setError] = useState<string | null>(null);
 
   const fetchPositions = async () => {
-    // CRITICAL: Never fetch without valid bibs - prevents loading all runners
-    if (!bibFilter || bibFilter.length === 0) {
-      setLoading(false);
-      setData(null);
-      return;
-    }
-
     try {
-      const params = new URLSearchParams();
-      params.set("bibs", bibFilter.join(","));
+      // Build URL - if bibFilter is provided, use it; otherwise fetch course track only
+      let url = `/api/race/positions`;
+      if (bibFilter && bibFilter.length > 0) {
+        const params = new URLSearchParams();
+        params.set("bibs", bibFilter.join(","));
+        url = `${url}?${params.toString()}`;
+      }
 
-      const url = `/api/race/positions?${params.toString()}`;
       const response = await fetch(url);
 
       if (!response.ok) {
@@ -117,11 +114,9 @@ export function RaceMap({ bibFilter, refreshInterval = 2000, isTop6Mode = false,
   useEffect(() => {
     fetchPositions();
 
-    // Only set up interval if we have valid bibs
-    if (bibFilter && bibFilter.length > 0) {
-      const interval = setInterval(fetchPositions, refreshInterval);
-      return () => clearInterval(interval);
-    }
+    // Always poll for updates (will show course track even without runners)
+    const interval = setInterval(fetchPositions, refreshInterval);
+    return () => clearInterval(interval);
   }, [bibFilter, refreshInterval]);
 
   if (loading) {

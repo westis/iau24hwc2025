@@ -139,9 +139,10 @@ export interface RunnerPosition {
   name: string;
   country: string;
   gender: "m" | "w";
+  avatarUrl?: string | null;
   lat: number;
   lon: number;
-  status: "racing" | "overdue" | "break";
+  status: "racing" | "pending" | "overdue" | "break";
   rank: number;
   genderRank: number;
   distanceKm: number;
@@ -166,4 +167,130 @@ export interface PositionsResponse {
   crewSpotPosition: { lat: number; lon: number } | null;
   courseTrack: { lat: number; lon: number }[];
   lastUpdate: string;
+}
+
+// AI Commentary & Event Detection Types
+
+export type RaceEventType =
+  | "break_started"
+  | "break_ended"
+  | "lead_change"
+  | "significant_move"
+  | "pace_surge"
+  | "pace_drop"
+  | "milestone"
+  | "record_pace"
+  | "team_battle";
+
+export type EventPriority = "low" | "medium" | "high";
+
+// Base event interface
+export interface RaceEvent {
+  id: number;
+  raceId: number;
+  eventType: RaceEventType;
+  priority: EventPriority;
+  relatedBibs: number[];
+  relatedCountries: string[];
+  eventData: Record<string, any>; // Flexible JSONB data
+  commentaryGenerated: boolean;
+  commentaryId?: number;
+  generationAttemptedAt?: string;
+  generationError?: string;
+  timestamp: string;
+  createdAt: string;
+}
+
+// Specific event data structures
+export interface BreakStartedEventData {
+  runner: LeaderboardEntry;
+  timeSinceLastLap: number; // milliseconds
+  lastLap?: LapTime;
+}
+
+export interface BreakEndedEventData {
+  runner: LeaderboardEntry;
+  breakDuration: number; // milliseconds
+}
+
+export interface LeadChangeEventData {
+  newLeader: LeaderboardEntry;
+  oldLeader: LeaderboardEntry;
+  gap: number; // km
+  gender: "m" | "w";
+}
+
+export interface SignificantMoveEventData {
+  runner: LeaderboardEntry;
+  oldRank: number;
+  newRank: number;
+  positionsGained: number;
+  timeframe: number; // minutes
+}
+
+export interface PaceChangeEventData {
+  runner: LeaderboardEntry;
+  recentLapPace: number; // sec/km
+  avgPace: number; // sec/km
+  percentChange: number;
+  direction: "faster" | "slower";
+}
+
+export interface MilestoneEventData {
+  runner: LeaderboardEntry;
+  milestone: number; // km (100, 150, 200, 250, etc.)
+}
+
+export interface RecordPaceEventData {
+  runner: LeaderboardEntry;
+  projectedDistance: number; // km
+  recordThreshold: number; // km (300 for men, 270 for women)
+  gender: "m" | "w";
+}
+
+export interface TeamBattleEventData {
+  teams: Array<{
+    country: string;
+    total: number; // km
+    rank: number;
+  }>;
+  gap: number; // km between first and last
+}
+
+// AI Commentary Context
+export interface CommentaryContext {
+  currentTime: string;
+  raceHour: number;
+  elapsedHours: number;
+  event: RaceEvent;
+  recentDevelopments?: {
+    leaderboardChanges: Array<{
+      runner: LeaderboardEntry;
+      oldRank: number;
+      newRank: number;
+    }>;
+    breaks: Array<{
+      runner: LeaderboardEntry;
+      duration: number;
+    }>;
+  };
+  teamStandings?: Array<{
+    country: string;
+    rank: number;
+    total: number;
+    runners: LeaderboardEntry[];
+  }>;
+  runnerNotes?: string;
+  personalBest?: number;
+  expectedPerformance?: {
+    distance: number;
+    storyline: string;
+  };
+}
+
+// API Response for race updates with filtering
+export interface RaceUpdatesResponse {
+  updates: RaceUpdate[];
+  totalCount: number;
+  hasMore: boolean;
 }

@@ -21,15 +21,15 @@ export function getMarkerColor(
   if (status === "overdue") return "#f97316"; // orange
   if (status === "break") return "#ef4444"; // red
 
-  // Racing - special colors for top 6 mode
-  if (isTop6Mode && status === "racing") {
+  // Pending and Racing use same colors (border style will differ)
+  if (isTop6Mode && (status === "racing" || status === "pending")) {
     if (genderRank === 1) return "#FFD700"; // gold
     if (genderRank === 2) return "#C0C0C0"; // silver
     if (genderRank === 3) return "#CD7F32"; // bronze
     if (genderRank <= 6) return "#3b82f6"; // blue for 4-6
   }
 
-  // Racing - gender-based colors (default)
+  // Racing/Pending - gender-based colors (default)
   if (gender === "m") return "#104760"; // men - dark teal/blue
   return "#00AF50"; // women - green
 }
@@ -44,8 +44,8 @@ export function getTextColor(
   gender: "m" | "w",
   isTop6Mode: boolean = false
 ): string {
-  // For top 6 mode special colors
-  if (isTop6Mode && status === "racing") {
+  // For top 6 mode special colors (pending and racing)
+  if (isTop6Mode && (status === "racing" || status === "pending")) {
     if (genderRank === 1) return "#000000"; // black text on gold
     if (genderRank === 2) return "#000000"; // black text on silver
     if (genderRank === 3) return "#ffffff"; // white text on bronze

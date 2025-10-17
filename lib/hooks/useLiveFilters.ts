@@ -71,7 +71,9 @@ export function useLiveFilters(
     // Update URL
     const params = new URLSearchParams();
     Object.entries(newFilters).forEach(([key, value]) => {
-      if (value && value !== "all" && value !== defaultFilters[key]) {
+      // Always include gender and mode in URL (even when they match defaults)
+      // Skip other values that are empty, "all" (except gender), or match defaults
+      if (value && (key === "gender" || key === "mode" || (value !== "all" && value !== defaultFilters[key]))) {
         params.set(key, value);
       }
     });

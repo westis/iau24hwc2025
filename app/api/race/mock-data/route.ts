@@ -145,10 +145,10 @@ export async function GET(request: NextRequest) {
     // Fetch real runners from the database (exclude DNS)
     const { data: raceEntries, error: entriesError } = await supabase
       .from("runners")
-      .select("entry_id, firstname, lastname, gender, nationality, dns")
+      .select("bib, firstname, lastname, gender, nationality, dns")
       .eq("dns", false)
-      .not("entry_id", "is", null)
-      .order("entry_id");
+      .not("bib", "is", null)
+      .order("bib");
 
     if (entriesError || !raceEntries || raceEntries.length === 0) {
       console.error("Error fetching race entries:", entriesError);
@@ -194,11 +194,8 @@ export async function GET(request: NextRequest) {
           ? 9.5 + Math.random() * 2.5 // Men: 9.5-12 km/h
           : 8.5 + Math.random() * 2.0; // Women: 8.5-10.5 km/h
 
-      // Parse entry_id as bib number (e.g., "101" -> 101)
-      const bib = parseInt(entry.entry_id, 10);
-
       return {
-        bib: isNaN(bib) ? 0 : bib,
+        bib: entry.bib,
         name: `${entry.firstname} ${entry.lastname}`,
         gender: (entry.gender === "M" ? "m" : "w") as "m" | "w",
         country: entry.nationality,

@@ -3,6 +3,18 @@
     {
       "path": "/api/cron/fetch-race-data",
       "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/cron/detect-race-events",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/generate-commentary",
+      "schedule": "*/2 * * * *"
+    },
+    {
+      "path": "/api/cron/generate-hourly-summary",
+      "schedule": "0 * * * *"
     }
   ]
 }

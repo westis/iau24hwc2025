@@ -37,6 +37,8 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const bibsParam = searchParams.get("bibs");
 
+    console.log(`[Positions API] Received bib filter:`, bibsParam);
+
     const supabase = await createClient();
 
     // Get active race
@@ -260,6 +262,36 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    // Fetch runner profiles to get optimized avatar URLs using direct DB query
+    // (Supabase RLS might block avatar_url access)
+    const avatarMap = new Map<number, string | null>();
+    try {
+      const runnerBibs = leaderboard.map((lb: any) => lb.bib);
+
+      // Use direct database query instead of Supabase client to bypass RLS
+      const { getDatabase } = await import("@/lib/db/database");
+      const db = getDatabase();
+
+      const avatarResult = await db.query(
+        `SELECT bib, avatar_url FROM runners WHERE bib = ANY($1)`,
+        [runnerBibs]
+      );
+
+      console.log(`[Avatar Debug] Fetched ${avatarResult.rows.length} runner profiles for bibs:`, runnerBibs);
+
+      avatarResult.rows.forEach((runner: any) => {
+        avatarMap.set(runner.bib, runner.avatar_url);
+        if (runner.avatar_url) {
+          console.log(`[Avatar Debug] #${runner.bib} has avatar:`, runner.avatar_url.substring(0, 60) + "...");
+        }
+      });
+
+      console.log(`[Avatar Debug] avatarMap size: ${avatarMap.size}`);
+    } catch (avatarFetchError) {
+      console.error("Error fetching avatars:", avatarFetchError);
+      // Continue without avatars - not a critical error
+    }
+
     // Fetch laps for each runner (last 10 laps for prediction)
     const lapsMap = new Map<number, LapTime[]>();
 
@@ -323,7 +355,8 @@ export async function GET(request: NextRequest) {
       track,
       raceConfig.timing_mat_lat,
       raceConfig.timing_mat_lon,
-      breakConfig
+      breakConfig,
+      avatarMap
     );
 
     // Group by status

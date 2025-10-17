@@ -31,35 +31,109 @@ export function RunnerMarker({ runner, courseTrack, isTop6Mode = false }: Runner
   // Use position directly from API (already pace-calculated)
   const positionArray: [number, number] = [runner.lat, runner.lon];
 
-  // Create custom divIcon with bib number
+  // Extract initials from runner name
+  const getInitials = (name: string): string => {
+    const parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
+
+  // Create custom divIcon with avatar/initials and bib badge
   const createCustomIcon = () => {
     const textColor = getTextColor(runner.genderRank, runner.status, runner.gender, isTop6Mode);
+    const initials = getInitials(runner.name);
+
+    // Styling for pending state (dashed border, semi-transparent)
+    const isPending = runner.status === "pending";
+    const borderStyle = isPending ? "3px dashed #fbbf24" : "2px solid white";
+    const opacity = isPending ? "0.85" : "1";
 
     const iconHtml = `
       <div class="runner-marker-icon ${runner.status === "overdue" ? "overdue-pulse" : ""}" style="
-        background-color: ${color};
-        border: 2px solid white;
-        border-radius: 50%;
-        width: 32px;
-        height: 32px;
+        position: relative;
+        width: 48px;
+        height: 56px;
         display: flex;
+        flex-direction: column;
         align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        font-size: 12px;
-        color: ${textColor};
-        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
       ">
-        ${runner.bib}
+        <!-- Avatar circle or initials -->
+        <div style="
+          background-color: ${color};
+          border: ${borderStyle};
+          border-radius: 50%;
+          width: 48px;
+          height: 48px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+          position: relative;
+          opacity: ${opacity};
+        ">
+          ${runner.avatarUrl ? `
+            <img
+              src="${runner.avatarUrl}"
+              style="
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+              "
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+              crossorigin="anonymous"
+            />
+            <div style="
+              display: none;
+              width: 100%;
+              height: 100%;
+              align-items: center;
+              justify-content: center;
+              font-weight: bold;
+              font-size: 16px;
+              color: ${textColor};
+            ">
+              ${initials}
+            </div>
+          ` : `
+            <div style="
+              font-weight: bold;
+              font-size: 16px;
+              color: ${textColor};
+            ">
+              ${initials}
+            </div>
+          `}
+        </div>
+
+        <!-- Bib number badge -->
+        <div style="
+          position: absolute;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.85);
+          color: white;
+          border: 1.5px solid white;
+          border-radius: 4px;
+          padding: 2px 6px;
+          font-size: 11px;
+          font-weight: bold;
+          line-height: 1;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+          white-space: nowrap;
+        ">
+          ${runner.bib}
+        </div>
       </div>
     `;
 
     return L.divIcon({
       html: iconHtml,
       className: "custom-runner-marker",
-      iconSize: [32, 32],
-      iconAnchor: [16, 16],
-      popupAnchor: [0, -16],
+      iconSize: [48, 56],
+      iconAnchor: [24, 48],
+      popupAnchor: [0, -48],
     });
   };
 
@@ -122,6 +196,16 @@ export function RunnerMarker({ runner, courseTrack, isTop6Mode = false }: Runner
                 {formatTime(runner.predictedLapTime)}
               </span>
             </div>
+
+            {runner.status === "pending" && (
+              <div className="mt-2 flex items-center gap-1 text-yellow-600 text-xs">
+                <AlertCircle className="h-3 w-3" />
+                <span>
+                  {t.live?.pendingConfirmation || "Awaiting confirmation"}
+                  {runner.timeOverdue && ` (+${formatTime(runner.timeOverdue)})`}
+                </span>
+              </div>
+            )}
 
             {runner.status === "overdue" && (
               <div className="mt-2 flex items-center gap-1 text-orange-600 text-xs">

@@ -1,29 +1,12 @@
 // lib/live-race/position-estimator.ts
 // Calculate runner positions on the course map based on lap predictions
 
-import type { LapTime, LeaderboardEntry } from "@/types/live-race";
+import type { LapTime, LeaderboardEntry, RunnerPosition } from "@/types/live-race";
 import { predictNextLapTime } from "./lap-predictor";
 import type { GPXTrack } from "@/lib/utils/gpx-parser";
 import { getPositionAtProgress } from "@/lib/utils/gpx-parser";
 
-export type RunnerStatus = "racing" | "overdue" | "break";
-
-export interface RunnerPosition {
-  bib: number;
-  name: string;
-  country: string;
-  gender: "m" | "w";
-  lat: number;
-  lon: number;
-  status: RunnerStatus;
-  rank: number;
-  genderRank: number;
-  distanceKm: number;
-  timeSinceLastPassing: number;
-  predictedLapTime: number;
-  progressPercent: number;
-  timeOverdue?: number; // seconds overdue (only if status is 'overdue' or 'break')
-}
+export type RunnerStatus = "racing" | "pending" | "overdue" | "break";
 
 export interface BreakDetectionConfig {
   thresholdMultiplier: number; // e.g., 2.5 means 2.5x predicted lap time
@@ -38,6 +21,7 @@ export interface BreakDetectionConfig {
  * @param timingMatLat Timing mat latitude
  * @param timingMatLon Timing mat longitude
  * @param breakConfig Break detection configuration
+ * @param avatarUrl Runner's optimized avatar URL (optional)
  * @param currentTime Current time (defaults to now)
  * @returns Runner position data
  */
@@ -48,6 +32,7 @@ export function calculateRunnerPosition(
   timingMatLat: number,
   timingMatLon: number,
   breakConfig: BreakDetectionConfig,
+  avatarUrl?: string | null,
   currentTime: Date = new Date()
 ): RunnerPosition {
   // Predict next lap time
@@ -61,11 +46,8 @@ export function calculateRunnerPosition(
   const timeSinceLastPassing =
     (currentTime.getTime() - lastPassingDate.getTime()) / 1000;
 
-  // Calculate progress through current lap
-  const progressPercent = Math.min(
-    100,
-    (timeSinceLastPassing / prediction.predictedLapTime) * 100
-  );
+  // Calculate progress through current lap (allow > 100% for pending state detection)
+  const progressPercent = (timeSinceLastPassing / prediction.predictedLapTime) * 100;
 
   // Determine status and position
   let status: RunnerStatus = "racing";
@@ -75,21 +57,28 @@ export function calculateRunnerPosition(
 
   const expectedFinishTime =
     prediction.predictedLapTime * breakConfig.thresholdMultiplier;
+  const PENDING_CONFIRMATION_WINDOW = 30; // seconds
 
   if (timeSinceLastPassing > prediction.predictedLapTime) {
-    // Runner is overdue
+    // Runner is overdue (predicted to have crossed timing mat)
     timeOverdue = timeSinceLastPassing - prediction.predictedLapTime;
 
-    if (timeOverdue > breakConfig.overdueDisplaySeconds) {
-      // Mark as on break
+    if (timeOverdue <= PENDING_CONFIRMATION_WINDOW) {
+      // Within 30 seconds of predicted crossing - pending confirmation
+      status = "pending";
+      // Show at timing mat since they should have crossed
+      lat = timingMatLat;
+      lon = timingMatLon;
+    } else if (timeOverdue > breakConfig.overdueDisplaySeconds) {
+      // Way overdue - mark as on break
       status = "break";
-      // Position at timing mat
       lat = timingMatLat;
       lon = timingMatLon;
     } else if (timeSinceLastPassing < expectedFinishTime) {
-      // Still overdue but within threshold - keep estimating position
+      // Overdue beyond confirmation window but within threshold
       status = "overdue";
-      const position = getPositionAtProgress(track, progressPercent);
+      // Cap progress at 100% for visual display
+      const position = getPositionAtProgress(track, Math.min(100, progressPercent));
       lat = position.lat;
       lon = position.lon;
     } else {
@@ -101,7 +90,8 @@ export function calculateRunnerPosition(
   } else {
     // Runner is on pace - calculate position along track
     status = "racing";
-    const position = getPositionAtProgress(track, progressPercent);
+    // Cap progress at 100% for display (can't go past timing mat until confirmed)
+    const position = getPositionAtProgress(track, Math.min(100, progressPercent));
     lat = position.lat;
     lon = position.lon;
   }
@@ -111,6 +101,7 @@ export function calculateRunnerPosition(
     name: leaderboardEntry.name,
     country: leaderboardEntry.country,
     gender: leaderboardEntry.gender,
+    avatarUrl,
     lat,
     lon,
     status,
@@ -132,6 +123,7 @@ export function calculateRunnerPosition(
  * @param timingMatLat Timing mat latitude
  * @param timingMatLon Timing mat longitude
  * @param breakConfig Break detection configuration
+ * @param avatarMap Map of bib number to avatar URL (optional)
  * @param currentTime Current time (defaults to now)
  * @returns Array of runner positions
  */
@@ -142,6 +134,7 @@ export function calculateAllRunnerPositions(
   timingMatLat: number,
   timingMatLon: number,
   breakConfig: BreakDetectionConfig,
+  avatarMap?: Map<number, string | null>,
   currentTime: Date = new Date()
 ): RunnerPosition[] {
   return leaderboard
@@ -151,6 +144,7 @@ export function calculateAllRunnerPositions(
         // Skip runners with no lap data
         return null;
       }
+      const avatarUrl = avatarMap?.get(entry.bib);
       return calculateRunnerPosition(
         entry,
         laps,
@@ -158,6 +152,7 @@ export function calculateAllRunnerPositions(
         timingMatLat,
         timingMatLon,
         breakConfig,
+        avatarUrl,
         currentTime
       );
     })
@@ -179,6 +174,10 @@ export function groupRunnersByStatus(positions: RunnerPosition[]): {
   positions.forEach((pos) => {
     switch (pos.status) {
       case "racing":
+        racing.push(pos);
+        break;
+      case "pending":
+        // Pending runners are shown with racing runners (they're still on track)
         racing.push(pos);
         break;
       case "overdue":
