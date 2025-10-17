@@ -79,13 +79,32 @@ function MapPageContent() {
     }
   };
 
-  // Fetch leaderboard data for filtering
+  // Fetch minimal leaderboard data based on selection mode
   const fetchLeaderboardData = async () => {
     try {
-      const res = await fetch("/api/race/leaderboard?filter=overall");
-      if (res.ok) {
-        const data = await res.json();
-        setLeaderboardData(data);
+      // For watchlist mode, don't fetch leaderboard at all
+      if (selectionMode === "watchlist") {
+        return;
+      }
+
+      // For top6 mode, only fetch the specific gender
+      if (selectionMode === "top6") {
+        const genderFilter = selectedGender === "w" ? "women" : "men";
+        const res = await fetch(`/api/race/leaderboard?filter=${genderFilter}`);
+        if (res.ok) {
+          const data = await res.json();
+          setLeaderboardData(data);
+        }
+        return;
+      }
+
+      // For country mode, fetch overall (needed to filter by country)
+      if (selectionMode === "country") {
+        const res = await fetch("/api/race/leaderboard?filter=overall");
+        if (res.ok) {
+          const data = await res.json();
+          setLeaderboardData(data);
+        }
       }
     } catch (err) {
       console.error("Failed to fetch leaderboard:", err);
@@ -118,36 +137,45 @@ function MapPageContent() {
     fetchRaceInfo();
     fetchSimulationConfig();
     fetchCountries();
-    fetchLeaderboardData();
 
-    // Poll for config and leaderboard updates every 10 seconds
+    // Poll for config updates every 10 seconds
     const configInterval = setInterval(fetchSimulationConfig, 10000);
-    const leaderboardInterval = setInterval(fetchLeaderboardData, 10000);
     return () => {
       clearInterval(configInterval);
-      clearInterval(leaderboardInterval);
     };
   }, []);
 
-  // Calculate filtered bibs based on selection mode
+  // Fetch leaderboard when selection mode or gender changes
+  useEffect(() => {
+    fetchLeaderboardData();
+
+    // Poll for leaderboard updates every 10 seconds
+    const leaderboardInterval = setInterval(fetchLeaderboardData, 10000);
+    return () => {
+      clearInterval(leaderboardInterval);
+    };
+  }, [selectionMode, selectedGender]);
+
+  // Calculate filtered bibs based on selection mode (with limits to prevent overload)
   const getFilteredBibs = (): number[] | undefined => {
+    // Watchlist mode: use watchlist bibs directly
     if (selectionMode === "watchlist") {
       return watchlist.length > 0 ? watchlist : undefined;
     }
 
+    // Top 6 mode: max 6 runners (already filtered by gender on server)
     if (selectionMode === "top6" && leaderboardData) {
-      const genderFilter = selectedGender === "m" ? "m" : "w";
       const filtered = leaderboardData.entries
-        .filter((e: LeaderboardEntry) => e.gender === genderFilter)
         .sort(
           (a: LeaderboardEntry, b: LeaderboardEntry) =>
             a.genderRank - b.genderRank
-        ) // Sort by gender rank!
+        )
         .slice(0, 6)
         .map((e: LeaderboardEntry) => e.bib);
       return filtered.length > 0 ? filtered : undefined;
     }
 
+    // Country mode: max 15 runners to prevent overload
     if (selectionMode === "country" && selectedCountry && leaderboardData) {
       const filtered = leaderboardData.entries
         .filter(
@@ -155,6 +183,11 @@ function MapPageContent() {
             e.country === selectedCountry &&
             (selectedGender === "all" || e.gender === selectedGender)
         )
+        .sort(
+          (a: LeaderboardEntry, b: LeaderboardEntry) =>
+            a.genderRank - b.genderRank
+        )
+        .slice(0, 15) // Limit to 15 runners max
         .map((e: LeaderboardEntry) => e.bib);
       return filtered.length > 0 ? filtered : undefined;
     }
