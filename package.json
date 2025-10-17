@@ -16,6 +16,8 @@
     "check-sim": "tsx scripts/check-simulation-mode.ts",
     "stop-sim": "tsx scripts/stop-simulation.ts && tsx scripts/clear-simulation-data.ts --force",
     "clear-sim-data": "tsx scripts/clear-simulation-data.ts",
+    "force-clear-data": "tsx scripts/force-clear-race-data.ts",
+    "check-race-data": "tsx scripts/check-race-laps.ts",
     "test-scraper": "tsx scripts/test-breizh-scraper.ts",
     "parse-bibs": "tsx scripts/parse-bib-numbers.ts",
     "import-bibs": "tsx scripts/import-bib-numbers.ts",
