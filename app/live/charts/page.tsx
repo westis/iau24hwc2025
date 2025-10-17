@@ -6,6 +6,7 @@ import { DistancePaceChart } from "@/components/live/DistancePaceChart";
 import { GapAnalysisChart } from "@/components/live/GapAnalysisChart";
 import { LiveNavigation } from "@/components/live/LiveNavigation";
 import { SimulationBanner } from "@/components/live/SimulationBanner";
+import { OfficialTimingBanner } from "@/components/live/OfficialTimingBanner";
 import { Button } from "@/components/ui/button";
 import { useWatchlist } from "@/lib/hooks/useWatchlist";
 import { useLeaderboard } from "@/lib/hooks/useLeaderboard";
@@ -143,6 +144,7 @@ export default function ChartsPage() {
         title={`${t.live?.charts || "Charts"} | ${t.live?.title || "Live"}`}
       />
       <div className="min-h-screen bg-background">
+        <OfficialTimingBanner />
         {simulationMode && <SimulationBanner />}
         <LiveNavigation />
         <div className="container mx-auto py-4 px-4 space-y-4">

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { RaceClock } from "@/components/live/RaceClock";
 import { LiveNavigation } from "@/components/live/LiveNavigation";
 import { SimulationBanner } from "@/components/live/SimulationBanner";
+import { OfficialTimingBanner } from "@/components/live/OfficialTimingBanner";
 import { CountdownCard } from "@/components/live/CountdownCard";
 import { useWatchlist } from "@/lib/hooks/useWatchlist";
 import { useLeaderboard } from "@/lib/hooks/useLeaderboard";
@@ -179,6 +180,7 @@ export default function CountdownPage() {
         }`}
       />
       <div className="min-h-screen bg-background">
+        <OfficialTimingBanner />
         {simulationMode && <SimulationBanner />}
         <LiveNavigation />
         <div className="container mx-auto py-4 px-4 space-y-4">

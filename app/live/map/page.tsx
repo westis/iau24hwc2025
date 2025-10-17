@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { RaceClock } from "@/components/live/RaceClock";
 import { LiveNavigation } from "@/components/live/LiveNavigation";
 import { SimulationBanner } from "@/components/live/SimulationBanner";
+import { OfficialTimingBanner } from "@/components/live/OfficialTimingBanner";
 import { PageTitle } from "@/components/PageTitle";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { useWatchlist } from "@/lib/hooks/useWatchlist";
@@ -180,6 +181,7 @@ function MapPageContent() {
         title={`${t.live?.map || "Map"} | ${t.live?.title || "Live"}`}
       />
       <div className="min-h-screen bg-background">
+        <OfficialTimingBanner />
         {simulationMode && <SimulationBanner />}
         <LiveNavigation />
         <div className="container mx-auto py-4 px-4 space-y-4">

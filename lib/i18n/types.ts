@@ -484,6 +484,7 @@ export interface Translations {
     team: string;
     runnerOverdueMessage: string;
     ago: string;
+    officialTimingLink: string;
     noRunnersOnTrack: string;
     loadingMap: string;
     legend: string;
@@ -494,6 +495,17 @@ export interface Translations {
     predictedLapTime: string;
     onBreak: string;
     noRunnersOnBreak: string;
+    staleDataWarning: string;
+    staleDataLastUpdated: string;
+    staleDataUnknownTime: string;
+    timeUnitsSeconds: string;
+    timeUnitsMinutes: string;
+    timeUnitsHours: string;
+    timeUnitsDays: string;
+    timeUnitsSecond: string;
+    timeUnitsMinute: string;
+    timeUnitsHour: string;
+    timeUnitsDay: string;
   };
   footer: {
     siteBy: string;
