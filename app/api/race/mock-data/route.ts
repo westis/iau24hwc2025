@@ -142,10 +142,12 @@ export async function GET(request: NextRequest) {
 
     const supabase = await createClient();
 
-    // Fetch real runners from the database
+    // Fetch real runners from the database (exclude DNS)
     const { data: raceEntries, error: entriesError } = await supabase
       .from("runners")
-      .select("entry_id, firstname, lastname, gender, nationality")
+      .select("entry_id, firstname, lastname, gender, nationality, dns")
+      .eq("dns", false)
+      .not("entry_id", "is", null)
       .order("entry_id");
 
     if (entriesError || !raceEntries || raceEntries.length === 0) {
@@ -167,10 +169,12 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    console.log(`Found ${raceEntries.length} real runners in database`);
+    console.log(`Found ${raceEntries.length} real runners in database (excluding DNS)`);
 
-    // Limit to first 80 runners for performance (you can adjust this)
-    const limitedEntries = raceEntries.slice(0, 80);
+    // Get max runners from query param (default: all)
+    const maxRunners = parseInt(searchParams.get("maxRunners") || "0");
+    const limitedEntries = maxRunners > 0 ? raceEntries.slice(0, maxRunners) : raceEntries;
+
     console.log(
       `Using ${limitedEntries.length} runners for mock data generation`
     );
