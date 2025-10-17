@@ -119,3 +119,22 @@
 .prose h3 {
   @apply text-lg font-bold mb-2 mt-4;
 }
+
+/* Smooth runner marker movement on map */
+.custom-runner-marker {
+  transition: transform 10s linear !important;
+}
+
+/* Pulse animation for overdue runners */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.overdue-pulse {
+  animation: pulse 2s infinite;
+}

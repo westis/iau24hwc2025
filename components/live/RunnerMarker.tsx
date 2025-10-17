@@ -1,6 +1,6 @@
 "use client";
 
-import { Marker, Popup, CircleMarker } from "react-leaflet";
+import { Marker, Popup, CircleMarker, useMap } from "react-leaflet";
 import L from "leaflet";
 import ReactCountryFlag from "react-country-flag";
 import { getCountryCodeForFlag } from "@/lib/utils/country-codes";
@@ -9,6 +9,7 @@ import { AlertCircle } from "lucide-react";
 import type { RunnerPosition } from "@/types/live-race";
 import { renderToString } from "react-dom/server";
 import { getMarkerColor, getTextColor } from "@/lib/utils/runner-marker-colors";
+import { useEffect, useRef } from "react";
 
 interface RunnerMarkerProps {
   runner: RunnerPosition;
@@ -23,13 +24,71 @@ function formatTime(seconds: number): string {
 export function RunnerMarker({ runner }: RunnerMarkerProps) {
   const { t } = useLanguage();
   const color = getMarkerColor(runner.genderRank, runner.status);
+  const markerRef = useRef<L.Marker>(null);
+  const prevPositionRef = useRef<[number, number] | null>(null);
+
+  // Calculate distance between two lat/lon points using Haversine formula
+  const calculateDistance = (
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number
+  ): number => {
+    const R = 6371e3; // Earth's radius in meters
+    const φ1 = (lat1 * Math.PI) / 180;
+    const φ2 = (lat2 * Math.PI) / 180;
+    const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+    const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+
+    const a =
+      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c; // Distance in meters
+  };
+
+  // Detect large position jumps (likely lap completions) and disable transitions
+  useEffect(() => {
+    const marker = markerRef.current;
+    if (!marker) return;
+
+    const currentPos: [number, number] = [runner.lat, runner.lon];
+    const prevPos = prevPositionRef.current;
+
+    if (prevPos) {
+      const distance = calculateDistance(
+        prevPos[0],
+        prevPos[1],
+        currentPos[0],
+        currentPos[1]
+      );
+
+      // If distance > 100m, likely a lap completion or data jump - disable transition temporarily
+      if (distance > 100) {
+        const element = marker.getElement();
+        if (element) {
+          // Temporarily disable transitions for large jumps (lap completions)
+          element.style.transition = "none !important";
+          // Re-enable transition after marker has moved
+          requestAnimationFrame(() => {
+            setTimeout(() => {
+              element.style.transition = "";
+            }, 100);
+          });
+        }
+      }
+    }
+
+    prevPositionRef.current = currentPos;
+  }, [runner.lat, runner.lon]);
 
   // Create custom divIcon with bib number
   const createCustomIcon = () => {
     const textColor = getTextColor(runner.genderRank, runner.status);
 
     const iconHtml = `
-      <div style="
+      <div class="runner-marker-icon ${runner.status === "overdue" ? "overdue-pulse" : ""}" style="
         background-color: ${color};
         border: 2px solid white;
         border-radius: 50%;
@@ -42,7 +101,6 @@ export function RunnerMarker({ runner }: RunnerMarkerProps) {
         font-size: 12px;
         color: ${textColor};
         box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        ${runner.status === "overdue" ? "animation: pulse 2s infinite;" : ""}
       ">
         ${runner.bib}
       </div>
@@ -58,7 +116,11 @@ export function RunnerMarker({ runner }: RunnerMarkerProps) {
   };
 
   return (
-    <Marker position={[runner.lat, runner.lon]} icon={createCustomIcon()}>
+    <Marker
+      ref={markerRef}
+      position={[runner.lat, runner.lon]}
+      icon={createCustomIcon()}
+    >
       <Popup>
         <div className="min-w-[200px]">
           <div className="flex items-center gap-2 mb-2">
