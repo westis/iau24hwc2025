@@ -14,6 +14,7 @@ import { useRef } from "react";
 interface RunnerMarkerProps {
   runner: RunnerPosition;
   courseTrack: { lat: number; lon: number }[];
+  isTop6Mode?: boolean;
 }
 
 function formatTime(seconds: number): string {
@@ -22,9 +23,9 @@ function formatTime(seconds: number): string {
   return `${minutes}:${secs.toString().padStart(2, "0")}`;
 }
 
-export function RunnerMarker({ runner, courseTrack }: RunnerMarkerProps) {
+export function RunnerMarker({ runner, courseTrack, isTop6Mode = false }: RunnerMarkerProps) {
   const { t } = useLanguage();
-  const color = getMarkerColor(runner.genderRank, runner.status);
+  const color = getMarkerColor(runner.genderRank, runner.status, runner.gender, isTop6Mode);
   const markerRef = useRef<L.Marker>(null);
 
   // Use position directly from API (already pace-calculated)
@@ -32,7 +33,7 @@ export function RunnerMarker({ runner, courseTrack }: RunnerMarkerProps) {
 
   // Create custom divIcon with bib number
   const createCustomIcon = () => {
-    const textColor = getTextColor(runner.genderRank, runner.status);
+    const textColor = getTextColor(runner.genderRank, runner.status, runner.gender, isTop6Mode);
 
     const iconHtml = `
       <div class="runner-marker-icon ${runner.status === "overdue" ? "overdue-pulse" : ""}" style="

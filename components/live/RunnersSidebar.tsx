@@ -11,6 +11,7 @@ import { getMarkerColor, getTextColor } from "@/lib/utils/runner-marker-colors";
 interface RunnersSidebarProps {
   runnersOnTrack: RunnerPosition[];
   runnersOnBreak: RunnerPosition[];
+  isTop6Mode?: boolean;
 }
 
 function formatDuration(seconds: number): string {
@@ -30,12 +31,14 @@ function formatDuration(seconds: number): string {
 function RunnerItem({
   runner,
   showOverdue,
+  isTop6Mode = false,
 }: {
   runner: RunnerPosition;
   showOverdue?: boolean;
+  isTop6Mode?: boolean;
 }) {
-  const markerColor = getMarkerColor(runner.genderRank, runner.status);
-  const textColor = getTextColor(runner.genderRank, runner.status);
+  const markerColor = getMarkerColor(runner.genderRank, runner.status, runner.gender, isTop6Mode);
+  const textColor = getTextColor(runner.genderRank, runner.status, runner.gender, isTop6Mode);
 
   return (
     <div className="flex items-center justify-between p-2 bg-muted/30 rounded border border-muted">
@@ -83,6 +86,7 @@ function RunnerItem({
 export function RunnersSidebar({
   runnersOnTrack,
   runnersOnBreak,
+  isTop6Mode = false,
 }: RunnersSidebarProps) {
   const { t } = useLanguage();
 
@@ -115,6 +119,7 @@ export function RunnersSidebar({
                 key={runner.bib}
                 runner={runner}
                 showOverdue={runner.status === "overdue"}
+                isTop6Mode={isTop6Mode}
               />
             ))
           )}
@@ -136,7 +141,7 @@ export function RunnersSidebar({
             </p>
           ) : (
             sortedOnBreak.map((runner) => (
-              <RunnerItem key={runner.bib} runner={runner} showOverdue={true} />
+              <RunnerItem key={runner.bib} runner={runner} showOverdue={true} isTop6Mode={isTop6Mode} />
             ))
           )}
         </CardContent>

@@ -35,6 +35,7 @@ if (typeof window !== "undefined") {
 interface RaceMapProps {
   bibFilter?: number[]; // Optional filter for specific bibs
   refreshInterval?: number; // Milliseconds (default 5000)
+  isTop6Mode?: boolean; // Whether top 6 selection mode is active
 }
 
 // Custom timing mat icon - pin/teardrop shape pointing to exact location
@@ -55,16 +56,21 @@ const timingMatIcon = L.divIcon({
   popupAnchor: [0, -50],
 });
 
-// Custom crew spot icon - smaller pin with Swedish flag colors (Team Sweden)
+// Custom crew spot icon - Swedish flag colors (yellow/gold and blue)
 const crewSpotIcon = L.divIcon({
   html: `
     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="36" viewBox="0 0 28 36" style="filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3));">
+      <!-- Pin shape with yellow/gold background -->
       <path d="M14 0 C8 0, 2 5, 2 12 C2 18, 14 36, 14 36 C14 36, 26 18, 26 12 C26 5, 20 0, 14 0 Z"
-            fill="#006AA7"
+            fill="#FECC00"
             stroke="white"
             stroke-width="2"/>
-      <circle cx="14" cy="12" r="4" fill="#FECC00"/>
-      <text x="14" y="15.5" font-size="9" font-weight="bold" fill="#006AA7" text-anchor="middle">C</text>
+      <!-- Swedish flag cross in blue -->
+      <rect x="5" y="10" width="18" height="4" fill="#006AA7"/>
+      <rect x="12" y="3" width="4" height="18" fill="#006AA7"/>
+      <!-- C for Crew -->
+      <circle cx="14" cy="12" r="5" fill="none" stroke="#006AA7" stroke-width="1.5"/>
+      <text x="14" y="15.5" font-size="8" font-weight="bold" fill="#006AA7" text-anchor="middle">C</text>
     </svg>
   `,
   className: "crew-spot-marker",
@@ -73,7 +79,7 @@ const crewSpotIcon = L.divIcon({
   popupAnchor: [0, -36],
 });
 
-export function RaceMap({ bibFilter, refreshInterval = 2000 }: RaceMapProps) {
+export function RaceMap({ bibFilter, refreshInterval = 2000, isTop6Mode = false }: RaceMapProps) {
   const { t } = useLanguage();
   const [data, setData] = useState<PositionsResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -220,6 +226,7 @@ export function RaceMap({ bibFilter, refreshInterval = 2000 }: RaceMapProps) {
               key={runner.bib}
               runner={runner}
               courseTrack={data.courseTrack}
+              isTop6Mode={isTop6Mode}
             />
           ))}
         </MapContainer>
@@ -230,22 +237,39 @@ export function RaceMap({ bibFilter, refreshInterval = 2000 }: RaceMapProps) {
             {t.live?.legend || "Legend"}
           </div>
           <div className="space-y-1 text-xs">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full bg-[#fbbf24] border-2 border-white" />
-              <span>1st Place</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full bg-[#9ca3af] border-2 border-white" />
-              <span>2nd-3rd</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full bg-[#cd7f32] border-2 border-white" />
-              <span>4th-10th</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full bg-[#3b82f6] border-2 border-white" />
-              <span>Others</span>
-            </div>
+            {isTop6Mode ? (
+              // Top 6 mode: Show podium colors
+              <>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded-full bg-[#FFD700] border-2 border-white" />
+                  <span>1st Place</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded-full bg-[#C0C0C0] border-2 border-white" />
+                  <span>2nd Place</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded-full bg-[#CD7F32] border-2 border-white" />
+                  <span>3rd Place</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded-full bg-[#3b82f6] border-2 border-white" />
+                  <span>4th-6th</span>
+                </div>
+              </>
+            ) : (
+              // Other modes: Show gender colors
+              <>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded-full bg-[#104760] border-2 border-white" />
+                  <span>{t.common?.men || "Men"}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded-full bg-[#00AF50] border-2 border-white" />
+                  <span>{t.common?.women || "Women"}</span>
+                </div>
+              </>
+            )}
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded-full bg-[#f97316] border-2 border-white" />
               <span>{t.live?.overdue || "Overdue"}</span>
@@ -277,6 +301,7 @@ export function RaceMap({ bibFilter, refreshInterval = 2000 }: RaceMapProps) {
         <RunnersSidebar
           runnersOnTrack={data.positions}
           runnersOnBreak={data.onBreak}
+          isTop6Mode={isTop6Mode}
         />
       </div>
     </div>

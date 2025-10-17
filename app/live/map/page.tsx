@@ -361,7 +361,7 @@ function MapPageContent() {
           </Card>
 
           {/* Live Race Map */}
-          <RaceMap bibFilter={filteredBibs} />
+          <RaceMap bibFilter={filteredBibs} isTop6Mode={selectionMode === "top6"} />
         </div>
       </div>
     </>
