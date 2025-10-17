@@ -269,7 +269,7 @@ export class BreizhChronoAdapter implements RaceDataSource {
         lapPaceSec,
         lapTimeSec,
         lap: laps,
-        gender: "m", // Will be matched with our database
+        gender: "m" as "m" | "w", // Will be matched with our database
         timestamp,
         country: "XXX", // Will be matched with our database
       };
@@ -328,7 +328,7 @@ export class BreizhChronoAdapter implements RaceDataSource {
             lapPaceSec,
             lapTimeSec,
             lap: laps || 0,
-            gender: "m" as const,
+            gender: "m" as "m" | "w",
             timestamp,
             country: "XXX",
           };
