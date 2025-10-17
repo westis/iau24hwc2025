@@ -28,6 +28,7 @@ const INTERVAL_SECONDS = parseInt(process.env.SCRAPE_INTERVAL || '30'); // Defau
 let successCount = 0;
 let errorCount = 0;
 let lastSuccessTime = null;
+let running = true;
 
 async function scrape() {
   const startTime = Date.now();
@@ -63,32 +64,43 @@ async function scrape() {
   }
 }
 
-// Initial fetch
+// Sequential loop: wait for completion, then delay, then repeat
+async function scrapeLoop() {
+  while (running) {
+    await scrape(); // Wait for this request to complete
+
+    if (running) {
+      // Wait INTERVAL_SECONDS before next request
+      await new Promise(resolve => setTimeout(resolve, INTERVAL_SECONDS * 1000));
+    }
+  }
+}
+
+// Start
 console.log('='.repeat(80));
 console.log('🏃 Race Data Scraper Started');
 console.log('='.repeat(80));
 console.log(`Endpoint: ${ENDPOINT_URL}/api/cron/fetch-race-data`);
-console.log(`Interval: ${INTERVAL_SECONDS} seconds`);
+console.log(`Interval: ${INTERVAL_SECONDS} seconds AFTER each request completes`);
+console.log(`Strategy: Sequential (prevents request stacking)`);
 console.log(`Started: ${new Date().toISOString()}`);
 console.log('='.repeat(80));
 console.log('');
 
-scrape();
-
-// Set up interval
-const intervalMs = INTERVAL_SECONDS * 1000;
-setInterval(scrape, intervalMs);
+// Start the sequential scraping loop
+scrapeLoop();
 
 // Graceful shutdown
 process.on('SIGINT', () => {
   console.log('\n');
   console.log('='.repeat(80));
   console.log('🛑 Shutting down...');
+  running = false; // Stop the loop
   console.log(`Total successes: ${successCount}`);
   console.log(`Total errors: ${errorCount}`);
   console.log(`Last success: ${lastSuccessTime?.toISOString() || 'Never'}`);
   console.log('='.repeat(80));
-  process.exit(0);
+  setTimeout(() => process.exit(0), 1000); // Give time to finish current request
 });
 
 // Log stats every 5 minutes

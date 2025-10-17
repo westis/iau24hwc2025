@@ -215,7 +215,9 @@ Started: 2025-01-15T10:00:00.000Z
 
 **Recommendation**: Start with **10 seconds** for race day. If you notice issues (rate limiting, errors), increase to 20-30 seconds.
 
-**Note**: 10 seconds means runners passing timing mat will be confirmed within 10 seconds max. This gives crews immediate notifications.
+**Note**: 10 seconds means runners passing timing mat will be confirmed within 10 seconds max (plus request time). This gives crews immediate notifications.
+
+**Smart Sequential Strategy**: The script waits for each request to complete before starting the delay timer. This prevents request stacking if Breizh Chrono's server becomes slow, providing automatic backoff protection.
 
 ---
 
