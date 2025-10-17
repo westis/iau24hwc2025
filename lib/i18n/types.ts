@@ -514,6 +514,7 @@ export interface Translations {
     secondPlace: string;
     thirdPlace: string;
     fourthToSixth: string;
+    pendingConfirmation: string;
   };
   footer: {
     siteBy: string;
