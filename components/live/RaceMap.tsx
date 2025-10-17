@@ -209,7 +209,11 @@ export function RaceMap({ bibFilter, refreshInterval = 10000 }: RaceMapProps) {
 
           {/* Runner markers */}
           {data.positions.map((runner) => (
-            <RunnerMarker key={runner.bib} runner={runner} />
+            <RunnerMarker
+              key={runner.bib}
+              runner={runner}
+              courseTrack={data.courseTrack}
+            />
           ))}
         </MapContainer>
 

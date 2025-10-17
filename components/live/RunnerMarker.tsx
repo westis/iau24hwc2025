@@ -9,10 +9,11 @@ import { AlertCircle } from "lucide-react";
 import type { RunnerPosition } from "@/types/live-race";
 import { renderToString } from "react-dom/server";
 import { getMarkerColor, getTextColor } from "@/lib/utils/runner-marker-colors";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface RunnerMarkerProps {
   runner: RunnerPosition;
+  courseTrack: { lat: number; lon: number }[];
 }
 
 function formatTime(seconds: number): string {
@@ -21,11 +22,16 @@ function formatTime(seconds: number): string {
   return `${minutes}:${secs.toString().padStart(2, "0")}`;
 }
 
-export function RunnerMarker({ runner }: RunnerMarkerProps) {
+export function RunnerMarker({ runner, courseTrack }: RunnerMarkerProps) {
   const { t } = useLanguage();
   const color = getMarkerColor(runner.genderRank, runner.status);
   const markerRef = useRef<L.Marker>(null);
   const prevPositionRef = useRef<[number, number] | null>(null);
+  const animationRef = useRef<number | null>(null);
+  const [displayPosition, setDisplayPosition] = useState<[number, number]>([
+    runner.lat,
+    runner.lon,
+  ]);
 
   // Calculate distance between two lat/lon points using Haversine formula
   const calculateDistance = (
@@ -48,40 +54,161 @@ export function RunnerMarker({ runner }: RunnerMarkerProps) {
     return R * c; // Distance in meters
   };
 
-  // Detect large position jumps (likely lap completions) and disable transitions
-  useEffect(() => {
-    const marker = markerRef.current;
-    if (!marker) return;
+  // Find nearest point index on course track
+  const findNearestPointOnTrack = (
+    lat: number,
+    lon: number
+  ): number => {
+    let minDist = Infinity;
+    let nearestIdx = 0;
 
-    const currentPos: [number, number] = [runner.lat, runner.lon];
-    const prevPos = prevPositionRef.current;
-
-    if (prevPos) {
-      const distance = calculateDistance(
-        prevPos[0],
-        prevPos[1],
-        currentPos[0],
-        currentPos[1]
-      );
-
-      // If distance > 100m, likely a lap completion or data jump - disable transition temporarily
-      if (distance > 100) {
-        const element = marker.getElement();
-        if (element) {
-          // Temporarily disable transitions for large jumps (lap completions)
-          element.style.transition = "none !important";
-          // Re-enable transition after marker has moved
-          requestAnimationFrame(() => {
-            setTimeout(() => {
-              element.style.transition = "";
-            }, 100);
-          });
-        }
+    courseTrack.forEach((point, idx) => {
+      const dist = calculateDistance(lat, lon, point.lat, point.lon);
+      if (dist < minDist) {
+        minDist = dist;
+        nearestIdx = idx;
       }
+    });
+
+    return nearestIdx;
+  };
+
+  // Get path segments along course track between two indices
+  const getPathAlongTrack = (
+    startIdx: number,
+    endIdx: number
+  ): { lat: number; lon: number }[] => {
+    const path: { lat: number; lon: number }[] = [];
+
+    if (startIdx === endIdx) {
+      return [courseTrack[startIdx]];
     }
 
-    prevPositionRef.current = currentPos;
-  }, [runner.lat, runner.lon]);
+    // Check which direction is shorter (forward or backward/wrap-around)
+    const forwardDist =
+      endIdx >= startIdx
+        ? endIdx - startIdx
+        : courseTrack.length - startIdx + endIdx;
+    const backwardDist =
+      startIdx >= endIdx
+        ? startIdx - endIdx
+        : courseTrack.length - endIdx + startIdx;
+
+    // Go the shorter direction
+    if (forwardDist <= backwardDist) {
+      // Forward direction
+      let idx = startIdx;
+      while (idx !== endIdx) {
+        path.push(courseTrack[idx]);
+        idx = (idx + 1) % courseTrack.length;
+      }
+      path.push(courseTrack[endIdx]);
+    } else {
+      // Backward direction
+      let idx = startIdx;
+      while (idx !== endIdx) {
+        path.push(courseTrack[idx]);
+        idx = idx === 0 ? courseTrack.length - 1 : idx - 1;
+      }
+      path.push(courseTrack[endIdx]);
+    }
+
+    return path;
+  };
+
+  // Animate runner along course path
+  useEffect(() => {
+    if (courseTrack.length === 0) return;
+
+    const targetPos: [number, number] = [runner.lat, runner.lon];
+    const prevPos = prevPositionRef.current;
+
+    // First render - just set position
+    if (!prevPos) {
+      setDisplayPosition(targetPos);
+      prevPositionRef.current = targetPos;
+      return;
+    }
+
+    // Calculate distance to determine if this is a large jump (lap completion)
+    const distance = calculateDistance(
+      prevPos[0],
+      prevPos[1],
+      targetPos[0],
+      targetPos[1]
+    );
+
+    // If large jump (>100m), instantly update without animation
+    if (distance > 100) {
+      setDisplayPosition(targetPos);
+      prevPositionRef.current = targetPos;
+      return;
+    }
+
+    // Find nearest points on track for both positions
+    const startIdx = findNearestPointOnTrack(prevPos[0], prevPos[1]);
+    const endIdx = findNearestPointOnTrack(targetPos[0], targetPos[1]);
+
+    // Get path along track
+    const path = getPathAlongTrack(startIdx, endIdx);
+
+    // If path is too short, just move directly
+    if (path.length < 2) {
+      setDisplayPosition(targetPos);
+      prevPositionRef.current = targetPos;
+      return;
+    }
+
+    // Animate along the path over 10 seconds
+    const duration = 10000; // 10 seconds to match refresh interval
+    const startTime = Date.now();
+
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      // Calculate position along path
+      const totalSegments = path.length - 1;
+      const segmentProgress = progress * totalSegments;
+      const currentSegment = Math.floor(segmentProgress);
+      const segmentFraction = segmentProgress - currentSegment;
+
+      if (currentSegment >= totalSegments) {
+        // Animation complete
+        setDisplayPosition(targetPos);
+        prevPositionRef.current = targetPos;
+        return;
+      }
+
+      // Interpolate between current segment points
+      const p1 = path[currentSegment];
+      const p2 = path[currentSegment + 1];
+      const lat = p1.lat + (p2.lat - p1.lat) * segmentFraction;
+      const lon = p1.lon + (p2.lon - p1.lon) * segmentFraction;
+
+      setDisplayPosition([lat, lon]);
+
+      if (progress < 1) {
+        animationRef.current = requestAnimationFrame(animate);
+      } else {
+        prevPositionRef.current = targetPos;
+      }
+    };
+
+    // Cancel any existing animation
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+    }
+
+    // Start animation
+    animate();
+
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [runner.lat, runner.lon, courseTrack]);
 
   // Create custom divIcon with bib number
   const createCustomIcon = () => {
@@ -118,7 +245,7 @@ export function RunnerMarker({ runner }: RunnerMarkerProps) {
   return (
     <Marker
       ref={markerRef}
-      position={[runner.lat, runner.lon]}
+      position={displayPosition}
       icon={createCustomIcon()}
     >
       <Popup>
