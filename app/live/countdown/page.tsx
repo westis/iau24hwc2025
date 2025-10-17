@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { RaceClock } from "@/components/live/RaceClock";
 import { LiveNavigation } from "@/components/live/LiveNavigation";
 import { SimulationBanner } from "@/components/live/SimulationBanner";
@@ -29,7 +29,7 @@ import { PageTitle } from "@/components/PageTitle";
 import type { RaceInfo } from "@/types/race";
 import type { CountdownResponse, NextLapPrediction } from "@/types/live-race";
 
-export default function CountdownPage() {
+function CountdownPageContent() {
   const { t } = useLanguage();
   const { watchlist } = useWatchlist();
 
@@ -671,5 +671,22 @@ function WatchlistCountdown({
         />
       )}
     </>
+  );
+}
+
+export default function CountdownPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground mx-auto mb-2"></div>
+            <p className="text-sm text-muted-foreground">Loading...</p>
+          </div>
+        </div>
+      }
+    >
+      <CountdownPageContent />
+    </Suspense>
   );
 }
