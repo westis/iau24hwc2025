@@ -280,7 +280,7 @@ export class BreizhChronoAdapter implements RaceDataSource {
   }
 
   /**
-   * Parse JSON leaderboard data
+   * Parse JSON leaderboard data from timing system
    */
   private parseJsonLeaderboard(data: any[]): LeaderboardEntry[] {
     const timestamp = new Date().toISOString();
