@@ -278,20 +278,21 @@ export function reverseTrack(track: GPXTrack): GPXTrack {
 }
 
 /**
- * Get position on track based on progress percentage (0-100)
+ * Get position on track based on progress percentage
  * @param track GPX track data (should be rotated to start at timing mat)
- * @param progressPercent Progress through the lap (0-100)
+ * @param progressPercent Progress through the lap (can exceed 100% for overshoot scenarios)
  * @returns Coordinates at that progress point
  */
 export function getPositionAtProgress(
   track: GPXTrack,
   progressPercent: number
 ): { lat: number; lon: number } {
-  // Clamp progress between 0 and 100
-  const clampedProgress = Math.max(0, Math.min(100, progressPercent));
+  // Allow values > 100% to wrap around the track (e.g., 105% -> 5%)
+  // This enables smooth "overshoot" animation when waiting for timing mat confirmation
+  const wrappedProgress = progressPercent >= 0 ? progressPercent % 100 : 0;
 
   // Calculate target distance along track
-  const targetDistance = (clampedProgress / 100) * track.totalDistance;
+  const targetDistance = (wrappedProgress / 100) * track.totalDistance;
 
   // Find the two points that bracket this distance
   let prevPoint = track.points[0];

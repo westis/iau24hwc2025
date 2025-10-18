@@ -64,16 +64,32 @@ export function calculateRunnerPosition(
 
   const expectedFinishTime =
     predictedLapTime * breakConfig.thresholdMultiplier;
+
+  // Overshoot configuration - allow runners to continue moving past timing mat
+  const MAX_OVERSHOOT_PROGRESS = 115; // Continue up to 15% past timing mat (115%)
+  const MAX_OVERSHOOT_SECONDS = 60;   // Continue for up to 60 seconds after estimated crossing
   const PENDING_CONFIRMATION_WINDOW = 30; // seconds
 
-  if (timeSinceLastPassing > predictedLapTime) {
-    // Runner is overdue (predicted to have crossed timing mat)
+  if (progressPercent < 100) {
+    // Normal racing - before reaching timing mat
+    status = "racing";
+    const position = getPositionAtProgress(track, progressPercent);
+    lat = position.lat;
+    lon = position.lon;
+  } else {
+    // Past predicted timing mat crossing
     timeOverdue = timeSinceLastPassing - predictedLapTime;
 
-    if (timeOverdue <= PENDING_CONFIRMATION_WINDOW) {
-      // Within 30 seconds of predicted crossing - pending confirmation
+    // Check if within overshoot window - continue moving with pending status
+    if (timeOverdue <= MAX_OVERSHOOT_SECONDS && progressPercent <= MAX_OVERSHOOT_PROGRESS) {
+      // Continue moving past timing mat while waiting for real timing data
       status = "pending";
-      // Show at timing mat since they should have crossed
+      const position = getPositionAtProgress(track, progressPercent);
+      lat = position.lat;
+      lon = position.lon;
+    } else if (timeOverdue <= PENDING_CONFIRMATION_WINDOW) {
+      // Just past overshoot window - stop at timing mat with pending status
+      status = "pending";
       lat = timingMatLat;
       lon = timingMatLon;
     } else if (timeOverdue > breakConfig.overdueDisplaySeconds) {
@@ -84,23 +100,14 @@ export function calculateRunnerPosition(
     } else if (timeSinceLastPassing < expectedFinishTime) {
       // Overdue beyond confirmation window but within threshold
       status = "overdue";
-      // Cap progress at 100% for visual display
-      const position = getPositionAtProgress(track, Math.min(100, progressPercent));
-      lat = position.lat;
-      lon = position.lon;
+      lat = timingMatLat;
+      lon = timingMatLon;
     } else {
       // Way overdue - likely on break
       status = "break";
       lat = timingMatLat;
       lon = timingMatLon;
     }
-  } else {
-    // Runner is on pace - calculate position along track
-    status = "racing";
-    // Cap progress at 100% for display (can't go past timing mat until confirmed)
-    const position = getPositionAtProgress(track, Math.min(100, progressPercent));
-    lat = position.lat;
-    lon = position.lon;
   }
 
   return {
