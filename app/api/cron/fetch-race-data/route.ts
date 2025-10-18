@@ -153,7 +153,7 @@ export async function GET(request: NextRequest) {
     const enrichedLeaderboard = leaderboard.map((entry) => {
       const runner = runnerMap.get(entry.bib);
 
-      // Calculate projected distance and paces
+      // Calculate projected distance based on current pace
       let projectedKm = 0;
       let lapTimeSec = 0;
       let lapPaceSec = 0;
@@ -162,28 +162,40 @@ export async function GET(request: NextRequest) {
         // Calculate projected 24h distance based on current pace
         const currentPaceKmPerSec = entry.distanceKm / entry.raceTimeSec;
         projectedKm = currentPaceKmPerSec * race24Hours;
-
-        // Calculate lap pace (seconds per km)
-        lapPaceSec = entry.raceTimeSec / entry.distanceKm;
       }
 
       // Get ACTUAL last lap time from race_laps table
       const latestLapData = latestLapTimeMap.get(entry.bib);
 
+      // Lap distance: first lap is ~0.2km, subsequent laps are ~1.5km
+      let lastLapDistanceKm = entry.lap === 1 ? 0.2 : 1.5;
+
       if (latestLapData) {
         if (latestLapData.lap === entry.lap) {
           // Same lap already in DB - use stored lap_time_sec (accurate from backfill/Puppeteer)
           lapTimeSec = latestLapData.lapTimeSec;
+          // For lap pace, use lap distance from current vs previous cumulative distance
+          // We already have latestLapData.distanceKm (cumulative for this lap)
+          // We need previous lap cumulative distance, but for simplicity use standard lap distance
+          lastLapDistanceKm = entry.lap === 1 ? 0.2 : 1.5;
         } else {
           // New lap detected - calculate from race time difference
           // Note: This is an estimate until backfill/calculate-laps runs
           lapTimeSec = entry.raceTimeSec - latestLapData.raceTimeSec;
+          // Calculate actual lap distance (current cumulative - previous cumulative)
+          lastLapDistanceKm = entry.distanceKm - latestLapData.distanceKm;
         }
       }
 
       // Fallback to average if we still don't have a lap time
       if (lapTimeSec <= 0 && entry.lap > 0 && entry.raceTimeSec > 0) {
         lapTimeSec = entry.raceTimeSec / entry.lap;
+        lastLapDistanceKm = entry.distanceKm / entry.lap;
+      }
+
+      // Calculate LAST LAP pace (seconds per km for the last lap)
+      if (lapTimeSec > 0 && lastLapDistanceKm > 0) {
+        lapPaceSec = lapTimeSec / lastLapDistanceKm;
       }
 
       return {
