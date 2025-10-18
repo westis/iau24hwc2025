@@ -107,6 +107,130 @@ export class BreizhChronoAdapter implements RaceDataSource {
   }
 
   /**
+   * Fetch detailed lap data for specific runners (from modals)
+   * @param bibs Array of bib numbers to fetch lap details for
+   */
+  async fetchLapDataForRunners(bibs: number[]): Promise<LapTime[]> {
+    const allLaps: LapTime[] = [];
+    const referenceMatch = this.url.match(/reference=([^&]+)/);
+    const reference = referenceMatch ? referenceMatch[1] : "";
+
+    console.log(`Fetching lap details for ${bibs.length} runners...`);
+
+    for (const bib of bibs) {
+      try {
+        // Fetch the modal/detail page for this runner
+        // The modal content is in the main HTML with ID like "details0", "details1", etc.
+        // We need to search the main HTML for the modal content
+        const html = await this.fetchHtml(0);
+
+        // Extract modal content for this runner's bib
+        const laps = this.parseRunnerLapDetails(html, bib);
+        if (laps.length > 0) {
+          allLaps.push(...laps);
+          console.log(`  Bib ${bib}: Found ${laps.length} laps`);
+        }
+
+        // Small delay to avoid rate limiting
+        if (bibs.indexOf(bib) < bibs.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+      } catch (error) {
+        console.error(`Error fetching laps for bib ${bib}:`, error);
+      }
+    }
+
+    console.log(`✅ Fetched ${allLaps.length} total lap records for ${bibs.length} runners`);
+    return allLaps;
+  }
+
+  /**
+   * Parse individual lap details from modal/detail section for a specific runner
+   */
+  private parseRunnerLapDetails(html: string, bib: number): LapTime[] {
+    const laps: LapTime[] = [];
+
+    try {
+      // Find all modal divs (they have IDs like "details0", "details1", etc.)
+      const modalPattern = /<div[^>]*id=["']details\d+["'][^>]*>[\s\S]*?<\/div>/gi;
+      const modals = html.match(modalPattern) || [];
+
+      for (const modal of modals) {
+        // Check if this modal contains our bib number
+        if (!modal.includes(`N°${bib}`)) {
+          continue;
+        }
+
+        // Find the lap table inside this modal
+        // Look for table with lap data (typically has columns: Lap, Time, Pace, etc.)
+        const lapTablePattern = /<table[^>]*>[\s\S]*?<\/table>/gi;
+        const tables = modal.match(lapTablePattern) || [];
+
+        for (const table of tables) {
+          // Skip if not a lap table (should have "Tour" or "Lap" header)
+          if (!table.includes("Tour") && !table.includes("Lap")) {
+            continue;
+          }
+
+          // Extract rows
+          const rowPattern = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+          const rows = table.match(rowPattern) || [];
+
+          let lapNumber = 0;
+          for (const row of rows) {
+            // Skip header rows
+            if (row.includes("<th")) {
+              continue;
+            }
+
+            // Extract cells
+            const cellPattern = /<td[^>]*>([\s\S]*?)<\/td>/gi;
+            const cells: string[] = [];
+            let match;
+
+            while ((match = cellPattern.exec(row)) !== null) {
+              const cellText = match[1]
+                .replace(/<[^>]*>/g, "")
+                .replace(/&nbsp;/g, " ")
+                .replace(/&amp;/g, "&")
+                .replace(/\s+/g, " ")
+                .trim();
+              cells.push(cellText);
+            }
+
+            if (cells.length >= 2) {
+              lapNumber++;
+
+              // Typical format: [lap#, time, pace, distance, rank, ...]
+              const lapTimeSec = this.parseTimeToSeconds(cells[1] || "0:00:00");
+
+              laps.push({
+                bib,
+                lap: lapNumber,
+                lapTimeSec,
+                raceTimeSec: 0, // Will be calculated
+                distanceKm: 0, // Will be calculated
+                rank: 0,
+                genderRank: 0,
+                ageGroupRank: 0,
+                lapPace: 0,
+                avgPace: 0,
+                timestamp: new Date().toISOString(),
+              });
+            }
+          }
+        }
+
+        break; // Found the modal for this bib, no need to check others
+      }
+    } catch (error) {
+      console.error(`Error parsing lap details for bib ${bib}:`, error);
+    }
+
+    return laps;
+  }
+
+  /**
    * Fetch HTML from BreizhChrono
    */
   private async fetchHtml(page: number = 0): Promise<string> {

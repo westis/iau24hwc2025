@@ -83,11 +83,45 @@ export async function GET(request: NextRequest) {
     try {
       leaderboard = await adapter.fetchLeaderboard();
 
-      // Try to fetch lap data (may not be available)
-      try {
-        laps = await adapter.fetchLapData();
-      } catch (lapError) {
-        console.log("Lap data not available, will calculate from leaderboard");
+      // Get existing lap data to determine which runners have new laps
+      const { data: existingLaps } = await supabase
+        .from("race_laps")
+        .select("bib, lap")
+        .eq("race_id", activeRace.id)
+        .order("bib", { ascending: true })
+        .order("lap", { ascending: false });
+
+      // Build a map of bib -> max lap number we have
+      const maxLapByBib = new Map<number, number>();
+      if (existingLaps) {
+        existingLaps.forEach(lap => {
+          if (!maxLapByBib.has(lap.bib) || lap.lap > maxLapByBib.get(lap.bib)!) {
+            maxLapByBib.set(lap.bib, lap.lap);
+          }
+        });
+      }
+
+      // Find top 1 runner who has NEW laps (for testing)
+      // TODO: Change to top 20 once confirmed working
+      const runnersWithNewLaps = leaderboard
+        .slice(0, 1)
+        .filter(entry => {
+          const maxLap = maxLapByBib.get(entry.bib) || 0;
+          return entry.lap > maxLap;
+        });
+
+      // Only fetch lap details for runners with new laps
+      if (runnersWithNewLaps.length > 0) {
+        try {
+          const bibsToFetch = runnersWithNewLaps.map(r => r.bib);
+          console.log(`Fetching detailed lap data for ${bibsToFetch.length} runners with new laps`);
+          laps = await adapter.fetchLapDataForRunners(bibsToFetch);
+          console.log(`Fetched ${laps.length} lap records`);
+        } catch (lapError) {
+          console.log("Detailed lap data not available, will calculate from leaderboard");
+        }
+      } else {
+        console.log("No new laps detected for top 20 runners");
       }
     } catch (fetchError) {
       console.error("Error fetching race data:", fetchError);
@@ -259,20 +293,63 @@ export async function GET(request: NextRequest) {
     // Insert new laps (use upsert to avoid duplicates)
     let lapsInserted = 0;
     if (laps.length > 0) {
-      const lapsWithRaceId = laps.map((lap) => ({
-        race_id: activeRace.id,
-        bib: lap.bib,
-        lap: lap.lap,
-        lap_time_sec: lap.lapTimeSec,
-        race_time_sec: lap.raceTimeSec,
-        distance_km: lap.distanceKm,
-        rank: lap.rank,
-        gender_rank: lap.genderRank,
-        age_group_rank: lap.ageGroupRank,
-        lap_pace: lap.lapPace,
-        avg_pace: lap.avgPace,
-        timestamp: lap.timestamp,
-      }));
+      // Calculate proper race times and distances for laps
+      const lapDistanceKm = parseFloat(process.env.LAP_DISTANCE || "1.5");
+      const firstLapDistanceKm = parseFloat(
+        process.env.FIRST_LAP_DISTANCE ||
+          config?.first_lap_distance_km?.toString() ||
+          "0.2"
+      );
+
+      // Group laps by bib to calculate cumulative times
+      const lapsByBib = new Map<number, any[]>();
+      laps.forEach(lap => {
+        if (!lapsByBib.has(lap.bib)) {
+          lapsByBib.set(lap.bib, []);
+        }
+        lapsByBib.get(lap.bib)!.push(lap);
+      });
+
+      // Sort laps within each bib and calculate cumulative values
+      const lapsWithRaceId = [];
+      for (const [bib, runnerLaps] of lapsByBib) {
+        // Sort by lap number
+        runnerLaps.sort((a, b) => a.lap - b.lap);
+
+        let cumulativeTimeSec = 0;
+        for (const lap of runnerLaps) {
+          cumulativeTimeSec += lap.lapTimeSec;
+
+          // Calculate cumulative distance
+          const distanceKm = lap.lap === 1
+            ? firstLapDistanceKm
+            : firstLapDistanceKm + (lap.lap - 1) * lapDistanceKm;
+
+          // Calculate paces
+          const thiLapDistanceKm = lap.lap === 1 ? firstLapDistanceKm : lapDistanceKm;
+          const lapPace = lap.lapTimeSec > 0
+            ? lap.lapTimeSec / thisLapDistanceKm
+            : 0;
+          const avgPace = cumulativeTimeSec > 0 && distanceKm > 0
+            ? cumulativeTimeSec / distanceKm
+            : 0;
+
+          lapsWithRaceId.push({
+            race_id: activeRace.id,
+            bib: lap.bib,
+            lap: lap.lap,
+            lap_time_sec: lap.lapTimeSec,
+            race_time_sec: cumulativeTimeSec,
+            distance_km: distanceKm,
+            rank: lap.rank || null,
+            gender_rank: lap.genderRank || null,
+            age_group_rank: lap.ageGroupRank || null,
+            lap_pace: lapPace,
+            avg_pace: avgPace,
+            timestamp: lap.timestamp,
+          });
+        }
+      }
 
       // Use upsert based on unique constraint (race_id, bib, lap)
       const lapsResult = await supabase
