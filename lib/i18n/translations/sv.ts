@@ -511,6 +511,7 @@ export const sv: Translations = {
     runnerOverdueMessage: "Löparen kan vara på paus eller försenad",
     ago: "sedan",
     officialTimingLink: "Officiell tidtagning",
+    officialLiveStreamLink: "Se officiell livestream",
     staleDataWarning: "Tidtagningsdata kanske inte är aktuell",
     staleDataLastUpdated: "Senast uppdaterad för {time} sedan",
     staleDataUnknownTime: "Kunde inte fastställa senaste uppdateringstid",

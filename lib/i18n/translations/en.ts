@@ -512,6 +512,7 @@ export const en: Translations = {
     runnerOverdueMessage: "Runner may be on break or delayed",
     ago: "ago",
     officialTimingLink: "View Official Timing Results",
+    officialLiveStreamLink: "Watch Official Live Stream",
     staleDataWarning: "Timing data may not be current",
     staleDataLastUpdated: "Last updated {time} ago",
     staleDataUnknownTime: "Unable to determine last update time",

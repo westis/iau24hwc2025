@@ -501,6 +501,7 @@ export interface Translations {
     runnerOverdueMessage: string;
     ago: string;
     officialTimingLink: string;
+    officialLiveStreamLink: string;
     noRunnersOnTrack: string;
     loadingMap: string;
     legend: string;
