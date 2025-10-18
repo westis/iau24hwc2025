@@ -460,11 +460,13 @@ export function RaceUpdateCard({ update, onMarkAsRead, isRead = false, onDelete 
 
           {(update.mediaType === "image" || update.mediaType === "text_image") &&
             update.mediaUrl && (
-              <img
-                src={update.mediaUrl}
-                alt={update.mediaDescription || "Race update image"}
-                className="w-full rounded-lg"
-              />
+              <div className="flex justify-center">
+                <img
+                  src={update.mediaUrl}
+                  alt={update.mediaDescription || "Race update image"}
+                  className="w-full md:max-w-2xl lg:max-w-3xl rounded-lg"
+                />
+              </div>
             )}
 
           {update.mediaType === "instagram" && update.mediaUrl && (
