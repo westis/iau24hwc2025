@@ -6,7 +6,7 @@ import { BreizhChronoAdapter } from "@/lib/live-race/breizh-chrono-adapter";
 
 export const runtime = "edge";
 export const dynamic = "force-dynamic";
-export const maxDuration = 300; // 5 minutes for this operation
+// Note: Edge runtime has a 30s timeout limit
 
 /**
  * Backfill missing lap data for top N runners
