@@ -533,6 +533,12 @@ export const en: Translations = {
     thirdPlace: "3rd Place",
     fourthToSixth: "4th-6th",
     pendingConfirmation: "Awaiting confirmation",
+    // Team Race Track
+    teamRace: "Team Race",
+    top: "Top",
+    leader: "Leader",
+    gapFromLeader: "Gap from leader in kilometers",
+    hoverForDetails: "Hover for details",
     // Race Updates
     updates: "Updates",
     urgent: "Urgent",

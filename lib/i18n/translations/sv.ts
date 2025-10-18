@@ -532,6 +532,12 @@ export const sv: Translations = {
     thirdPlace: "3:e plats",
     fourthToSixth: "4:e-6:e",
     pendingConfirmation: "Väntar på bekräftelse",
+    // Team Race Track
+    teamRace: "Lagkampen",
+    top: "Topp",
+    leader: "Ledare",
+    gapFromLeader: "Gap från ledaren i kilometer",
+    hoverForDetails: "Håll muspekaren för detaljer",
     // Race Updates
     updates: "Uppdateringar",
     urgent: "Brådskande",

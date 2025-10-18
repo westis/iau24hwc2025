@@ -6,6 +6,7 @@ import { RaceClock } from "@/components/live/RaceClock";
 import { LeaderboardTable } from "@/components/live/LeaderboardTable";
 import { LiveNavigation } from "@/components/live/LiveNavigation";
 import { LiveTeamCard } from "@/components/live/LiveTeamCard";
+import { TeamRaceTrack } from "@/components/live/TeamRaceTrack";
 import { SimulationBanner } from "@/components/live/SimulationBanner";
 import { StaleDataBanner } from "@/components/live/StaleDataBanner";
 import { OfficialTimingBanner } from "@/components/live/OfficialTimingBanner";
@@ -600,6 +601,9 @@ function LivePageContent() {
                   </Button>
                 </div>
               </div>
+
+              {/* Team Race Track Visualization */}
+              {teams.length > 0 && <TeamRaceTrack teams={teams} maxTeams={6} />}
 
               {/* Loading State */}
               {loadingTeams && teams.length === 0 ? (
