@@ -158,7 +158,11 @@ export function TeamRaceTrack({ teams, maxTeams = 6 }: TeamRaceTrackProps) {
                   </div>
 
                   {/* Tooltip on hover - country name and total */}
-                  <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity bg-popover text-popover-foreground text-xs p-2 rounded shadow-lg z-50 whitespace-nowrap pointer-events-none bottom-full mb-2">
+                  <div
+                    className={`absolute opacity-0 group-hover:opacity-100 transition-opacity bg-popover border text-popover-foreground text-xs p-2 rounded-md shadow-xl z-50 whitespace-nowrap pointer-events-none ${
+                      isAbove ? "top-full mt-2" : "bottom-full mb-2"
+                    }`}
+                  >
                     <div className="font-semibold">{countryName}</div>
                     <div className="text-muted-foreground">
                       {team.teamTotal.toFixed(3)} km
@@ -177,11 +181,6 @@ export function TeamRaceTrack({ teams, maxTeams = 6 }: TeamRaceTrackProps) {
       {/* Legend */}
       <div className="mt-6 pt-4 border-t text-xs text-muted-foreground flex flex-wrap gap-x-4 gap-y-1 justify-center">
         <div className="flex items-center gap-1">
-          <div className="w-3 h-3 bg-primary rounded-full" />
-          <span>{t.live?.leader || "Leader"}</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <span>•</span>
           <span>
             {t.live?.gapFromLeader || "Gap from leader in kilometers"}
           </span>
