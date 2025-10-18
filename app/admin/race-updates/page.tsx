@@ -167,7 +167,11 @@ export default function AdminRaceUpdatesPage() {
 
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(errorData.error || "Misslyckades med att skapa uppdatering");
+        console.error("Server error response:", errorData);
+        const errorMsg = errorData.error || "Misslyckades med att skapa uppdatering";
+        const errorDetails = errorData.code ? ` (Code: ${errorData.code})` : '';
+        const errorHint = errorData.hint ? ` - ${errorData.hint}` : '';
+        throw new Error(`${errorMsg}${errorDetails}${errorHint}`);
       }
 
       // Success!

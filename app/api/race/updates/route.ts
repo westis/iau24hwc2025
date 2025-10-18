@@ -62,34 +62,55 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Prepare insert data
+    const insertData = {
+      race_id: activeRace.id,
+      content: content.trim(),
+      content_sv: contentSv?.trim() || null,
+      update_type: updateType,
+      priority,
+      category,
+      media_type: mediaType,
+      media_url: mediaUrl || null,
+      media_description: mediaDescription?.trim() || null,
+      media_credit: mediaCredit?.trim() || null,
+      media_credit_url: mediaCreditUrl?.trim() || null,
+      related_bibs: relatedBibs,
+      related_countries: relatedCountries,
+      allow_comments: allowComments,
+      is_sticky: isSticky,
+      timestamp: new Date().toISOString(),
+    };
+
+    console.log("=== RACE UPDATE INSERT DEBUG ===");
+    console.log("User ID:", user.id);
+    console.log("Active Race ID:", activeRace.id);
+    console.log("Insert data:", JSON.stringify(insertData, null, 2));
+    console.log("Service role key present:", !!process.env.SUPABASE_SERVICE_ROLE_KEY);
+
     // Insert race update
     const { data: newUpdate, error } = await adminClient
       .from("race_updates")
-      .insert({
-        race_id: activeRace.id,
-        content: content.trim(),
-        content_sv: contentSv?.trim() || null,
-        update_type: updateType,
-        priority,
-        category,
-        media_type: mediaType,
-        media_url: mediaUrl || null,
-        media_description: mediaDescription?.trim() || null,
-        media_credit: mediaCredit?.trim() || null,
-        media_credit_url: mediaCreditUrl?.trim() || null,
-        related_bibs: relatedBibs,
-        related_countries: relatedCountries,
-        allow_comments: allowComments,
-        is_sticky: isSticky,
-        timestamp: new Date().toISOString(),
-      })
+      .insert(insertData)
       .select()
       .single();
 
     if (error) {
-      console.error("Error creating race update:", error);
+      console.error("=== RACE UPDATE INSERT ERROR ===");
+      console.error("Error object:", error);
+      console.error("Error code:", error.code);
+      console.error("Error message:", error.message);
+      console.error("Error details:", error.details);
+      console.error("Error hint:", error.hint);
+      console.error("Full error JSON:", JSON.stringify(error, null, 2));
+
       return NextResponse.json(
-        { error: "Failed to create update" },
+        {
+          error: `Database error: ${error.message}`,
+          code: error.code,
+          details: error.details,
+          hint: error.hint
+        },
         { status: 500 }
       );
     }

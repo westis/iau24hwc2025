@@ -64,12 +64,36 @@ export class BreizhChronoAdapter implements RaceDataSource {
    * Fetch HTML from BreizhChrono
    */
   private async fetchHtml(): Promise<string> {
-    const response = await fetch(this.url, {
+    // Extract reference ID from URL if present
+    const referenceMatch = this.url.match(/reference=([^&]+)/);
+    const reference = referenceMatch ? referenceMatch[1] : "";
+
+    // BreizhChrono uses a POST endpoint for data
+    const endpoint = "https://live.breizhchrono.com/types/generic/custo/x.running/findInResults.jsp";
+
+    // Build form data
+    const formData = new URLSearchParams({
+      inter: "",
+      search: "",
+      ville: "",
+      course: "24h",
+      sexe: "",
+      category: "",
+      reference: reference,
+      from: "null",
+      nofacebook: "1",
+      version: "v6",
+      page: "0",
+    });
+
+    const response = await fetch(endpoint, {
+      method: "POST",
       headers: {
         "User-Agent": "IAU 24H World Championship App (Live Tracking)",
+        "Content-Type": "application/x-www-form-urlencoded",
         Accept: "text/html,application/json,*/*",
       },
-      // Don't follow redirects to error pages
+      body: formData.toString(),
       redirect: "follow",
     });
 
@@ -84,8 +108,7 @@ export class BreizhChronoAdapter implements RaceDataSource {
     // Check for error messages in HTML
     if (
       text.includes("ne sont pas encore disponibles") ||
-      text.includes("not yet available") ||
-      text.includes("résultats") === false
+      text.includes("not yet available")
     ) {
       throw new Error("Race results not yet available");
     }
@@ -128,10 +151,23 @@ export class BreizhChronoAdapter implements RaceDataSource {
     const entries: LeaderboardEntry[] = [];
 
     try {
-      // Use regex to extract table rows
-      // This is basic parsing - cheerio would be more robust
+      // BreizhChrono specific: Find table containing showDetails links
+      // Main table has links like: <a href="javascript:showDetails('details0')">
+      // Modal tables don't have these links
+      const mainTableMatch = html.match(
+        /<table[^>]*>[\s\S]*?<th>Clsmt\.<\/th>[\s\S]*?showDetails[\s\S]*?<\/table>/i
+      );
+
+      if (!mainTableMatch) {
+        console.log("Could not find main leaderboard table");
+        return [];
+      }
+
+      const mainTableHtml = mainTableMatch[0];
+
+      // Use regex to extract table rows from main table only
       const tableRowPattern = /<tr[^>]*>[\s\S]*?<\/tr>/gi;
-      const rows = html.match(tableRowPattern) || [];
+      const rows = mainTableHtml.match(tableRowPattern) || [];
 
       let rank = 0;
       const timestamp = new Date().toISOString();
@@ -152,6 +188,8 @@ export class BreizhChronoAdapter implements RaceDataSource {
           const cellText = match[1]
             .replace(/<[^>]*>/g, "")
             .replace(/&nbsp;/g, " ")
+            .replace(/&amp;/g, "&")
+            .replace(/\s+/g, " ") // Collapse multiple spaces
             .trim();
           cells.push(cellText);
         }
@@ -164,14 +202,18 @@ export class BreizhChronoAdapter implements RaceDataSource {
         try {
           rank++;
 
-          // Parse runner data - adjust indices based on actual table structure
-          // Common formats:
-          // [Rank, Bib, Name, Laps, Distance, Time, ...]
-          // [Bib, Name, Country, Distance, Time, Laps, ...]
-          const entry = this.parseTableRow(cells, rank, timestamp);
+          // Breizh Chrono specific format:
+          // cells[0] = rank (e.g. "1")
+          // cells[1] = "N°191 - RUEGER Pascal"
+          // cells[2] = laps (e.g. "4")
+          // cells[3] = last passage time (e.g. "10:24:35")
+          // cells[4] = distance (e.g. "6.00128 km")
 
-          if (entry && entry.bib > 0) {
-            entries.push(entry);
+          if (cells.length >= 5) {
+            const entry = this.parseBreizhChronoRow(cells, rank, timestamp);
+            if (entry && entry.bib > 0) {
+              entries.push(entry);
+            }
           }
         } catch (error) {
           console.log("Error parsing table row:", error, cells);
@@ -182,6 +224,58 @@ export class BreizhChronoAdapter implements RaceDataSource {
     }
 
     return entries;
+  }
+
+  /**
+   * Parse Breizh Chrono specific table row
+   * Format: [rank, "N°XXX - Name", laps, time, distance]
+   */
+  private parseBreizhChronoRow(
+    cells: string[],
+    rank: number,
+    timestamp: string
+  ): LeaderboardEntry | null {
+    try {
+      // cells[1] contains "N°191 - RUEGER Pascal"
+      const bibNameMatch = cells[1].match(/N°(\d+)\s*-\s*(.+)/);
+      if (!bibNameMatch) {
+        console.log("Could not extract bib/name from:", cells[1]);
+        return null;
+      }
+
+      const bib = parseInt(bibNameMatch[1]);
+      const name = bibNameMatch[2].trim();
+      const laps = parseInt(cells[2]) || 0;
+      const timeStr = cells[3] || "00:00:00";
+      const distanceStr = cells[4].replace(/[^\d,.]/g, "").replace(",", "."); // Remove "km", handle commas
+      let distanceKm = parseFloat(distanceStr) || 0;
+
+      // Parse time to seconds (HH:MM:SS)
+      const raceTimeSec = this.parseTimeToSeconds(timeStr);
+
+      // Calculate pace
+      const lapTimeSec = laps > 0 ? raceTimeSec / laps : 0;
+      const lapPaceSec = distanceKm > 0 ? raceTimeSec / distanceKm : 0;
+
+      return {
+        bib,
+        name,
+        rank,
+        genderRank: 0, // Will be calculated later
+        distanceKm,
+        projectedKm: 0, // Will be calculated
+        raceTimeSec,
+        lapPaceSec,
+        lapTimeSec,
+        lap: laps,
+        gender: "m" as "m" | "w", // Will be matched with our database
+        timestamp,
+        country: "XXX", // Will be matched with our database
+      };
+    } catch (error) {
+      console.error("Error parsing Breizh Chrono row:", error);
+      return null;
+    }
   }
 
   /**
@@ -204,28 +298,34 @@ export class BreizhChronoAdapter implements RaceDataSource {
       for (let i = 0; i < cells.length; i++) {
         const cell = cells[i];
 
+        // BreizhChrono specific: Check for "N°XXX - Name" format FIRST
+        if (bibIndex === -1 && nameIndex === -1 && cell.match(/N°(\d+)\s*-/)) {
+          bibIndex = i;
+          nameIndex = i; // Same cell contains both
+        }
         // Bib is usually a 1-3 digit number
-        if (bibIndex === -1 && /^\d{1,4}$/.test(cell)) {
+        else if (bibIndex === -1 && /^\d{1,4}$/.test(cell)) {
           bibIndex = i;
         }
-        // Name contains letters and possibly spaces
+        // Name contains letters and possibly spaces (but not N° format)
         else if (
           nameIndex === -1 &&
           /[a-zA-ZÀ-ÿ]{2,}/.test(cell) &&
-          cell.length > 2
+          cell.length > 2 &&
+          !cell.includes("N°")
         ) {
           nameIndex = i;
         }
         // Distance might be like "45.5" or "45.5 km"
-        else if (distanceIndex === -1 && /\d+\.?\d*\s*(km|m)?/i.test(cell)) {
+        else if (distanceIndex === -1 && /^\d+\.?\d*\s*(km|m)?$/i.test(cell)) {
           distanceIndex = i;
         }
         // Time is HH:MM:SS or H:MM:SS
         else if (timeIndex === -1 && /\d{1,2}:\d{2}:\d{2}/.test(cell)) {
           timeIndex = i;
         }
-        // Laps is a number
-        else if (lapsIndex === -1 && /^\d+$/.test(cell) && parseInt(cell) > 0) {
+        // Laps is a number (but not distance)
+        else if (lapsIndex === -1 && /^\d+$/.test(cell) && parseInt(cell) > 0 && parseInt(cell) < 100) {
           lapsIndex = i;
         }
       }
@@ -235,8 +335,18 @@ export class BreizhChronoAdapter implements RaceDataSource {
         return null;
       }
 
-      const bib = parseInt(cells[bibIndex]);
-      const name = cells[nameIndex];
+      // Extract bib and name (might be in same cell as "N°XXX - Name")
+      let bib: number;
+      let name: string;
+
+      const bibNameMatch = cells[bibIndex].match(/N°(\d+)\s*-\s*(.+)/);
+      if (bibNameMatch) {
+        bib = parseInt(bibNameMatch[1]);
+        name = bibNameMatch[2].trim();
+      } else {
+        bib = parseInt(cells[bibIndex]);
+        name = cells[nameIndex];
+      }
       const distance =
         distanceIndex !== -1 ? parseFloat(cells[distanceIndex]) : 0;
       const laps = lapsIndex !== -1 ? parseInt(cells[lapsIndex]) : 0;
