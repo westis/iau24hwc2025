@@ -419,21 +419,23 @@ export function RaceUpdateCard({ update, onMarkAsRead, isRead = false, onDelete 
           )}
 
           {update.mediaType === "video" && update.mediaUrl && (
-            <div className="aspect-video bg-black rounded-lg overflow-hidden">
-              {update.mediaUrl.includes("youtube.com") ||
-              update.mediaUrl.includes("youtu.be") ? (
-                <iframe
-                  src={update.mediaUrl.replace("watch?v=", "embed/")}
-                  className="w-full h-full"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              ) : (
-                <video controls className="w-full h-full">
-                  <source src={update.mediaUrl} />
-                  Your browser does not support the video element.
-                </video>
-              )}
+            <div className="flex justify-center">
+              <div className="aspect-video bg-black rounded-lg overflow-hidden w-full md:max-w-2xl lg:max-w-3xl">
+                {update.mediaUrl.includes("youtube.com") ||
+                update.mediaUrl.includes("youtu.be") ? (
+                  <iframe
+                    src={update.mediaUrl.replace("watch?v=", "embed/")}
+                    className="w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                ) : (
+                  <video controls className="w-full h-full">
+                    <source src={update.mediaUrl} />
+                    Your browser does not support the video element.
+                  </video>
+                )}
+              </div>
             </div>
           )}
 

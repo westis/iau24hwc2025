@@ -9,7 +9,7 @@ import { SimulationBanner } from "@/components/live/SimulationBanner";
 import { OfficialTimingBanner } from "@/components/live/OfficialTimingBanner";
 import { Button } from "@/components/ui/button";
 import { useWatchlist } from "@/lib/hooks/useWatchlist";
-import { useLeaderboard } from "@/lib/hooks/useLeaderboard";
+import { useLiveFilters } from "@/lib/hooks/useLiveFilters";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import {
   Card,
@@ -21,33 +21,90 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { PageTitle } from "@/components/PageTitle";
+import ReactCountryFlag from "react-country-flag";
+import { getCountryCodeForFlag } from "@/lib/utils/country-codes";
 import type { RaceInfo } from "@/types/race";
-
-// Empty array outside component to avoid recreating on every render
-const EMPTY_ARRAY: number[] = [];
+import type { LeaderboardEntry } from "@/types/live-race";
 
 export default function ChartsPage() {
   const [raceInfo, setRaceInfo] = useState<RaceInfo | null>(null);
   const [loadingRace, setLoadingRace] = useState(true);
   const [selectedBibs, setSelectedBibs] = useState<number[]>([]);
-  const [selectionMode, setSelectionMode] = useState<
-    "top6" | "watchlist" | "custom"
-  >("top6");
-  const [top6Gender, setTop6Gender] = useState<"men" | "women">("men");
   const [simulationMode, setSimulationMode] = useState(false);
   const [showCustomSelection, setShowCustomSelection] = useState(false);
+  const [countries, setCountries] = useState<string[]>([]);
+  const [leaderboardData, setLeaderboardData] = useState<any>(null);
 
   const { watchlist } = useWatchlist();
-
-  // Fetch leaderboard based on top6 gender selection
-  const leaderboardFilter = selectionMode === "top6" ? top6Gender : "overall";
-  const { data: leaderboardData } = useLeaderboard(
-    leaderboardFilter,
-    EMPTY_ARRAY,
-    60000
-  );
   const { t } = useLanguage();
+
+  // Use persistent filters hook
+  const { filters, setFilter } = useLiveFilters("charts", {
+    mode: "top6",
+    gender: "m",
+    country: "",
+  });
+
+  const selectionMode = filters.mode as "top6" | "watchlist" | "country" | "custom";
+  const selectedGender = filters.gender as "m" | "w" | "all";
+  const selectedCountry = filters.country || "";
+
+  // Fetch all countries from registered runners
+  const fetchCountries = async () => {
+    try {
+      const res = await fetch("/api/runners/countries");
+      if (res.ok) {
+        const data = await res.json();
+        setCountries(data.countries || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch countries:", err);
+    }
+  };
+
+  // Fetch leaderboard data based on selection mode
+  const fetchLeaderboardData = async () => {
+    try {
+      // For watchlist mode, don't fetch leaderboard at all
+      if (selectionMode === "watchlist") {
+        return;
+      }
+
+      // For top6 mode, only fetch the specific gender
+      if (selectionMode === "top6") {
+        const genderFilter = selectedGender === "w" ? "women" : "men";
+        const res = await fetch(`/api/race/leaderboard?filter=${genderFilter}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.entries && data.entries.length > 0) {
+            setLeaderboardData(data);
+          }
+        }
+        return;
+      }
+
+      // For country and custom modes, fetch overall
+      if (selectionMode === "country" || selectionMode === "custom") {
+        const res = await fetch("/api/race/leaderboard?filter=overall");
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.entries && data.entries.length > 0) {
+            setLeaderboardData(data);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch leaderboard:", err);
+    }
+  };
 
   // Fetch race info and simulation config
   useEffect(() => {
@@ -75,18 +132,37 @@ export default function ChartsPage() {
 
     fetchRaceInfo();
     fetchSimulationConfig();
+    fetchCountries();
 
-    const interval = setInterval(fetchSimulationConfig, 10000);
-    return () => clearInterval(interval);
+    const configInterval = setInterval(fetchSimulationConfig, 10000);
+    return () => {
+      clearInterval(configInterval);
+    };
   }, []);
 
-  // Update selected bibs based on mode
+  // Fetch leaderboard when selection mode or gender changes
   useEffect(() => {
+    fetchLeaderboardData();
+
+    const leaderboardInterval = setInterval(fetchLeaderboardData, 10000);
+    return () => {
+      clearInterval(leaderboardInterval);
+    };
+  }, [selectionMode, selectedGender]);
+
+  // Calculate filtered bibs based on selection mode
+  useEffect(() => {
+    if (selectionMode === "watchlist") {
+      setSelectedBibs(watchlist.length > 0 ? watchlist : []);
+      return;
+    }
+
     if (!leaderboardData?.entries) return;
 
     if (selectionMode === "top6") {
-      const top6 = leaderboardData.entries.slice(0, 6).map((e) => e.bib);
-      // Only update if bibs actually changed
+      const top6 = leaderboardData.entries
+        .slice(0, 6)
+        .map((e: LeaderboardEntry) => e.bib);
       setSelectedBibs((prev) => {
         if (
           prev.length === top6.length &&
@@ -96,34 +172,32 @@ export default function ChartsPage() {
         }
         return top6;
       });
-    } else if (selectionMode === "watchlist") {
-      // Only update if watchlist changed
-      setSelectedBibs((prev) => {
-        if (
-          prev.length === watchlist.length &&
-          prev.every((bib) => watchlist.includes(bib))
-        ) {
-          return prev;
-        }
-        return watchlist;
-      });
+    } else if (selectionMode === "country" && selectedCountry) {
+      const filtered = leaderboardData.entries
+        .filter(
+          (e: LeaderboardEntry) =>
+            e.country === selectedCountry &&
+            (selectedGender === "all" || e.gender === selectedGender)
+        )
+        .sort(
+          (a: LeaderboardEntry, b: LeaderboardEntry) =>
+            a.genderRank - b.genderRank
+        )
+        .slice(0, 10) // Limit to 10 runners for charts
+        .map((e: LeaderboardEntry) => e.bib);
+      setSelectedBibs(filtered);
     }
-  }, [selectionMode, leaderboardData?.entries, watchlist]);
+  }, [selectionMode, leaderboardData?.entries, watchlist, selectedCountry, selectedGender]);
 
   const toggleBib = (bib: number) => {
     if (selectionMode !== "custom") {
-      setSelectionMode("custom");
+      setFilter("mode", "custom");
       setShowCustomSelection(true);
     }
     setSelectedBibs((prev) =>
       prev.includes(bib) ? prev.filter((b) => b !== bib) : [...prev, bib]
     );
   };
-
-  // Debug logging
-  useEffect(() => {
-    console.log("Selected bibs for charts:", selectedBibs);
-  }, [selectedBibs]);
 
   if (loadingRace || !raceInfo) {
     return (
@@ -149,111 +223,167 @@ export default function ChartsPage() {
         <LiveNavigation />
         <div className="container mx-auto py-4 px-4 space-y-4">
           {/* Compact Header: Race Clock + Runner Selection */}
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-card border rounded-lg p-4">
-            <div className="flex-1">
-              <div className="flex items-center gap-3 flex-wrap">
-                <span className="text-sm font-medium text-muted-foreground">
-                  {t.live?.runnerSelection || "Välj löpare"}:
-                </span>
-                <div className="flex gap-2 flex-wrap items-center">
-                  <Button
-                    size="sm"
-                    variant={selectionMode === "top6" ? "default" : "outline"}
-                    onClick={() => setSelectionMode("top6")}
-                  >
-                    {t.live?.top6Overall || "Topp 6"}
-                  </Button>
-
-                  {/* Gender selector for Top 6 */}
-                  {selectionMode === "top6" && (
-                    <div className="flex gap-1 border rounded-md">
-                      <Button
-                        size="sm"
-                        variant={top6Gender === "men" ? "default" : "ghost"}
-                        onClick={() => setTop6Gender("men")}
-                        className="rounded-r-none"
-                      >
-                        {t.common?.men || "Herrar"}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant={top6Gender === "women" ? "default" : "ghost"}
-                        onClick={() => setTop6Gender("women")}
-                        className="rounded-l-none"
-                      >
-                        {t.common?.women || "Damer"}
-                      </Button>
-                    </div>
-                  )}
-
-                  <Button
-                    size="sm"
-                    variant={
-                      selectionMode === "watchlist" ? "default" : "outline"
-                    }
-                    onClick={() => setSelectionMode("watchlist")}
-                    disabled={watchlist.length === 0}
-                  >
-                    ⭐ {watchlist.length}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={selectionMode === "custom" ? "default" : "outline"}
-                    onClick={() => {
-                      setSelectionMode("custom");
-                      setShowCustomSelection(true);
-                    }}
-                  >
-                    {t.live?.custom || "Anpassad"}
-                  </Button>
-                  {selectionMode === "custom" && (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() =>
-                        setShowCustomSelection(!showCustomSelection)
-                      }
-                    >
-                      {showCustomSelection ? "▼" : "▶"}
-                    </Button>
-                  )}
-                </div>
-                <span className="text-xs text-muted-foreground">
-                  ({selectedBibs.length} {t.live?.runners || "löpare"})
-                </span>
-              </div>
-
-              {selectionMode === "custom" &&
-                showCustomSelection &&
-                leaderboardData && (
-                  <div className="mt-3 border rounded-lg p-3 max-h-48 overflow-y-auto bg-muted/20">
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
-                      {leaderboardData.entries.map((entry) => (
-                        <div
-                          key={entry.bib}
-                          className="flex items-center gap-2"
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                <div className="flex-1 w-full">
+                  <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
+                    {/* Selection Mode Buttons */}
+                    <div className="flex-1 min-w-[200px]">
+                      <Label className="text-sm font-medium mb-2 block">
+                        {t.live?.runnerSelection || "Välj löpare"}
+                      </Label>
+                      <div className="flex gap-2 flex-wrap">
+                        <Button
+                          size="sm"
+                          variant={selectionMode === "top6" ? "default" : "outline"}
+                          onClick={() => setFilter("mode", "top6")}
                         >
-                          <Checkbox
-                            id={`runner-${entry.bib}`}
-                            checked={selectedBibs.includes(entry.bib)}
-                            onCheckedChange={() => toggleBib(entry.bib)}
-                          />
-                          <Label
-                            htmlFor={`runner-${entry.bib}`}
-                            className="text-xs cursor-pointer truncate"
-                            title={`#${entry.bib} ${entry.name}`}
-                          >
-                            #{entry.bib} {entry.name.split(" ")[0]}
-                          </Label>
-                        </div>
-                      ))}
+                          {t.live?.top6Overall || "Topp 6"}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant={
+                            selectionMode === "watchlist" ? "default" : "outline"
+                          }
+                          onClick={() => setFilter("mode", "watchlist")}
+                          disabled={watchlist.length === 0}
+                        >
+                          ⭐ {watchlist.length}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant={selectionMode === "country" ? "default" : "outline"}
+                          onClick={() => setFilter("mode", "country")}
+                        >
+                          {t.runners?.country || "Land"}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant={selectionMode === "custom" ? "default" : "outline"}
+                          onClick={() => {
+                            setFilter("mode", "custom");
+                            setShowCustomSelection(true);
+                          }}
+                        >
+                          {t.live?.custom || "Anpassad"}
+                        </Button>
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-2">
+                        {selectedBibs.length} {t.live?.runners || "löpare"}
+                      </div>
                     </div>
-                  </div>
-                )}
-            </div>
 
-            <RaceClock race={raceInfo} />
-          </div>
+                    {/* Gender Selection (for Top 6 and Country) */}
+                    {(selectionMode === "top6" || selectionMode === "country") && (
+                      <div className="w-full sm:w-auto sm:min-w-[180px]">
+                        <Label className="text-sm font-medium mb-2 block">
+                          {t.common?.gender || "Kön"}
+                        </Label>
+                        <div className="flex gap-1 border rounded-md w-full sm:w-auto">
+                          {selectionMode === "country" && (
+                            <Button
+                              size="sm"
+                              variant={selectedGender === "all" ? "default" : "ghost"}
+                              onClick={() => setFilter("gender", "all")}
+                              className="flex-1 sm:flex-none"
+                            >
+                              {t.common?.all || "Alla"}
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            variant={selectedGender === "m" ? "default" : "ghost"}
+                            onClick={() => setFilter("gender", "m")}
+                            className="flex-1 sm:flex-none"
+                          >
+                            {t.common?.men || "Herrar"}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant={selectedGender === "w" ? "default" : "ghost"}
+                            onClick={() => setFilter("gender", "w")}
+                            className="flex-1 sm:flex-none"
+                          >
+                            {t.common?.women || "Damer"}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Country Selection (only for Country mode) */}
+                    {selectionMode === "country" && (
+                      <div className="w-full sm:w-auto sm:min-w-[200px]">
+                        <Label className="text-sm font-medium mb-2 block">
+                          {t.runners?.country || "Land"}
+                        </Label>
+                        <Select
+                          value={selectedCountry}
+                          onValueChange={(value) => {
+                            setFilter("country", value);
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue
+                              placeholder={t.live?.selectTeam || "Välj land"}
+                            />
+                          </SelectTrigger>
+                          <SelectContent className="z-[9999]">
+                            {countries.map((country) => (
+                              <SelectItem key={country} value={country}>
+                                <div className="flex items-center gap-2">
+                                  <ReactCountryFlag
+                                    countryCode={getCountryCodeForFlag(country)}
+                                    svg
+                                    style={{ width: "1.5em", height: "1em" }}
+                                  />
+                                  {country}
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Custom Selection Grid */}
+                  {selectionMode === "custom" &&
+                    showCustomSelection &&
+                    leaderboardData && (
+                      <div className="mt-3 border rounded-lg p-3 max-h-48 overflow-y-auto bg-muted/20">
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
+                          {leaderboardData.entries.map((entry: LeaderboardEntry) => (
+                            <div
+                              key={entry.bib}
+                              className="flex items-center gap-2"
+                            >
+                              <Checkbox
+                                id={`runner-${entry.bib}`}
+                                checked={selectedBibs.includes(entry.bib)}
+                                onCheckedChange={() => toggleBib(entry.bib)}
+                              />
+                              <Label
+                                htmlFor={`runner-${entry.bib}`}
+                                className="text-xs cursor-pointer truncate"
+                                title={`#${entry.bib} ${entry.name}`}
+                              >
+                                #{entry.bib} {entry.name.split(" ")[0]}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                </div>
+
+                {/* Race Clock */}
+                <div className="flex-shrink-0">
+                  <RaceClock race={raceInfo} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Chart Tabs */}
           <Tabs defaultValue="distance-pace" className="w-full">
