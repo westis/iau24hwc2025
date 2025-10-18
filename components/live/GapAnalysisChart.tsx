@@ -154,8 +154,13 @@ function GapAnalysisChartComponent({ bibs }: GapAnalysisChartProps) {
     const chart = chartRef.current;
 
     if (hours === null) {
-      // Reset to auto-scaled data range
-      chart.resetZoom();
+      // Reset to show all available data (same as default)
+      const dataMax = maxTime > 0 ? Math.min(maxTime + 600000, 24 * 3600 * 1000) : 24 * 3600 * 1000;
+      if (chart.options.scales?.x) {
+        chart.options.scales.x.min = 0;
+        chart.options.scales.x.max = dataMax;
+        chart.update("none");
+      }
     } else if (hours === 24) {
       // Show full 24 hours explicitly
       if (chart.options.scales?.x) {
