@@ -147,13 +147,45 @@ export async function GET(request: NextRequest) {
       };
     });
 
+    // Sort overall leaderboard by distance (descending), then by last passing time (ascending for ties)
+    enrichedLeaderboard.sort((a, b) => {
+      // Primary sort: distance (higher is better)
+      if (b.distanceKm !== a.distanceKm) {
+        return b.distanceKm - a.distanceKm;
+      }
+
+      // Secondary sort: last passing time (earlier is better for same distance)
+      if (a.lastPassing && b.lastPassing) {
+        return new Date(a.lastPassing).getTime() - new Date(b.lastPassing).getTime();
+      }
+
+      return 0;
+    });
+
+    // Recalculate overall ranks based on sorted order
+    enrichedLeaderboard.forEach((entry, index) => {
+      entry.rank = index + 1;
+    });
+
     // Calculate gender ranks
     const menLeaderboard = enrichedLeaderboard
       .filter((e) => e.gender === "m")
-      .sort((a, b) => b.distanceKm - a.distanceKm);
+      .sort((a, b) => {
+        if (b.distanceKm !== a.distanceKm) return b.distanceKm - a.distanceKm;
+        if (a.lastPassing && b.lastPassing) {
+          return new Date(a.lastPassing).getTime() - new Date(b.lastPassing).getTime();
+        }
+        return 0;
+      });
     const womenLeaderboard = enrichedLeaderboard
       .filter((e) => e.gender === "w")
-      .sort((a, b) => b.distanceKm - a.distanceKm);
+      .sort((a, b) => {
+        if (b.distanceKm !== a.distanceKm) return b.distanceKm - a.distanceKm;
+        if (a.lastPassing && b.lastPassing) {
+          return new Date(a.lastPassing).getTime() - new Date(b.lastPassing).getTime();
+        }
+        return 0;
+      });
 
     menLeaderboard.forEach((entry, index) => {
       entry.genderRank = index + 1;

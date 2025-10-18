@@ -60,9 +60,21 @@ export class BreizhChronoAdapter implements RaceDataSource {
             }
           }
         } catch (error) {
-          console.error(`Error fetching page ${page}:`, error);
-          // On error, stop pagination and return what we have so far
-          hasMore = false;
+          console.error(`❌ Error fetching page ${page}:`, error);
+          if (error instanceof Error) {
+            console.error(`Error message: ${error.message}`);
+            console.error(`Error stack: ${error.stack}`);
+          }
+
+          // If we failed on the first page, throw the error
+          // Otherwise, return what we have so far
+          if (page === 0) {
+            console.error(`Failed on first page, rethrowing error`);
+            throw error;
+          } else {
+            console.warn(`Stopping pagination at page ${page} due to error. Returning ${allEntries.length} entries.`);
+            hasMore = false;
+          }
         }
       }
 
@@ -123,9 +135,12 @@ export class BreizhChronoAdapter implements RaceDataSource {
     const response = await fetch(endpoint, {
       method: "POST",
       headers: {
-        "User-Agent": "IAU 24H World Championship App (Live Tracking)",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         "Content-Type": "application/x-www-form-urlencoded",
-        Accept: "text/html,application/json,*/*",
+        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9,fr;q=0.8",
+        Referer: "https://live.breizhchrono.com/external/live5/classements.jsp",
+        Origin: "https://live.breizhchrono.com",
       },
       body: formData.toString(),
       redirect: "follow",
@@ -133,13 +148,19 @@ export class BreizhChronoAdapter implements RaceDataSource {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`Breizh Chrono error response:`, errorText.substring(0, 500));
+      console.error(`Breizh Chrono error response (page ${page}, status ${response.status}):`, errorText.substring(0, 500));
       throw new Error(
         `HTTP error! status: ${response.status} ${response.statusText} (page ${page})`
       );
     }
 
     const text = await response.text();
+
+    // Log first fetch to verify we're getting data
+    if (page === 0) {
+      console.log(`First page response length: ${text.length} characters`);
+      console.log(`First 200 chars:`, text.substring(0, 200));
+    }
 
     // Check for error messages in HTML
     if (
