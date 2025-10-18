@@ -91,26 +91,53 @@ export default function AdminRaceUpdatesPage() {
       return;
     }
 
+    // Validate file size
+    let maxSize = 5 * 1024 * 1024; // 5MB for images
+    if (file.type.startsWith("video/")) {
+      maxSize = 100 * 1024 * 1024; // 100MB for videos
+    } else if (file.type.startsWith("audio/")) {
+      maxSize = 10 * 1024 * 1024; // 10MB for audio
+    }
+
+    if (file.size > maxSize) {
+      const maxSizeMB = Math.floor(maxSize / (1024 * 1024));
+      setError(`Filen är för stor. Max ${maxSizeMB}MB för ${mediaType}.`);
+      return;
+    }
+
     try {
       setUploading(true);
       setError("");
 
-      const formData = new FormData();
-      formData.append("file", file);
+      // Upload directly to Supabase from client (bypasses Vercel 4.5MB limit)
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
 
-      const res = await fetch("/api/upload/media", {
-        method: "POST",
-        body: formData,
-      });
+      // Generate unique filename
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${Date.now()}-${Math.random()
+        .toString(36)
+        .substring(7)}.${fileExt}`;
 
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({ error: "Unknown error" }));
-        console.error("Upload error response:", errorData);
-        throw new Error(errorData.error || "Uppladdning misslyckades");
+      // Upload to Supabase Storage
+      const { data, error: uploadError } = await supabase.storage
+        .from("race-media")
+        .upload(fileName, file, {
+          contentType: file.type,
+          upsert: false,
+        });
+
+      if (uploadError) {
+        console.error("Supabase upload error:", uploadError);
+        throw new Error(`Uppladdning misslyckades: ${uploadError.message}`);
       }
 
-      const data = await res.json();
-      setMediaUrl(data.url);
+      // Get public URL
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("race-media").getPublicUrl(fileName);
+
+      setMediaUrl(publicUrl);
       setError("");
     } catch (err) {
       console.error("Upload error:", err);
