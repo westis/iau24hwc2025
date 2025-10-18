@@ -135,13 +135,13 @@ export async function GET(request: NextRequest) {
     const { data: latestLapTimes } = await supabase
       .rpc('get_latest_laps_per_runner', { race_id_param: activeRace.id });
 
-    const latestLapTimeMap = new Map<number, { lapTimeSec: number; raceTimeSec: number }>();
+    const latestLapTimeMap = new Map<number, { lap: number; lapTimeSec: number; raceTimeSec: number }>();
     if (latestLapTimes) {
-      latestLapTimes.forEach((lap: any) => {
-        // Store both lap_time_sec (duration of last lap) and race_time_sec (cumulative time)
-        latestLapTimeMap.set(lap.bib, {
-          lapTimeSec: lap.lap_time_sec,
-          raceTimeSec: lap.race_time_sec,
+      latestLapTimes.forEach((lapRecord: any) => {
+        latestLapTimeMap.set(lapRecord.bib, {
+          lap: lapRecord.lap,
+          lapTimeSec: lapRecord.lap_time_sec,
+          raceTimeSec: lapRecord.race_time_sec,
         });
       });
     }
@@ -169,8 +169,8 @@ export async function GET(request: NextRequest) {
       // Get ACTUAL last lap time from race_laps table
       const latestLapData = latestLapTimeMap.get(entry.bib);
       if (latestLapData) {
-        // Check if we already have this lap in the database
-        if (latestLapData.raceTimeSec === entry.raceTimeSec) {
+        // Check if the lap number matches (same lap already in database)
+        if (latestLapData.lap === entry.lap) {
           // Lap already inserted - use the stored lap_time_sec directly
           lapTimeSec = latestLapData.lapTimeSec;
         } else {
