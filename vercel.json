@@ -18,7 +18,7 @@
     }
   ],
   "functions": {
-    "api/upload/media.ts": {
+    "app/api/upload/media/route.ts": {
       "maxDuration": 60,
       "memory": 1024
     }
