@@ -454,10 +454,12 @@ export const sv: Translations = {
     runners: "löpare",
     distanceOverTime: "Distans över tid",
     distanceAndPace: "Beräknad distans",
-    distanceAndPaceDesc: "Beräknad distans över tävlingstid. Streckade trendlinjer visar beräknad 24h-målgång baserat på senaste tempot. Använd mushjulet för att zooma, dra för att panorera.",
+    distanceAndPaceDesc:
+      "Beräknad distans över tävlingstid. Streckade trendlinjer visar beräknad 24h-målgång baserat på senaste tempot. Använd mushjulet för att zooma, dra för att panorera.",
     gapAnalysis: "Jämför med referens",
-    gapAnalysisDesc: "Avstånd från referens. Streckade trendlinjer visar beräknat avstånd vid 24h baserat på senaste tempot. Använd mushjulet för att zooma, dra för att panorera.",
-    gapFromBaseline: "Gap från referens (km)",
+    gapAnalysisDesc:
+      "Avstånd från referens. Streckade trendlinjer visar beräknat avstånd vid 24h baserat på senaste tempot. Använd mushjulet för att zooma, dra för att panorera.",
+    gapFromBaseline: "Avstånd från referens (km)",
     baselineMode: "Referensläge",
     worldRecord: "Världsrekord",
     manualDistance: "Manuell distans",
@@ -536,7 +538,7 @@ export const sv: Translations = {
     teamEvent: "Lagtävling",
     top: "Topp",
     leader: "Ledare",
-    gapFromLeader: "Gap från ledaren i kilometer",
+    gapFromLeader: "Avstånd från ledaren i kilometer",
     hoverForDetails: "Håll muspekaren för detaljer",
     showTeams: "Visa lag",
     // Race Updates
