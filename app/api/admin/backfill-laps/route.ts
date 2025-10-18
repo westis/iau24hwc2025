@@ -125,22 +125,27 @@ export async function POST(request: NextRequest) {
       lapsByBib.get(lap.bib)!.push(lap);
     });
 
-    // Sort laps within each bib and calculate cumulative values
+    // Sort laps within each bib and calculate lap times from cumulative times
+    // NOTE: Puppeteer scraper returns CUMULATIVE race time in lapTimeSec (misleading name)
     const lapsWithRaceId = [];
     for (const [bib, runnerLaps] of lapsByBib) {
       runnerLaps.sort((a, b) => a.lap - b.lap);
 
-      let cumulativeTimeSec = 0;
+      let previousRaceTimeSec = 0;
       for (const lap of runnerLaps) {
-        cumulativeTimeSec += lap.lapTimeSec;
+        // lap.lapTimeSec is actually cumulative race time from modal table
+        const cumulativeTimeSec = lap.lapTimeSec;
+
+        // Calculate actual lap time: current cumulative - previous cumulative
+        const actualLapTimeSec = cumulativeTimeSec - previousRaceTimeSec;
 
         const distanceKm = lap.lap === 1
           ? firstLapDistanceKm
           : firstLapDistanceKm + (lap.lap - 1) * lapDistanceKm;
 
         const thisLapDistanceKm = lap.lap === 1 ? firstLapDistanceKm : lapDistanceKm;
-        const lapPace = lap.lapTimeSec > 0
-          ? lap.lapTimeSec / thisLapDistanceKm
+        const lapPace = actualLapTimeSec > 0
+          ? actualLapTimeSec / thisLapDistanceKm
           : 0;
         const avgPace = cumulativeTimeSec > 0 && distanceKm > 0
           ? cumulativeTimeSec / distanceKm
@@ -150,8 +155,8 @@ export async function POST(request: NextRequest) {
           race_id: activeRace.id,
           bib: lap.bib,
           lap: lap.lap,
-          lap_time_sec: lap.lapTimeSec,
-          race_time_sec: cumulativeTimeSec,
+          lap_time_sec: actualLapTimeSec, // ← ACTUAL lap duration
+          race_time_sec: cumulativeTimeSec, // ← Cumulative race time
           distance_km: distanceKm,
           rank: lap.rank || null,
           gender_rank: lap.genderRank || null,
@@ -160,6 +165,8 @@ export async function POST(request: NextRequest) {
           avg_pace: avgPace,
           timestamp: lap.timestamp,
         });
+
+        previousRaceTimeSec = cumulativeTimeSec;
       }
     }
 
