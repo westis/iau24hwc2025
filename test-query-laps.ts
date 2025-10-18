@@ -30,16 +30,18 @@ async function test() {
     console.log(`\nRace ID ${activeRace.id} has ${count} total laps`);
     if (lapsError) console.error("Laps error:", lapsError);
 
-    // Get Bib 191 specifically
-    const { data: bib191Laps } = await supabase
-      .from("race_laps")
-      .select("bib, lap, race_time_sec")
-      .eq("race_id", activeRace.id)
-      .eq("bib", 191)
-      .order("lap", { ascending: false })
-      .limit(5);
+    // Check specific bibs from the debug samples
+    for (const bib of [193, 212, 68, 191]) {
+      const { data: bibLaps } = await supabase
+        .from("race_laps")
+        .select("bib, lap, race_time_sec")
+        .eq("race_id", activeRace.id)
+        .eq("bib", bib)
+        .order("lap", { ascending: false })
+        .limit(3);
 
-    console.log(`\nBib 191 latest laps:`, bib191Laps);
+      console.log(`\nBib ${bib} latest laps:`, bibLaps);
+    }
   }
 }
 

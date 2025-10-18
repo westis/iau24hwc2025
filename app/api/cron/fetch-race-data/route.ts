@@ -123,12 +123,12 @@ export async function GET(request: NextRequest) {
     // This is the source of truth for what laps have been captured
     // Strategy: Get ALL laps, then filter to latest per runner in JavaScript
     // This is more efficient than trying to do DISTINCT ON via Supabase client
-    // Note: Must set explicit limit, Supabase defaults to 1000 rows
+    // Note: .limit() doesn't work reliably in Edge runtime, use .range() instead
     const { data: existingLaps, error: lapsQueryError } = await supabase
       .from("race_laps")
       .select("bib, lap, distance_km, race_time_sec")
       .eq("race_id", activeRace.id)
-      .limit(100000); // Large enough for any 24h race (~260 laps max per runner)
+      .range(0, 99999); // Fetch up to 100k rows (0-indexed, inclusive)
 
     if (lapsQueryError) {
       console.error("ERROR querying existing laps:", lapsQueryError);
