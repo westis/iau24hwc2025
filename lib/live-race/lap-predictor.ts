@@ -62,34 +62,48 @@ function linearRegressionSlope(values: number[]): number {
 }
 
 /**
- * Identify break laps using statistical outlier detection
- * Returns indices of laps that are likely breaks
+ * Calculate weights for lap times using IQR-based outlier detection
+ * Outliers get reduced weight instead of being removed
+ * Returns array of weights (0.1 to 1.0) for each lap
  */
-function identifyBreakLaps(lapTimes: number[]): Set<number> {
-  if (lapTimes.length < 3) return new Set();
+function calculateOutlierWeights(lapTimes: number[]): number[] {
+  if (lapTimes.length < 3) {
+    return lapTimes.map(() => 1.0);
+  }
 
-  const medianTime = median(lapTimes);
-  const breakThreshold = medianTime * 1.75; // Laps > 175% of median are likely breaks
-  const breakIndices = new Set<number>();
+  // Calculate quartiles using median
+  const sorted = [...lapTimes].sort((a, b) => a - b);
+  const q1 = median(sorted.slice(0, Math.floor(sorted.length / 2)));
+  const q3 = median(sorted.slice(Math.ceil(sorted.length / 2)));
+  const iqr = q3 - q1;
 
-  lapTimes.forEach((time, index) => {
-    if (time > breakThreshold) {
-      breakIndices.add(index);
+  // Tukey's fences for mild and extreme outliers
+  const mildOutlierThreshold = q3 + 1.5 * iqr;
+  const extremeOutlierThreshold = q3 + 3.0 * iqr;
+
+  return lapTimes.map((time) => {
+    if (time > extremeOutlierThreshold) {
+      // Extreme outlier: 10% weight (likely a long break)
+      return 0.1;
+    } else if (time > mildOutlierThreshold) {
+      // Mild outlier: 30% weight (maybe a short break or slow lap)
+      return 0.3;
+    } else {
+      // Normal lap: full weight
+      return 1.0;
     }
   });
-
-  return breakIndices;
 }
 
 /**
  * Predict next lap time using weighted moving average with trend adjustment
  * @param laps - Array of recent lap data (should be sorted by lap number ascending)
- * @param maxLaps - Maximum number of laps to consider (default: 10)
+ * @param maxLaps - Maximum number of laps to consider (default: 6)
  * @returns Prediction result with confidence score
  */
 export function predictNextLapTime(
   laps: LapTime[],
-  maxLaps: number = 10
+  maxLaps: number = 6
 ): LapPredictionResult {
   // Handle insufficient data
   if (laps.length === 0) {
@@ -112,41 +126,30 @@ export function predictNextLapTime(
   const recentLaps = laps.slice(-maxLaps);
   const lapTimes = recentLaps.map((lap) => lap.lapTimeSec);
 
-  // Identify and exclude break laps
-  const breakIndices = identifyBreakLaps(lapTimes);
-  const validLapTimes = lapTimes.filter((_, index) => !breakIndices.has(index));
+  // Calculate outlier weights (0.1-1.0) instead of removing outliers
+  const outlierWeights = calculateOutlierWeights(lapTimes);
 
-  // Need at least 2 valid laps for prediction
-  if (validLapTimes.length < 2) {
-    // Fall back to all laps if filtering removed too much
-    const fallbackLaps = lapTimes.slice(-Math.min(5, lapTimes.length));
-    return {
-      predictedLapTime:
-        fallbackLaps.reduce((sum, t) => sum + t, 0) / fallbackLaps.length,
-      confidence: 0.3,
-      recentLaps: fallbackLaps,
-    };
-  }
+  // Recency weights (more recent = higher weight)
+  const recencyWeights = lapTimes.map((_, index) => index + 1);
 
-  // Use last 5 valid laps for weighted average
-  const lapsForPrediction = validLapTimes.slice(-5);
-
-  // Calculate weighted moving average (more recent = higher weight)
-  const weights = [1, 2, 3, 4, 5]; // Weights for oldest to newest
+  // Combine outlier weights with recency weights
   let weightedSum = 0;
   let totalWeight = 0;
 
-  for (let i = 0; i < lapsForPrediction.length; i++) {
-    const weight = weights[weights.length - lapsForPrediction.length + i];
-    weightedSum += lapsForPrediction[i] * weight;
-    totalWeight += weight;
+  for (let i = 0; i < lapTimes.length; i++) {
+    const combinedWeight = outlierWeights[i] * recencyWeights[i];
+    weightedSum += lapTimes[i] * combinedWeight;
+    totalWeight += combinedWeight;
   }
 
-  let predictedTime = weightedSum / totalWeight;
+  let predictedTime = totalWeight > 0 ? weightedSum / totalWeight : lapTimes[lapTimes.length - 1];
+
+  // For trend adjustment, only use non-outlier laps (weight >= 0.5)
+  const normalLaps = lapTimes.filter((_, i) => outlierWeights[i] >= 0.5);
 
   // Apply trend adjustment if runner is slowing
-  if (lapsForPrediction.length >= 3) {
-    const slope = linearRegressionSlope(lapsForPrediction);
+  if (normalLaps.length >= 3) {
+    const slope = linearRegressionSlope(normalLaps);
 
     // If positive slope (slowing down), add trend component
     if (slope > 0) {
@@ -156,8 +159,8 @@ export function predictNextLapTime(
     }
   }
 
-  // Calculate confidence score based on consistency
-  const cv = coefficientOfVariation(lapsForPrediction);
+  // Calculate confidence score based on consistency of normal laps
+  const cv = normalLaps.length >= 2 ? coefficientOfVariation(normalLaps) : coefficientOfVariation(lapTimes);
   let confidence: number;
 
   if (cv < 0.15) {
@@ -171,14 +174,20 @@ export function predictNextLapTime(
   }
 
   // Reduce confidence if we have very few laps
-  if (lapsForPrediction.length < 3) {
+  if (lapTimes.length < 3) {
     confidence *= 0.7;
+  }
+
+  // Reduce confidence if we have too many outliers
+  const outlierCount = outlierWeights.filter(w => w < 1.0).length;
+  if (outlierCount > lapTimes.length / 2) {
+    confidence *= 0.8; // Many outliers = less confidence
   }
 
   return {
     predictedLapTime: Math.max(0, predictedTime),
     confidence,
-    recentLaps: lapsForPrediction,
+    recentLaps: lapTimes,
   };
 }
 
