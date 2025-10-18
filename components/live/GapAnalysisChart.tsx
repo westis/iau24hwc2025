@@ -50,8 +50,8 @@ const TIME_RANGES = [
 
 // World Records for 24h
 const WORLD_RECORDS = {
-  men: 309.399, // Aleksandr Sorokin (2022)
-  women: 270.116, // Camille Herron (2023)
+  men: 319.614, // Aleksandr Sorokin (2024)
+  women: 270.363, // Camille Herron (2023)
 };
 
 function GapAnalysisChartComponent({ bibs }: GapAnalysisChartProps) {
