@@ -533,6 +533,13 @@ export interface Translations {
     thirdPlace: string;
     fourthToSixth: string;
     pendingConfirmation: string;
+    // Team Race Track
+    teamEvent: string;
+    top: string;
+    leader: string;
+    gapFromLeader: string;
+    hoverForDetails: string;
+    showTeams: string;
   };
   footer: {
     siteBy: string;
