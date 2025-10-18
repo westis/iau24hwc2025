@@ -83,46 +83,9 @@ export async function GET(request: NextRequest) {
     try {
       leaderboard = await adapter.fetchLeaderboard();
 
-      // Get existing lap data to determine which runners have new laps
-      const { data: existingLaps } = await supabase
-        .from("race_laps")
-        .select("bib, lap")
-        .eq("race_id", activeRace.id)
-        .order("bib", { ascending: true })
-        .order("lap", { ascending: false });
-
-      // Build a map of bib -> max lap number we have
-      const maxLapByBib = new Map<number, number>();
-      if (existingLaps) {
-        existingLaps.forEach(lap => {
-          if (!maxLapByBib.has(lap.bib) || lap.lap > maxLapByBib.get(lap.bib)!) {
-            maxLapByBib.set(lap.bib, lap.lap);
-          }
-        });
-      }
-
-      // Find top 1 runner who has NEW laps (for testing)
-      // TODO: Change to top 20 once confirmed working
-      const runnersWithNewLaps = leaderboard
-        .slice(0, 1)
-        .filter(entry => {
-          const maxLap = maxLapByBib.get(entry.bib) || 0;
-          return entry.lap > maxLap;
-        });
-
-      // Only fetch lap details for runners with new laps
-      if (runnersWithNewLaps.length > 0) {
-        try {
-          const bibsToFetch = runnersWithNewLaps.map(r => r.bib);
-          console.log(`Fetching detailed lap data for ${bibsToFetch.length} runners with new laps`);
-          laps = await adapter.fetchLapDataForRunners(bibsToFetch);
-          console.log(`Fetched ${laps.length} lap records`);
-        } catch (lapError) {
-          console.log("Detailed lap data not available, will calculate from leaderboard");
-        }
-      } else {
-        console.log("No new laps detected for top 20 runners");
-      }
+      // Note: Lap scraping has been moved to /api/admin/backfill-laps
+      // Normal operation uses lap calculation from distance increases
+      // This keeps the regular scraper fast and simple
     } catch (fetchError) {
       console.error("Error fetching race data:", fetchError);
       return NextResponse.json(
