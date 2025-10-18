@@ -25,6 +25,16 @@ interface WeatherHour {
   description: string;
 }
 
+interface WeatherResponse {
+  forecast: WeatherHour[];
+  raceStart: string;
+  raceEnd: string;
+  usingRaceTimes: boolean;
+  forecastStart: string;
+  forecastEnd: string;
+  forecastInterval?: '1h' | '3h';
+}
+
 const WeatherIcon = ({
   icon,
   className = "h-6 w-6",
@@ -52,6 +62,7 @@ const WeatherIcon = ({
 
 export function WeatherForecast() {
   const [forecast, setForecast] = useState<WeatherHour[]>([]);
+  const [forecastInterval, setForecastInterval] = useState<'1h' | '3h'>('3h');
   const [loading, setLoading] = useState(true);
   const { t, language } = useLanguage();
 
@@ -59,8 +70,9 @@ export function WeatherForecast() {
     async function fetchWeather() {
       try {
         const res = await fetch("/api/race/weather");
-        const data = await res.json();
+        const data: WeatherResponse = await res.json();
         setForecast(data.forecast || []);
+        setForecastInterval(data.forecastInterval || '3h');
       } catch (err) {
         console.error("Failed to fetch weather:", err);
       } finally {
@@ -70,7 +82,8 @@ export function WeatherForecast() {
 
     fetchWeather();
 
-    // Refresh every 30 minutes
+    // Refresh every 30 minutes (matches hourly forecast cache)
+    // 3-hour forecasts are cached for 3 hours, but checking every 30min doesn't hurt
     const interval = setInterval(fetchWeather, 30 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
@@ -161,8 +174,10 @@ export function WeatherForecast() {
               </div>
             </div>
             <div className="mt-3 text-xs text-muted-foreground text-center">
-              {t.live?.weatherNote ||
-                "Hourly forecast for race period. Updated every 30 minutes."}
+              {forecastInterval === '1h'
+                ? (t.live?.weatherNoteHourly || "Hourly forecast for race period. Updated every 30 minutes.")
+                : (t.live?.weatherNote3Hour || "3-hour forecast for race period. Updated every 3 hours.")
+              }
             </div>
           </div>
         )}

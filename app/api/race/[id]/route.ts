@@ -57,6 +57,8 @@ export async function PUT(
       endDate: body.endDate || null,
       locationName: body.locationName || null,
       locationAddress: body.locationAddress || null,
+      locationLatitude: body.locationLatitude !== undefined ? body.locationLatitude : undefined,
+      locationLongitude: body.locationLongitude !== undefined ? body.locationLongitude : undefined,
       liveResultsUrl: body.liveResultsUrl || null,
       registrationUrl: body.registrationUrl || null,
       officialWebsiteUrl: body.officialWebsiteUrl || null,

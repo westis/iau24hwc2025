@@ -510,6 +510,8 @@ export interface Translations {
     weatherDescription: string;
     noWeatherData: string;
     weatherNote: string;
+    weatherNoteHourly: string;
+    weatherNote3Hour: string;
     firstPlace: string;
     secondPlace: string;
     thirdPlace: string;

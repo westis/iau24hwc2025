@@ -37,32 +37,6 @@ export async function GET() {
       return NextResponse.json(mockData);
     }
 
-    // Build weather API URL - prefer coordinates, fallback to city name
-    let url: string;
-    if (locationLatitude && locationLongitude) {
-      // Use coordinates (most accurate)
-      url = `https://api.openweathermap.org/data/2.5/forecast?lat=${locationLatitude}&lon=${locationLongitude}&units=metric&appid=${apiKey}`;
-    } else if (locationName) {
-      // Fallback to city name (extract city from "City, Country" format)
-      const cityName = locationName.split(',')[0].trim();
-      url = `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(cityName)}&units=metric&appid=${apiKey}`;
-    } else {
-      return NextResponse.json(
-        { error: "Race location not configured (need coordinates or city name)" },
-        { status: 400 }
-      );
-    }
-
-    const response = await fetch(url, {
-      next: { revalidate: 10800 }, // Cache for 3 hours
-    });
-
-    if (!response.ok) {
-      throw new Error("Weather API request failed");
-    }
-
-    const data = await response.json();
-
     // Calculate race hours to show
     if (!startDate || !endDate) {
       return NextResponse.json(
@@ -75,69 +49,149 @@ export async function GET() {
     const raceEnd = new Date(endDate);
     const now = new Date();
 
-    // Determine effective forecast period
-    // Strategy: Use race times if they overlap with the 5-day forecast window
-    // Otherwise, show next 24 hours from now
+    // Determine effective forecast period (always show race hours only)
     let effectiveStart: Date;
     let effectiveEnd: Date;
     let usingRaceTimes = false;
 
-    const fiveDaysFromNow = new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000);
-
-    // Check if race overlaps with forecast window
-    if (raceStart <= fiveDaysFromNow && raceEnd >= now) {
-      // Race is within forecast window (current or upcoming)
+    // Check if race overlaps with current/upcoming period
+    if (raceEnd >= now) {
+      // Race is current or upcoming - show race hours only
       effectiveStart = raceStart < now ? now : raceStart;
       effectiveEnd = raceEnd;
       usingRaceTimes = true;
     } else {
-      // Race is too far in future or past - show next 24 hours
+      // Race is in the past - show next 24 hours
       effectiveStart = now;
       effectiveEnd = new Date(now.getTime() + 24 * 60 * 60 * 1000);
       usingRaceTimes = false;
     }
 
-    // Transform to our format - filter for effective period
-    const hourlyForecast: WeatherHour[] = data.list
-      .filter((item: any) => {
-        const itemTime = new Date(item.dt * 1000);
-        return itemTime >= effectiveStart && itemTime <= effectiveEnd;
-      })
-      .map((item: any) => {
-        const time = new Date(item.dt * 1000);
-        const hour = time.getHours();
-        const isNight = hour < 6 || hour > 20;
+    // Check if race is within 48 hours for hourly forecast
+    const fortyEightHoursFromNow = new Date(now.getTime() + 48 * 60 * 60 * 1000);
+    const raceWithin48Hours = raceStart <= fortyEightHoursFromNow;
 
-        const weatherMain = item.weather[0].main.toLowerCase();
-        let icon = "cloud";
+    let hourlyForecast: WeatherHour[];
+    let forecastInterval: '1h' | '3h';
 
-        if (weatherMain.includes("rain") || weatherMain.includes("drizzle")) {
-          icon = "rain";
-        } else if (weatherMain.includes("clear")) {
-          icon = isNight ? "moon" : "sun";
-        } else if (weatherMain.includes("cloud")) {
-          icon = isNight ? "cloud-moon" : "cloud-sun";
-        }
+    // Use One Call API 3.0 for hourly data if race is within 48 hours
+    if (raceWithin48Hours && locationLatitude && locationLongitude) {
+      // One Call API 3.0 - provides hourly forecast for 48 hours
+      const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${locationLatitude}&lon=${locationLongitude}&exclude=minutely,daily,alerts&units=metric&appid=${apiKey}`;
 
-        return {
-          time: time.toISOString(),
-          temp: Math.round(item.main.temp),
-          feelsLike: Math.round(item.main.feels_like),
-          humidity: item.main.humidity,
-          windSpeed: Math.round(item.wind.speed * 10) / 10, // Keep in m/s, round to 1 decimal
-          precipitation: item.rain ? Math.round(item.rain["3h"] || 0) : 0,
-          icon,
-          description: item.weather[0].description,
-        };
+      const response = await fetch(url, {
+        next: { revalidate: 1800 }, // Cache for 30 minutes (hourly data updates more frequently)
       });
+
+      if (!response.ok) {
+        throw new Error("Weather API request failed");
+      }
+
+      const data = await response.json();
+      forecastInterval = '1h';
+
+      // Transform hourly data and filter for race hours
+      hourlyForecast = data.hourly
+        .filter((item: any) => {
+          const itemTime = new Date(item.dt * 1000);
+          return itemTime >= effectiveStart && itemTime <= effectiveEnd;
+        })
+        .map((item: any) => {
+          const time = new Date(item.dt * 1000);
+          const hour = time.getHours();
+          const isNight = hour < 6 || hour > 20;
+
+          const weatherMain = item.weather[0].main.toLowerCase();
+          let icon = "cloud";
+
+          if (weatherMain.includes("rain") || weatherMain.includes("drizzle")) {
+            icon = "rain";
+          } else if (weatherMain.includes("clear")) {
+            icon = isNight ? "moon" : "sun";
+          } else if (weatherMain.includes("cloud")) {
+            icon = isNight ? "cloud-moon" : "cloud-sun";
+          }
+
+          return {
+            time: time.toISOString(),
+            temp: Math.round(item.temp),
+            feelsLike: Math.round(item.feels_like),
+            humidity: item.humidity,
+            windSpeed: Math.round(item.wind_speed * 10) / 10,
+            precipitation: item.rain ? Math.round(item.rain["1h"] || 0) : 0,
+            icon,
+            description: item.weather[0].description,
+          };
+        });
+    } else {
+      // Fallback to 5-day/3-hour forecast API
+      let url: string;
+      if (locationLatitude && locationLongitude) {
+        url = `https://api.openweathermap.org/data/2.5/forecast?lat=${locationLatitude}&lon=${locationLongitude}&units=metric&appid=${apiKey}`;
+      } else if (locationName) {
+        const cityName = locationName.split(',')[0].trim();
+        url = `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(cityName)}&units=metric&appid=${apiKey}`;
+      } else {
+        return NextResponse.json(
+          { error: "Race location not configured (need coordinates or city name)" },
+          { status: 400 }
+        );
+      }
+
+      const response = await fetch(url, {
+        next: { revalidate: 10800 }, // Cache for 3 hours
+      });
+
+      if (!response.ok) {
+        throw new Error("Weather API request failed");
+      }
+
+      const data = await response.json();
+      forecastInterval = '3h';
+
+      // Transform 3-hour data and filter for race hours
+      hourlyForecast = data.list
+        .filter((item: any) => {
+          const itemTime = new Date(item.dt * 1000);
+          return itemTime >= effectiveStart && itemTime <= effectiveEnd;
+        })
+        .map((item: any) => {
+          const time = new Date(item.dt * 1000);
+          const hour = time.getHours();
+          const isNight = hour < 6 || hour > 20;
+
+          const weatherMain = item.weather[0].main.toLowerCase();
+          let icon = "cloud";
+
+          if (weatherMain.includes("rain") || weatherMain.includes("drizzle")) {
+            icon = "rain";
+          } else if (weatherMain.includes("clear")) {
+            icon = isNight ? "moon" : "sun";
+          } else if (weatherMain.includes("cloud")) {
+            icon = isNight ? "cloud-moon" : "cloud-sun";
+          }
+
+          return {
+            time: time.toISOString(),
+            temp: Math.round(item.main.temp),
+            feelsLike: Math.round(item.main.feels_like),
+            humidity: item.main.humidity,
+            windSpeed: Math.round(item.wind.speed * 10) / 10,
+            precipitation: item.rain ? Math.round(item.rain["3h"] || 0) : 0,
+            icon,
+            description: item.weather[0].description,
+          };
+        });
+    }
 
     return NextResponse.json({
       forecast: hourlyForecast,
       raceStart: raceStart.toISOString(),
       raceEnd: raceEnd.toISOString(),
-      usingRaceTimes, // Indicates if showing race period or next 24h
+      usingRaceTimes,
       forecastStart: effectiveStart.toISOString(),
       forecastEnd: effectiveEnd.toISOString(),
+      forecastInterval, // '1h' or '3h' - indicates which API was used
     });
   } catch (error) {
     console.error("Error fetching weather:", error);

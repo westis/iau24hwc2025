@@ -35,6 +35,7 @@ export function Navbar() {
   const adminNavItems = [
     { href: "/match", label: t.common.match },
     { href: "/admin/news", label: t.admin.manageNews },
+    { href: "/admin/race-updates", label: "Race Updates" },
     { href: "/admin/race", label: t.admin.editRaceInfo },
     { href: "/admin/race-live", label: t.admin.liveRaceControl },
     { href: "/admin/monitoring", label: t.admin.monitoring || "Monitoring" },

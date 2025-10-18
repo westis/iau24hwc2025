@@ -34,16 +34,66 @@ export interface LeaderboardEntry {
   lastPassing?: string; // ISO timestamp
 }
 
+// Media types for race updates
+export type RaceUpdateMediaType =
+  | "text"
+  | "audio"
+  | "video"
+  | "image"
+  | "instagram"
+  | "text_image";
+
+// Update categories for filtering
+export type RaceUpdateCategory =
+  | "summary"
+  | "urgent"
+  | "general"
+  | "interview"
+  | "team_sweden";
+
 export interface RaceUpdate {
   id: number;
   content: string;
   contentSv?: string; // Swedish version
-  updateType: "ai" | "milestone" | "lead_change" | "manual";
+  updateType: "ai" | "milestone" | "lead_change" | "manual" | "ai_summary";
   priority: "low" | "medium" | "high";
   relatedBibs?: number[]; // Related runner bibs
   relatedCountries?: string[];
   timestamp: string;
   createdAt: string;
+
+  // New multimedia fields
+  mediaType?: RaceUpdateMediaType;
+  mediaUrl?: string; // URL to media file (Vercel Blob, YouTube, Instagram, etc.)
+  mediaDescription?: string; // Text description or transcript for accessibility
+  category?: RaceUpdateCategory;
+  allowComments?: boolean;
+  commentCount?: number;
+
+  // Sticky/pinned posts
+  isSticky?: boolean;
+  stickyOrder?: number;
+}
+
+// Comment on a race update
+export interface RaceUpdateComment {
+  id: number;
+  updateId: number;
+  userId: string;
+  comment: string;
+  createdAt: string;
+  updatedAt: string;
+  chatUsers: {
+    displayName: string;
+    avatarUrl: string | null;
+  };
+}
+
+// Read tracking for unread badges
+export interface RaceUpdateRead {
+  userId: string;
+  updateId: number;
+  readAt: string;
 }
 
 export interface RaceConfig {
@@ -293,4 +343,17 @@ export interface RaceUpdatesResponse {
   updates: RaceUpdate[];
   totalCount: number;
   hasMore: boolean;
+  unreadCount?: number; // For authenticated users
+}
+
+// API Response for race update comments
+export interface RaceUpdateCommentsResponse {
+  comments: RaceUpdateComment[];
+  totalCount: number;
+}
+
+// API Response for unread count
+export interface RaceUpdateUnreadCountResponse {
+  unreadCount: number;
+  totalCount: number;
 }
