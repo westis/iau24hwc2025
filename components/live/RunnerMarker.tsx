@@ -184,7 +184,7 @@ export function RunnerMarker({ runner, courseTrack, isTop6Mode = false }: Runner
                 {t.live?.progress || "Progress"}:
               </span>
               <span className="font-medium">
-                {runner.progressPercent.toFixed(1)}%
+                {runner.progressPercent?.toFixed(1) ?? '0.0'}%
               </span>
             </div>
 
