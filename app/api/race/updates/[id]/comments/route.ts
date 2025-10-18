@@ -111,8 +111,8 @@ export async function POST(
     // Check if user exists in chat_users and is not banned
     const { data: chatUser } = await supabase
       .from("chat_users")
-      .select("user_id, is_banned")
-      .eq("user_id", user.id)
+      .select("id, is_banned")
+      .eq("id", user.id)
       .single();
 
     if (!chatUser) {

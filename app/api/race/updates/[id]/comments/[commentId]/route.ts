@@ -54,7 +54,7 @@ export async function PATCH(
       })
       .eq("id", commentId)
       .eq("update_id", updateId)
-      .eq("user_id", user.id)
+      .eq("id", user.id)
       .select(
         `
         *,
@@ -132,7 +132,7 @@ export async function DELETE(
     const { data: chatUser } = await supabase
       .from("chat_users")
       .select("is_admin")
-      .eq("user_id", user.id)
+      .eq("id", user.id)
       .single();
 
     const isAdmin = chatUser?.is_admin === true;
@@ -145,7 +145,7 @@ export async function DELETE(
       .eq("update_id", updateId);
 
     if (!isAdmin) {
-      query = query.eq("user_id", user.id);
+      query = query.eq("id", user.id);
     }
 
     const { error, count } = await query;
