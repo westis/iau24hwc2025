@@ -535,7 +535,7 @@ export const sv: Translations = {
     updates: "Uppdateringar",
     urgent: "Brådskande",
     summary: "Sammanfattning",
-    teamSweden: "Sverige",
+    teamSweden: "Team Sverige",
     interview: "Intervju",
     general: "Allmänt",
     all: "Alla",

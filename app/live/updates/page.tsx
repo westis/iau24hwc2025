@@ -138,6 +138,18 @@ function RaceUpdatesContent() {
     [user, readUpdateIds]
   );
 
+  // Handle update deletion
+  const handleDeleteUpdate = React.useCallback(
+    (updateId: number) => {
+      setUpdates((prev) => prev.filter((update) => update.id !== updateId));
+      // Also decrease unread count if it was unread
+      if (!readUpdateIds.has(updateId)) {
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+      }
+    },
+    [readUpdateIds]
+  );
+
   const handleRefresh = () => {
     setHasNewUpdates(false);
     fetchUpdates(false);
@@ -308,6 +320,7 @@ function RaceUpdatesContent() {
                   update={update}
                   onMarkAsRead={user ? handleMarkAsRead : undefined}
                   isRead={readUpdateIds.has(update.id)}
+                  onDelete={handleDeleteUpdate}
                 />
               ))}
             </div>

@@ -29,11 +29,14 @@ import type { RaceUpdate, RaceUpdateComment, RaceUpdateCategory } from "@/types/
 import { useSupabaseAuth } from "@/lib/auth/supabase-auth-context";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { ChatAuthPrompt } from "@/components/chat/ChatAuthPrompt";
+import { useAuth } from "@/lib/auth/auth-context";
+import { useRouter } from "next/navigation";
 
 interface RaceUpdateCardProps {
   update: RaceUpdate;
   onMarkAsRead?: (updateId: number) => void;
   isRead?: boolean;
+  onDelete?: (updateId: number) => void;
 }
 
 interface InstagramEmbedProps {
@@ -131,9 +134,11 @@ function InstagramEmbed({ url }: InstagramEmbedProps) {
   );
 }
 
-export function RaceUpdateCard({ update, onMarkAsRead, isRead = false }: RaceUpdateCardProps) {
+export function RaceUpdateCard({ update, onMarkAsRead, isRead = false, onDelete }: RaceUpdateCardProps) {
   const { user, chatUser } = useSupabaseAuth();
+  const { isAdmin } = useAuth();
   const { t, language } = useLanguage();
+  const router = useRouter();
   const locale = language === "sv" ? sv : enUS;
 
   const [comments, setComments] = React.useState<RaceUpdateComment[]>([]);
@@ -144,6 +149,7 @@ export function RaceUpdateCard({ update, onMarkAsRead, isRead = false }: RaceUpd
   const [editingCommentId, setEditingCommentId] = React.useState<number | null>(null);
   const [editingText, setEditingText] = React.useState("");
   const [showAuthPrompt, setShowAuthPrompt] = React.useState(false);
+  const [deleting, setDeleting] = React.useState(false);
 
   const cardRef = React.useRef<HTMLDivElement>(null);
 
@@ -269,6 +275,36 @@ export function RaceUpdateCard({ update, onMarkAsRead, isRead = false }: RaceUpd
     }
   }
 
+  async function handleDeleteUpdate() {
+    if (!window.confirm("Är du säker på att du vill radera denna uppdatering?")) return;
+
+    try {
+      setDeleting(true);
+      const res = await fetch(`/api/race/updates/${update.id}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to delete update");
+      }
+
+      if (onDelete) {
+        onDelete(update.id);
+      }
+    } catch (error) {
+      console.error("Error deleting update:", error);
+      alert(error instanceof Error ? error.message : "Misslyckades med att radera uppdatering");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  function handleEditUpdate() {
+    // Navigate to edit page with update ID
+    router.push(`/admin/race-updates/edit/${update.id}`);
+  }
+
   function getCategoryBadge(category?: RaceUpdateCategory) {
     const categoryColors: Record<RaceUpdateCategory, string> = {
       urgent: "bg-red-500 text-white",
@@ -324,12 +360,52 @@ export function RaceUpdateCard({ update, onMarkAsRead, isRead = false }: RaceUpd
                 <Badge variant="destructive" className="text-xs py-0">{t.live?.high || "High"}</Badge>
               )}
             </div>
-            <span className="text-xs text-muted-foreground whitespace-nowrap">
-              {formatDistanceToNow(new Date(update.timestamp), {
-                addSuffix: true,
-                locale,
-              })}
-            </span>
+            <div className="flex items-center gap-2">
+              <span
+                className="text-xs text-muted-foreground whitespace-nowrap"
+                title={new Date(update.timestamp).toLocaleString('sv-SE', {
+                  timeZone: 'Europe/Stockholm',
+                  year: 'numeric',
+                  month: '2-digit',
+                  day: '2-digit',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit'
+                })}
+              >
+                {formatDistanceToNow(new Date(update.timestamp), {
+                  addSuffix: true,
+                  locale,
+                })}
+              </span>
+              {isAdmin && (
+                <div className="flex gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={handleEditUpdate}
+                    title="Redigera uppdatering"
+                  >
+                    <Edit2 className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 text-destructive hover:text-destructive"
+                    onClick={handleDeleteUpdate}
+                    disabled={deleting}
+                    title="Radera uppdatering"
+                  >
+                    {deleting ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-3.5 w-3.5" />
+                    )}
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         </CardHeader>
 
@@ -471,7 +547,18 @@ export function RaceUpdateCard({ update, onMarkAsRead, isRead = false }: RaceUpd
                                 <p className="font-semibold text-xs">
                                   {comment.chatUsers.displayName}
                                 </p>
-                                <p className="text-xs text-muted-foreground">
+                                <p
+                                  className="text-xs text-muted-foreground"
+                                  title={new Date(comment.createdAt).toLocaleString('sv-SE', {
+                                    timeZone: 'Europe/Stockholm',
+                                    year: 'numeric',
+                                    month: '2-digit',
+                                    day: '2-digit',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    second: '2-digit'
+                                  })}
+                                >
                                   {formatDistanceToNow(new Date(comment.createdAt), {
                                     addSuffix: true,
                                     locale,
