@@ -314,53 +314,20 @@ export function GapAnalysisChart({ bibs }: GapAnalysisChartProps) {
     }
   }, [theme]);
 
-  // Chart configuration
+  // Chart configuration - ONLY initialize once, updates happen via ref
+  // DO NOT depend on 'data' or chart will rebuild on every update
   const chartData = useMemo(() => {
-    if (!data) {
-      return { datasets: [] };
-    }
-
-    const datasets = data.runners
-      .sort((a, b) => a.bib - b.bib)
-      .map((runner) => ({
-        label: `#${runner.bib} ${runner.name}`,
-        data: runner.data.map((point) => ({
-          x: point.time * 1000,
-          y: point.projectedKm - baselineDistance,
-        })),
-        borderColor: runner.color,
-        backgroundColor: runner.color,
-        borderWidth: 2,
-        pointRadius: 0,
-        tension: 0.4,
-      }));
-
-    // Add baseline reference line (y=0)
-    datasets.push({
-      label: `Baseline (${baselineDistance.toFixed(0)}km)`,
-      data: [
-        { x: 0, y: 0 },
-        { x: 24 * 3600 * 1000, y: 0 },
-      ],
-      borderColor: "#fbbf24",
-      backgroundColor: "#fbbf24",
-      borderWidth: 3,
-      borderDash: [5, 5],
-      pointRadius: 0,
-      tension: 0,
-    } as any);
-
-    return { datasets };
-  }, [data, baselineDistance]);
+    return { datasets: [] };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty deps = only create once
 
   const chartOptions: ChartOptions<"line"> = useMemo(() => {
     const isDark = theme === "dark";
     const textColor = isDark ? "#e5e7eb" : "#111827";
     const gridColor = isDark ? "#374151" : "#e5e7eb";
 
-    // Calculate default max based on available data with buffer
-    const dataMax =
-      maxTime > 0 ? Math.min(maxTime + 600000, 24 * 3600 * 1000) : 3600000; // Add 10 min buffer or show 1h minimum
+    // Start with 1h default, will be updated dynamically by useEffect
+    const dataMax = 3600000; // 1 hour initial view
 
     return {
       responsive: true,
@@ -529,7 +496,7 @@ export function GapAnalysisChart({ bibs }: GapAnalysisChartProps) {
         },
       },
     };
-  }, [theme, t, baselineDistance, maxTime]);
+  }, [theme, t, baselineDistance]); // Removed maxTime - updates happen via useEffect, not prop changes
 
   if (bibs.length === 0) {
     return (
