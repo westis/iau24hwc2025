@@ -88,8 +88,16 @@ async function backfillWithPuppeteer() {
     const allLaps: any[] = [];
     let runnersProcessed = 0;
 
+    // TEST MODE: Only process first runner (race leader)
+    const TEST_MODE = true; // Set to true to test with just one runner
+    const MAX_RUNNERS = TEST_MODE ? 1 : Infinity;
+
     // Iterate through all pages and process runners on each page
     for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
+      if (runnersProcessed >= MAX_RUNNERS) {
+        console.log(`\n✅ Reached max runners limit (${MAX_RUNNERS}), stopping...`);
+        break;
+      }
       // Call quickSearch() to load the page
       await page.evaluate((index) => {
         (window as any).quickSearch(index);
@@ -117,6 +125,9 @@ async function backfillWithPuppeteer() {
 
       // Process each runner on this page
       for (const runner of runnersOnPage) {
+      if (runnersProcessed >= MAX_RUNNERS) {
+        break;
+      }
       try {
         // Click the runner link to open modal
         await page.evaluate((modalId) => {
@@ -130,8 +141,23 @@ async function backfillWithPuppeteer() {
         // Wait for the table body to actually have data
         await page.waitForSelector(`#${runner.modalId} tbody tr`, { visible: true, timeout: 3000 });
 
-        // Extra delay to ensure data is fully loaded
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Wait for the data to actually be populated (check if time cells have content)
+        await page.waitForFunction(
+          (modalId) => {
+            const modal = document.querySelector(`#${modalId}`);
+            if (!modal) return false;
+            const firstRow = modal.querySelector('tbody tr');
+            if (!firstRow) return false;
+            const cells = firstRow.querySelectorAll('td');
+            // Check if cell[3] (race time) has content with time format
+            return cells[3]?.textContent?.trim().match(/\d+:\d+:\d+/) !== null;
+          },
+          { timeout: 5000 },
+          runner.modalId
+        );
+
+        // Extra delay to be absolutely sure
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
         // Extract lap data from modal
         const lapData = await page.evaluate((modalId) => {

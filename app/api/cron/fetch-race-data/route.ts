@@ -159,6 +159,12 @@ export async function GET(request: NextRequest) {
       );
 
       laps = calculatedLaps;
+
+      // Debug: Show first few calculated laps for bib 191
+      const bib191Laps = calculatedLaps.filter(lap => lap.bib === 191).slice(0, 5);
+      if (bib191Laps.length > 0) {
+        console.log(`Calculated laps for Bib 191:`, bib191Laps.map(lap => `Lap ${lap.lap}: ${lap.raceTimeSec}s, ${lap.distanceKm}km`));
+      }
     }
 
     // Match leaderboard entries with our runner database to get ALL runner info
@@ -329,13 +335,13 @@ export async function GET(request: NextRequest) {
         const existingTimes = existingLapTimesMap.get(key);
 
         // If existing lap has non-zero times (from Puppeteer backfill), preserve them
-        // Otherwise use calculated times (which might be 0 for distance-based detection)
+        // Otherwise use calculated times (which might be 0 or undefined for distance-based detection)
         const raceTimeSec = existingTimes && existingTimes.raceTimeSec > 0
           ? existingTimes.raceTimeSec
-          : lap.raceTimeSec;
+          : (lap.raceTimeSec || 0);
         const lapTimeSec = existingTimes && existingTimes.lapTimeSec > 0
           ? existingTimes.lapTimeSec
-          : lap.lapTimeSec;
+          : (lap.lapTimeSec || 0);
 
         // Debug: Track preserved laps
         if (existingTimes && existingTimes.raceTimeSec > 0 && lap.bib === 191 && lap.lap <= 3) {
