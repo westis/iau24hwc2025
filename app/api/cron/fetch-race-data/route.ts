@@ -121,12 +121,14 @@ export async function GET(request: NextRequest) {
 
     // Get the latest lap for each runner from race_laps table
     // This is the source of truth for what laps have been captured
+    // Note: Supabase has a default 1000 row limit, so we need to set a higher limit
     const { data: existingLaps, error: lapsQueryError } = await supabase
       .from("race_laps")
       .select("bib, lap, distance_km, race_time_sec")
       .eq("race_id", activeRace.id)
       .order("bib", { ascending: true })
-      .order("lap", { ascending: false });
+      .order("lap", { ascending: false })
+      .limit(50000); // Support up to ~130 laps per runner for 376 runners
 
     if (lapsQueryError) {
       console.error("ERROR querying existing laps:", lapsQueryError);
