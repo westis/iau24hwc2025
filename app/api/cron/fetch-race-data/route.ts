@@ -187,13 +187,38 @@ export async function GET(request: NextRequest) {
     // CRITICAL: Only insert CURRENT lap (from leaderboard), NOT historical laps
     // Historical laps should come from Puppeteer backfill with accurate times
     // This prevents inserting estimated/calculated laps that would be overwritten later
+    let newLapCandidates = 0;
+    let skippedNoLapIncrease = 0;
+    let skippedNoRaceTime = 0;
+    const debugSamples: any[] = [];
+
     if (laps.length === 0) {
       for (const entry of leaderboard) {
         const latestLap = latestLapMap.get(entry.bib);
         const currentLapNum = entry.lap; // Lap number from leaderboard
         const latestLapNum = latestLap?.lap || 0;
 
+        // Debug: Collect first 5 samples for response
+        if (debugSamples.length < 5) {
+          debugSamples.push({
+            bib: entry.bib,
+            currentLap: currentLapNum,
+            latestLap: latestLapNum,
+            raceTime: entry.raceTimeSec,
+          });
+        }
+
         // Only insert if runner completed a NEW lap since last check
+        if (currentLapNum > latestLapNum) {
+          if (entry.raceTimeSec > 0) {
+            newLapCandidates++;
+          } else {
+            skippedNoRaceTime++;
+          }
+        } else {
+          skippedNoLapIncrease++;
+        }
+
         if (currentLapNum > latestLapNum && entry.raceTimeSec > 0) {
           // Calculate lap time (time since last lap)
           const previousRaceTime = latestLap?.raceTimeSec || 0;
@@ -460,6 +485,12 @@ export async function GET(request: NextRequest) {
       runnersUpdated: leaderboard.length,
       lapsCalculated: laps.length > 0 && lapsInserted === 0 ? false : true,
       timestamp: new Date().toISOString(),
+      debug: {
+        newLapCandidates,
+        skippedNoLapIncrease,
+        skippedNoRaceTime,
+        samples: debugSamples,
+      },
     });
   } catch (error) {
     console.error("Error in cron fetch:", error);
