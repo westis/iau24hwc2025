@@ -31,11 +31,12 @@ export function RunnerMarker({ runner, courseTrack, isTop6Mode = false }: Runner
   // Use position directly from API (already pace-calculated)
   const positionArray: [number, number] = [runner.lat, runner.lon];
 
-  // Extract initials from runner name
+  // Extract initials from runner name (firstname lastname format)
   const getInitials = (name: string): string => {
     const parts = name.trim().split(' ');
     if (parts.length >= 2) {
-      return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+      // Assume name is "Firstname Lastname" format, so take last part first, then first part
+      return `${parts[parts.length - 1][0]}${parts[0][0]}`.toUpperCase();
     }
     return name.substring(0, 2).toUpperCase();
   };
