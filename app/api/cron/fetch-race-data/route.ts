@@ -97,20 +97,57 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get previous leaderboard for lap calculation
-    const { data: previousLeaderboard } = await supabase
-      .from("race_leaderboard")
-      .select("*")
-      .eq("race_id", activeRace.id);
+    // Get the latest lap for each runner from race_laps table
+    // This is the source of truth for what laps have been captured
+    const { data: existingLaps } = await supabase
+      .from("race_laps")
+      .select("bib, lap, distance_km, race_time_sec")
+      .eq("race_id", activeRace.id)
+      .order("bib", { ascending: true })
+      .order("lap", { ascending: false });
+
+    // Create a map of latest lap per runner
+    const latestLapMap = new Map();
+    if (existingLaps) {
+      existingLaps.forEach(lap => {
+        if (!latestLapMap.has(lap.bib)) {
+          latestLapMap.set(lap.bib, {
+            lap: lap.lap,
+            distanceKm: lap.distance_km,
+            raceTimeSec: lap.race_time_sec,
+          });
+        }
+      });
+    }
+
+    // Build "previous leaderboard" from latest laps
+    const previousLeaderboard = leaderboard.map(entry => {
+      const latestLap = latestLapMap.get(entry.bib);
+      if (latestLap) {
+        return {
+          ...entry,
+          lap: latestLap.lap,
+          distanceKm: latestLap.distanceKm,
+          raceTimeSec: latestLap.raceTimeSec,
+        };
+      }
+      // No laps yet for this runner - start from 0
+      return {
+        ...entry,
+        lap: 0,
+        distanceKm: 0,
+        raceTimeSec: 0,
+      };
+    });
 
     // If no lap data from source, calculate from distance increases
-    if (laps.length === 0 && previousLeaderboard) {
+    if (laps.length === 0) {
       const lapConfig: LapCalculationConfig = {
         lapDistanceKm: parseFloat(process.env.LAP_DISTANCE || "1.5"),
         firstLapDistanceKm: parseFloat(
           process.env.FIRST_LAP_DISTANCE ||
             config?.first_lap_distance_km?.toString() ||
-            "0.1"
+            "0.2"
         ),
         tolerancePercent: 10,
       };
