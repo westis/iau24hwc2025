@@ -7,12 +7,13 @@ import type { RaceUpdateComment } from "@/types/live-race";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string; commentId: string } }
+  { params }: { params: Promise<{ id: string; commentId: string }> }
 ) {
   try {
     const supabase = await createClient();
-    const updateId = parseInt(params.id);
-    const commentId = parseInt(params.commentId);
+    const { id, commentId: commentIdParam } = await params;
+    const updateId = parseInt(id);
+    const commentId = parseInt(commentIdParam);
 
     if (isNaN(updateId) || isNaN(commentId)) {
       return NextResponse.json({ error: "Invalid IDs" }, { status: 400 });
@@ -106,12 +107,13 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string; commentId: string } }
+  { params }: { params: Promise<{ id: string; commentId: string }> }
 ) {
   try {
     const supabase = await createClient();
-    const updateId = parseInt(params.id);
-    const commentId = parseInt(params.commentId);
+    const { id, commentId: commentIdParam } = await params;
+    const updateId = parseInt(id);
+    const commentId = parseInt(commentIdParam);
 
     if (isNaN(updateId) || isNaN(commentId)) {
       return NextResponse.json({ error: "Invalid IDs" }, { status: 400 });

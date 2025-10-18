@@ -36,6 +36,101 @@ interface RaceUpdateCardProps {
   isRead?: boolean;
 }
 
+interface InstagramEmbedProps {
+  url: string;
+}
+
+function InstagramEmbed({ url }: InstagramEmbedProps) {
+  const embedRef = React.useRef<HTMLDivElement>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [error, setError] = React.useState(false);
+
+  React.useEffect(() => {
+    // Load Instagram embed script
+    const script = document.createElement("script");
+    script.src = "https://www.instagram.com/embed.js";
+    script.async = true;
+
+    script.onload = () => {
+      // Process embeds after script loads
+      if ((window as any).instgrm) {
+        (window as any).instgrm.Embeds.process();
+        setIsLoading(false);
+      }
+    };
+
+    script.onerror = () => {
+      setError(true);
+      setIsLoading(false);
+    };
+
+    document.body.appendChild(script);
+
+    return () => {
+      // Clean up script if needed
+      const existingScript = document.querySelector(
+        'script[src="https://www.instagram.com/embed.js"]'
+      );
+      if (existingScript && document.body.contains(existingScript)) {
+        // Don't remove - might be used by other embeds
+      }
+    };
+  }, []);
+
+  // Re-process when URL changes
+  React.useEffect(() => {
+    if ((window as any).instgrm && embedRef.current) {
+      (window as any).instgrm.Embeds.process();
+    }
+  }, [url]);
+
+  if (error) {
+    return (
+      <div className="border rounded-lg p-4 bg-muted/30">
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary hover:underline"
+        >
+          View on Instagram →
+        </a>
+      </div>
+    );
+  }
+
+  return (
+    <div ref={embedRef} className="w-full flex justify-center">
+      {isLoading && (
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      )}
+      <blockquote
+        className="instagram-media"
+        data-instgrm-captioned
+        data-instgrm-permalink={url}
+        data-instgrm-version="14"
+        style={{
+          background: "#FFF",
+          border: 0,
+          borderRadius: "3px",
+          boxShadow: "0 0 1px 0 rgba(0,0,0,0.5),0 1px 10px 0 rgba(0,0,0,0.15)",
+          margin: "1px",
+          maxWidth: "540px",
+          minWidth: "326px",
+          padding: 0,
+          width: "calc(100% - 2px)",
+        }}
+      >
+        <a href={url} target="_blank" rel="noopener noreferrer">
+          View this post on Instagram
+        </a>
+      </blockquote>
+    </div>
+  );
+}
+
 export function RaceUpdateCard({ update, onMarkAsRead, isRead = false }: RaceUpdateCardProps) {
   const { user, chatUser } = useSupabaseAuth();
   const { t, language } = useLanguage();
@@ -276,16 +371,7 @@ export function RaceUpdateCard({ update, onMarkAsRead, isRead = false }: RaceUpd
             )}
 
           {update.mediaType === "instagram" && update.mediaUrl && (
-            <div className="border rounded-lg p-4 bg-muted/30">
-              <a
-                href={update.mediaUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary hover:underline"
-              >
-                View on Instagram →
-              </a>
-            </div>
+            <InstagramEmbed url={update.mediaUrl} />
           )}
 
           {/* Description/Content */}

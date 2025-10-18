@@ -10,11 +10,12 @@ import type {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient();
-    const updateId = parseInt(params.id);
+    const { id } = await params;
+    const updateId = parseInt(id);
 
     if (isNaN(updateId)) {
       return NextResponse.json(
@@ -84,11 +85,12 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient();
-    const updateId = parseInt(params.id);
+    const { id } = await params;
+    const updateId = parseInt(id);
 
     if (isNaN(updateId)) {
       return NextResponse.json(
