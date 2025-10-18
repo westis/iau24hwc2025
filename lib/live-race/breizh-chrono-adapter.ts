@@ -31,25 +31,38 @@ export class BreizhChronoAdapter implements RaceDataSource {
 
       while (hasMore) {
         console.log(`Fetching page ${page}...`);
-        const html = await this.fetchHtml(page);
 
-        // Parse this page
-        const entries = this.parseHtmlLeaderboard(html);
-        console.log(`Page ${page}: found ${entries.length} entries`);
+        try {
+          const html = await this.fetchHtml(page);
 
-        if (entries.length === 0) {
-          // No more results
-          console.log(`No more results on page ${page}, stopping pagination`);
-          hasMore = false;
-        } else {
-          allEntries.push(...entries);
-          page++;
+          // Parse this page
+          const entries = this.parseHtmlLeaderboard(html);
+          console.log(`Page ${page}: found ${entries.length} entries`);
 
-          // Safety limit to prevent infinite loops
-          if (page > 50) {
-            console.warn("Reached page limit of 50, stopping pagination");
+          if (entries.length === 0) {
+            // No more results
+            console.log(`No more results on page ${page}, stopping pagination`);
             hasMore = false;
+          } else {
+            allEntries.push(...entries);
+            page++;
+
+            // Add a small delay between requests to avoid rate limiting
+            // Only delay if there are more pages to fetch
+            if (hasMore && page > 0) {
+              await new Promise(resolve => setTimeout(resolve, 300)); // 300ms delay
+            }
+
+            // Safety limit to prevent infinite loops
+            if (page > 50) {
+              console.warn("Reached page limit of 50, stopping pagination");
+              hasMore = false;
+            }
           }
+        } catch (error) {
+          console.error(`Error fetching page ${page}:`, error);
+          // On error, stop pagination and return what we have so far
+          hasMore = false;
         }
       }
 
@@ -119,8 +132,10 @@ export class BreizhChronoAdapter implements RaceDataSource {
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Breizh Chrono error response:`, errorText.substring(0, 500));
       throw new Error(
-        `HTTP error! status: ${response.status} ${response.statusText}`
+        `HTTP error! status: ${response.status} ${response.statusText} (page ${page})`
       );
     }
 
