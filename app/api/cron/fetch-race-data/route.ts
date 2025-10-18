@@ -1,7 +1,7 @@
 // app/api/cron/fetch-race-data/route.ts
 // Vercel Cron job endpoint to fetch and update race data
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/server";
 import { BreizhChronoAdapter } from "@/lib/live-race/breizh-chrono-adapter";
 import {
   calculateLapsFromLeaderboard,
@@ -30,7 +30,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const supabase = await createClient();
+    // Use service role client to bypass RLS (cron is trusted, authenticated by CRON_SECRET)
+    const supabase = createServiceClient();
 
     // Get active race and config (including start_date for elapsed time calculation)
     const { data: activeRace } = await supabase
