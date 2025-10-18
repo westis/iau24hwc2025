@@ -160,6 +160,44 @@ function DistancePaceChartComponent({ bibs }: DistancePaceChartProps) {
     }
   };
 
+  // Calculate moving average trendline for a runner
+  const calculateTrendline = (runnerData: any[]) => {
+    if (runnerData.length < 2) return null;
+
+    // Get the most recent data point
+    const latestPoint = runnerData[runnerData.length - 1];
+    const latestTime = latestPoint.time * 1000; // Convert to ms
+    const latestDistance = latestPoint.projectedKm;
+
+    // Adaptive window: 20% of elapsed time, min 3h, max 6h
+    const elapsedHours = latestTime / 3600000;
+    const windowHours = Math.max(3, Math.min(6, elapsedHours * 0.2));
+
+    // Filter to points within the moving average window (last X hours)
+    const windowMs = windowHours * 3600 * 1000;
+    const windowStart = latestTime - windowMs;
+    const recentPoints = runnerData.filter(p => p.time * 1000 >= windowStart);
+
+    if (recentPoints.length < 2) return null;
+
+    // Calculate average pace from recent points (km per ms)
+    const firstRecent = recentPoints[0];
+    const timeElapsed = (latestPoint.time - firstRecent.time) * 1000; // ms
+    const distanceGained = latestPoint.projectedKm - firstRecent.projectedKm;
+    const pace = distanceGained / timeElapsed; // km per ms
+
+    // Project trendline from current position to 24 hours
+    const endTime = 24 * 3600 * 1000; // 24 hours in ms
+    const timeRemaining = endTime - latestTime;
+    const projectedEndDistance = latestDistance + (pace * timeRemaining);
+
+    return {
+      startPoint: { x: latestTime, y: latestDistance },
+      endPoint: { x: endTime, y: projectedEndDistance },
+      pace: pace * 3600000, // Convert to km/hour for display
+    };
+  };
+
   // Update chart when data changes (PUSH MODEL: append data + update('quiet'))
   useEffect(() => {
     if (!data || !chartRef.current) {
@@ -183,21 +221,42 @@ function DistancePaceChartComponent({ bibs }: DistancePaceChartProps) {
       console.log("[DistancePaceChart] Bibs changed or initial load - rebuilding datasets");
       prevBibs.current = currentBibsKey;
 
-      // Replace all datasets (use sorted copy, don't mutate)
-      chart.data.datasets = [...data.runners]
-        .sort((a, b) => a.bib - b.bib)
-        .map((runner) => ({
-          label: `#${runner.bib} ${runner.name}`,
-          data: runner.data.map((point) => ({
-            x: point.time * 1000,
-            y: point.projectedKm,
-          })),
+      const sortedRunners = [...data.runners].sort((a, b) => a.bib - b.bib);
+
+      // Create main data datasets
+      const mainDatasets = sortedRunners.map((runner) => ({
+        label: `#${runner.bib} ${runner.name}`,
+        data: runner.data.map((point) => ({
+          x: point.time * 1000,
+          y: point.projectedKm,
+        })),
+        borderColor: runner.color,
+        backgroundColor: runner.color,
+        borderWidth: 2,
+        pointRadius: 0,
+        tension: 0.1,
+      }));
+
+      // Create trendline datasets
+      const trendlineDatasets = sortedRunners.map((runner) => {
+        const trendline = calculateTrendline(runner.data);
+        if (!trendline) return null;
+
+        return {
+          label: `#${runner.bib} trend`,
+          data: [trendline.startPoint, trendline.endPoint],
           borderColor: runner.color,
           backgroundColor: runner.color,
-          borderWidth: 2,
+          borderWidth: 1,
+          borderDash: [5, 5],
           pointRadius: 0,
-          tension: 0.1,
-        }));
+          tension: 0,
+          opacity: 0.5,
+        };
+      }).filter(Boolean); // Remove nulls
+
+      // Combine main datasets + trendlines
+      chart.data.datasets = [...mainDatasets, ...trendlineDatasets] as any;
 
       chart.update('quiet'); // Use 'quiet' mode - updates without redraw
       lastDataUpdate.current = Date.now();
@@ -208,18 +267,31 @@ function DistancePaceChartComponent({ bibs }: DistancePaceChartProps) {
     if (chart.data.datasets.length > 0 && data.runners.length > 0) {
       console.log("[DistancePaceChart] Appending/updating data points (quiet mode)");
 
-      // Update each dataset's data array (use sorted copy, don't mutate)
-      [...data.runners]
-        .sort((a, b) => a.bib - b.bib)
-        .forEach((runner, idx) => {
-          const dataset = chart.data.datasets[idx];
-          if (dataset) {
-            dataset.data = runner.data.map((point) => ({
-              x: point.time * 1000,
-              y: point.projectedKm,
-            }));
+      const sortedRunners = [...data.runners].sort((a, b) => a.bib - b.bib);
+      const numRunners = sortedRunners.length;
+
+      // Update main datasets (first N datasets are main data)
+      sortedRunners.forEach((runner, idx) => {
+        const dataset = chart.data.datasets[idx];
+        if (dataset) {
+          dataset.data = runner.data.map((point) => ({
+            x: point.time * 1000,
+            y: point.projectedKm,
+          }));
+        }
+      });
+
+      // Update trendline datasets (next N datasets are trendlines)
+      sortedRunners.forEach((runner, idx) => {
+        const trendlineIdx = numRunners + idx;
+        const trendlineDataset = chart.data.datasets[trendlineIdx];
+        if (trendlineDataset) {
+          const trendline = calculateTrendline(runner.data);
+          if (trendline) {
+            trendlineDataset.data = [trendline.startPoint, trendline.endPoint];
           }
-        });
+        }
+      });
 
       chart.update('quiet'); // 'quiet' mode = no animation, no full redraw
       lastDataUpdate.current = Date.now();
