@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, memo } from "react";
 import {
   Card,
   CardContent,
@@ -39,7 +39,7 @@ const TIME_RANGES = [
   { label: "24h", hours: 24 },
 ];
 
-export function DistancePaceChart({ bibs }: DistancePaceChartProps) {
+function DistancePaceChartComponent({ bibs }: DistancePaceChartProps) {
   const { t } = useLanguage();
   const { theme } = useTheme();
   const [data, setData] = useState<ChartDataResponse | null>(null);
@@ -47,6 +47,7 @@ export function DistancePaceChart({ bibs }: DistancePaceChartProps) {
   const [chartReady, setChartReady] = useState(false);
   const chartRef = useRef<any>(null);
   const prevBibs = useRef<string>("");
+  const lastDataUpdate = useRef<number>(0);
 
   // Register Chart.js components before rendering
   useEffect(() => {
@@ -154,14 +155,71 @@ export function DistancePaceChart({ bibs }: DistancePaceChartProps) {
     }
   };
 
-  // Track bib changes for logging
+  // Update chart when data changes (PUSH MODEL: append data + update('quiet'))
   useEffect(() => {
-    const currentBibsKey = bibs.sort().join(",");
-    if (prevBibs.current && prevBibs.current !== currentBibsKey) {
-      console.log("[DistancePaceChart] Runner selection changed");
+    if (!data || !chartRef.current) {
+      return;
     }
-    prevBibs.current = currentBibsKey;
-  }, [bibs]);
+
+    const chart = chartRef.current;
+    // Don't mutate bibs array! Create sorted copy
+    const currentBibsKey = [...bibs].sort((a, b) => a - b).join(",");
+    const bibsChanged = prevBibs.current !== currentBibsKey;
+
+    console.log("[DistancePaceChart] useEffect - checking for changes", {
+      currentBibsKey,
+      prevBibsKey: prevBibs.current,
+      bibsChanged,
+      datasetCount: chart.data.datasets.length
+    });
+
+    // Full rebuild when bibs change
+    if (bibsChanged || chart.data.datasets.length === 0) {
+      console.log("[DistancePaceChart] Bibs changed or initial load - rebuilding datasets");
+      prevBibs.current = currentBibsKey;
+
+      // Replace all datasets (use sorted copy, don't mutate)
+      chart.data.datasets = [...data.runners]
+        .sort((a, b) => a.bib - b.bib)
+        .map((runner) => ({
+          label: `#${runner.bib} ${runner.name}`,
+          data: runner.data.map((point) => ({
+            x: point.time * 1000,
+            y: point.projectedKm,
+          })),
+          borderColor: runner.color,
+          backgroundColor: runner.color,
+          borderWidth: 2,
+          pointRadius: 0,
+          tension: 0.1,
+        }));
+
+      chart.update('quiet'); // Use 'quiet' mode - updates without redraw
+      lastDataUpdate.current = Date.now();
+      return;
+    }
+
+    // Incremental update: replace data points via ref
+    if (chart.data.datasets.length > 0 && data.runners.length > 0) {
+      console.log("[DistancePaceChart] Appending/updating data points (quiet mode)");
+
+      // Update each dataset's data array (use sorted copy, don't mutate)
+      [...data.runners]
+        .sort((a, b) => a.bib - b.bib)
+        .forEach((runner, idx) => {
+          const dataset = chart.data.datasets[idx];
+          if (dataset) {
+            dataset.data = runner.data.map((point) => ({
+              x: point.time * 1000,
+              y: point.projectedKm,
+            }));
+          }
+        });
+
+      chart.update('quiet'); // 'quiet' mode = no animation, no full redraw
+      lastDataUpdate.current = Date.now();
+    }
+  }, [data, bibs]);
 
   // Update X-axis max when data range changes
   useEffect(() => {
@@ -220,37 +278,19 @@ export function DistancePaceChart({ bibs }: DistancePaceChartProps) {
     }
   }, [theme]);
 
-  // Chart data - rebuild when data changes
+  // Chart data - keep empty, all updates via ref
   const chartData = useMemo(() => {
-    if (!data || data.runners.length === 0) {
-      return { datasets: [] };
-    }
-
-    return {
-      datasets: data.runners
-        .sort((a, b) => a.bib - b.bib)
-        .map((runner) => ({
-          label: `#${runner.bib} ${runner.name}`,
-          data: runner.data.map((point) => ({
-            x: point.time * 1000,
-            y: point.projectedKm,
-          })),
-          borderColor: runner.color,
-          backgroundColor: runner.color,
-          borderWidth: 2,
-          pointRadius: 0,
-          tension: 0.1,
-        }))
-    };
-  }, [data]); // Rebuild when data changes
+    console.log("[DistancePaceChart] chartData object created (empty, stable)");
+    return { datasets: [] };
+  }, []); // Never rebuild - stable empty object
 
   const chartOptions: ChartOptions<"line"> = useMemo(() => {
     const isDark = theme === "dark";
     const textColor = isDark ? "#e5e7eb" : "#111827";
     const gridColor = isDark ? "#374151" : "#e5e7eb";
 
-    // Start with 1h default, will be updated dynamically by useEffect
-    const dataMax = 3600000; // 1 hour initial view
+    // Use actual data range, or default to 24h if no data yet
+    const dataMax = maxTime > 0 ? Math.min(maxTime + 600000, 24 * 3600 * 1000) : 24 * 3600 * 1000;
 
     return {
       responsive: true,
@@ -403,7 +443,7 @@ export function DistancePaceChart({ bibs }: DistancePaceChartProps) {
         },
       },
     };
-  }, [theme, t]); // Removed maxTime - updates happen via useEffect, not prop changes
+  }, [theme, t, maxTime]); // Include maxTime to update initial view range
 
   if (bibs.length === 0) {
     return (
@@ -442,11 +482,14 @@ export function DistancePaceChart({ bibs }: DistancePaceChartProps) {
     );
   }
 
-  console.log("[DistancePaceChart] Rendering chart component", {
+  console.log("[DistancePaceChart] COMPONENT RENDER", {
     chartReady,
     loading,
     hasData: !!data,
-    datasetCount: chartData.datasets.length
+    numRunners: data?.runners?.length,
+    datasetCount: chartData.datasets.length,
+    bibs: bibs,
+    timestamp: Date.now()
   });
 
   return (
@@ -492,3 +535,19 @@ export function DistancePaceChart({ bibs }: DistancePaceChartProps) {
     </Card>
   );
 }
+
+// Wrap in memo to prevent rerenders when parent updates but bibs haven't changed
+export const DistancePaceChart = memo(DistancePaceChartComponent, (prevProps, nextProps) => {
+  // React.memo: return TRUE if props are equal (skip rerender), FALSE if different (do rerender)
+  const areEqual = prevProps.bibs.length === nextProps.bibs.length &&
+                   prevProps.bibs.every((bib, i) => bib === nextProps.bibs[i]);
+
+  console.log("[DistancePaceChart] memo comparison:", {
+    prevBibs: prevProps.bibs,
+    nextBibs: nextProps.bibs,
+    areEqual,
+    willRerender: !areEqual
+  });
+
+  return areEqual;
+});

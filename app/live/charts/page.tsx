@@ -47,7 +47,7 @@ function ChartsContent() {
   const { t } = useLanguage();
 
   // Use persistent filters hook
-  const { filters, setFilter } = useLiveFilters("charts", {
+  const { filters, setFilter, updateFilters } = useLiveFilters("charts", {
     mode: "top6",
     gender: "m",
     country: "",
@@ -56,6 +56,18 @@ function ChartsContent() {
   const selectionMode = filters.mode as "top6" | "watchlist" | "country" | "custom";
   const selectedGender = filters.gender as "m" | "w" | "all";
   const selectedCountry = filters.country || "";
+
+  // Helper to switch modes and clear irrelevant filters
+  const switchMode = (newMode: string) => {
+    const updates: Record<string, string> = { mode: newMode };
+
+    // Clear country when not in country mode
+    if (newMode !== "country") {
+      updates.country = "";
+    }
+
+    updateFilters(updates);
+  };
 
   // Fetch all countries from registered runners
   const fetchCountries = async () => {
@@ -256,7 +268,7 @@ function ChartsContent() {
                         <Button
                           size="sm"
                           variant={selectionMode === "top6" ? "default" : "outline"}
-                          onClick={() => setFilter("mode", "top6")}
+                          onClick={() => switchMode("top6")}
                         >
                           {t.live?.top6Overall || "Topp 6"}
                         </Button>
@@ -265,7 +277,7 @@ function ChartsContent() {
                           variant={
                             selectionMode === "watchlist" ? "default" : "outline"
                           }
-                          onClick={() => setFilter("mode", "watchlist")}
+                          onClick={() => switchMode("watchlist")}
                           disabled={watchlist.length === 0}
                         >
                           ⭐ {watchlist.length}
@@ -273,7 +285,7 @@ function ChartsContent() {
                         <Button
                           size="sm"
                           variant={selectionMode === "country" ? "default" : "outline"}
-                          onClick={() => setFilter("mode", "country")}
+                          onClick={() => switchMode("country")}
                         >
                           {t.runners?.country || "Land"}
                         </Button>
@@ -281,7 +293,7 @@ function ChartsContent() {
                           size="sm"
                           variant={selectionMode === "custom" ? "default" : "outline"}
                           onClick={() => {
-                            setFilter("mode", "custom");
+                            switchMode("custom");
                             setShowCustomSelection(true);
                           }}
                         >
