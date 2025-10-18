@@ -256,63 +256,21 @@ export async function GET(request: NextRequest) {
     // Insert new laps (use upsert to avoid duplicates)
     let lapsInserted = 0;
     if (laps.length > 0) {
-      // Calculate proper race times and distances for laps
-      const lapDistanceKm = parseFloat(process.env.LAP_DISTANCE || "1.5");
-      const firstLapDistanceKm = parseFloat(
-        process.env.FIRST_LAP_DISTANCE ||
-          config?.first_lap_distance_km?.toString() ||
-          "0.2"
-      );
-
-      // Group laps by bib to calculate cumulative times
-      const lapsByBib = new Map<number, any[]>();
-      laps.forEach(lap => {
-        if (!lapsByBib.has(lap.bib)) {
-          lapsByBib.set(lap.bib, []);
-        }
-        lapsByBib.get(lap.bib)!.push(lap);
-      });
-
-      // Sort laps within each bib and calculate cumulative values
-      const lapsWithRaceId = [];
-      for (const [bib, runnerLaps] of lapsByBib) {
-        // Sort by lap number
-        runnerLaps.sort((a, b) => a.lap - b.lap);
-
-        let cumulativeTimeSec = 0;
-        for (const lap of runnerLaps) {
-          cumulativeTimeSec += lap.lapTimeSec;
-
-          // Calculate cumulative distance
-          const distanceKm = lap.lap === 1
-            ? firstLapDistanceKm
-            : firstLapDistanceKm + (lap.lap - 1) * lapDistanceKm;
-
-          // Calculate paces
-          const thiLapDistanceKm = lap.lap === 1 ? firstLapDistanceKm : lapDistanceKm;
-          const lapPace = lap.lapTimeSec > 0
-            ? lap.lapTimeSec / thisLapDistanceKm
-            : 0;
-          const avgPace = cumulativeTimeSec > 0 && distanceKm > 0
-            ? cumulativeTimeSec / distanceKm
-            : 0;
-
-          lapsWithRaceId.push({
-            race_id: activeRace.id,
-            bib: lap.bib,
-            lap: lap.lap,
-            lap_time_sec: lap.lapTimeSec,
-            race_time_sec: cumulativeTimeSec,
-            distance_km: distanceKm,
-            rank: lap.rank || null,
-            gender_rank: lap.genderRank || null,
-            age_group_rank: lap.ageGroupRank || null,
-            lap_pace: lapPace,
-            avg_pace: avgPace,
-            timestamp: lap.timestamp,
-          });
-        }
-      }
+      // Map calculated laps to database format
+      const lapsWithRaceId = laps.map((lap) => ({
+        race_id: activeRace.id,
+        bib: lap.bib,
+        lap: lap.lap,
+        lap_time_sec: lap.lapTimeSec,
+        race_time_sec: lap.raceTimeSec,
+        distance_km: lap.distanceKm,
+        rank: lap.rank || null,
+        gender_rank: lap.genderRank || null,
+        age_group_rank: lap.ageGroupRank || null,
+        lap_pace: lap.lapPace,
+        avg_pace: lap.avgPace,
+        timestamp: lap.timestamp,
+      }));
 
       // Use upsert based on unique constraint (race_id, bib, lap)
       const lapsResult = await supabase
