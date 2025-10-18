@@ -121,25 +121,25 @@ export async function GET(request: NextRequest) {
 
     // Get the latest lap for each runner from race_laps table
     // This is the source of truth for what laps have been captured
-    // Note: Supabase has a default 1000 row limit, so we need to set a higher limit
+    // Strategy: Get ALL laps, then filter to latest per runner in JavaScript
+    // This is more efficient than trying to do DISTINCT ON via Supabase client
     const { data: existingLaps, error: lapsQueryError } = await supabase
       .from("race_laps")
       .select("bib, lap, distance_km, race_time_sec")
-      .eq("race_id", activeRace.id)
-      .order("bib", { ascending: true })
-      .order("lap", { ascending: false })
-      .limit(50000); // Support up to ~130 laps per runner for 376 runners
+      .eq("race_id", activeRace.id);
 
     if (lapsQueryError) {
       console.error("ERROR querying existing laps:", lapsQueryError);
     }
     console.log(`Existing laps query returned ${existingLaps?.length || 0} rows`);
 
-    // Create a map of latest lap per runner
+    // Create a map of latest lap per runner by finding max lap number for each bib
     const latestLapMap = new Map();
     if (existingLaps) {
       existingLaps.forEach(lap => {
-        if (!latestLapMap.has(lap.bib)) {
+        const existing = latestLapMap.get(lap.bib);
+        // Keep the lap with the highest lap number
+        if (!existing || lap.lap > existing.lap) {
           latestLapMap.set(lap.bib, {
             lap: lap.lap,
             distanceKm: lap.distance_km,
