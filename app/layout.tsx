@@ -9,6 +9,7 @@ import { AuthProvider } from "@/lib/auth/auth-context";
 import { SupabaseAuthProvider } from "@/lib/auth/supabase-auth-context";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 import { ChatWidget } from "@/components/chat/ChatWidget";
+import { UpdateNotification } from "@/components/UpdateNotification";
 
 export const metadata: Metadata = {
   title: "IAU 24h World Championships 2025",
@@ -81,6 +82,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <UpdateNotification />
           <LanguageProvider>
             <AuthProvider>
               <SupabaseAuthProvider>

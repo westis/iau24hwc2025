@@ -151,8 +151,21 @@ export function TeamRaceTrack({ teams }: TeamRaceTrackProps) {
               language as "en" | "sv"
             );
 
-            // Alternate positions above/below track to prevent overlap
-            const isAbove = index % 2 === 0;
+            // Smart vertical positioning to prevent overlap
+            // Check if this flag is close to the previous one
+            let isAbove = index % 2 === 0; // Default alternating pattern
+
+            if (index > 0) {
+              const prevTeam = teamsWithPositions[index - 1];
+              const horizontalDistance = Math.abs(team.position - prevTeam.position);
+
+              // If flags are very close horizontally (< 12%), ensure they're on opposite levels
+              if (horizontalDistance < 12) {
+                // Force opposite of previous flag's position
+                const prevIsAbove = (index - 1) % 2 === 0;
+                isAbove = !prevIsAbove;
+              }
+            }
 
             return (
               <div
