@@ -229,7 +229,7 @@ export async function GET(request: NextRequest) {
       const { data: readUpdates } = await supabase
         .from("race_update_reads")
         .select("update_id")
-        .eq("id", user.id);
+        .eq("user_id", user.id);
 
       const readUpdateIds = new Set(
         (readUpdates || []).map((r: any) => r.update_id)

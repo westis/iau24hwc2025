@@ -54,7 +54,7 @@ export async function PATCH(
       })
       .eq("id", commentId)
       .eq("update_id", updateId)
-      .eq("id", user.id)
+      .eq("user_id", user.id)
       .select(
         `
         *,
@@ -145,7 +145,7 @@ export async function DELETE(
       .eq("update_id", updateId);
 
     if (!isAdmin) {
-      query = query.eq("id", user.id);
+      query = query.eq("user_id", user.id);
     }
 
     const { error, count } = await query;
