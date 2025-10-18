@@ -136,13 +136,14 @@ export async function GET(request: NextRequest) {
     const { data: latestLapTimes } = await supabase
       .rpc('get_latest_laps_per_runner', { race_id_param: activeRace.id });
 
-    const latestLapTimeMap = new Map<number, { lap: number; raceTimeSec: number; lapTimeSec: number }>();
+    const latestLapTimeMap = new Map<number, { lap: number; raceTimeSec: number; lapTimeSec: number; distanceKm: number }>();
     if (latestLapTimes) {
       latestLapTimes.forEach((lapRecord: any) => {
         latestLapTimeMap.set(lapRecord.bib, {
           lap: lapRecord.lap,
           raceTimeSec: lapRecord.race_time_sec,
           lapTimeSec: lapRecord.lap_time_sec, // Use the stored value (accurate from backfill/Puppeteer)
+          distanceKm: lapRecord.distance_km,
         });
       });
     }
