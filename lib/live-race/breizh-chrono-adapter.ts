@@ -30,13 +30,16 @@ export class BreizhChronoAdapter implements RaceDataSource {
       let hasMore = true;
 
       while (hasMore) {
+        console.log(`Fetching page ${page}...`);
         const html = await this.fetchHtml(page);
 
         // Parse this page
         const entries = this.parseHtmlLeaderboard(html);
+        console.log(`Page ${page}: found ${entries.length} entries`);
 
         if (entries.length === 0) {
           // No more results
+          console.log(`No more results on page ${page}, stopping pagination`);
           hasMore = false;
         } else {
           allEntries.push(...entries);
@@ -50,7 +53,7 @@ export class BreizhChronoAdapter implements RaceDataSource {
         }
       }
 
-      console.log(`Fetched ${allEntries.length} runners across ${page} pages`);
+      console.log(`✅ Fetched ${allEntries.length} total runners across ${page} pages`);
       return allEntries;
     } catch (error) {
       console.error("Error fetching BreizhChrono leaderboard:", error);
@@ -264,14 +267,18 @@ export class BreizhChronoAdapter implements RaceDataSource {
       const bib = parseInt(bibNameMatch[1]);
       const name = bibNameMatch[2].trim();
       const laps = parseInt(cells[2]) || 0;
-      const timeStr = cells[3] || "00:00:00";
+      const clockTimeStr = cells[3] || "00:00:00"; // This is clock time (e.g., "10:24:35"), not elapsed time
       const distanceStr = cells[4].replace(/[^\d,.]/g, "").replace(",", "."); // Remove "km", handle commas
       let distanceKm = parseFloat(distanceStr) || 0;
 
-      // Parse time to seconds (HH:MM:SS)
-      const raceTimeSec = this.parseTimeToSeconds(timeStr);
+      // Create last_passing timestamp from clock time + today's date
+      const lastPassing = this.parseClockTimeToTimestamp(clockTimeStr);
 
-      // Calculate pace
+      // Note: raceTimeSec will be calculated in the cron route based on race start time
+      // For now, just use 0 as placeholder
+      const raceTimeSec = 0;
+
+      // Calculate pace (will be recalculated with correct race time in cron route)
       const lapTimeSec = laps > 0 ? raceTimeSec / laps : 0;
       const lapPaceSec = distanceKm > 0 ? raceTimeSec / distanceKm : 0;
 
@@ -289,6 +296,7 @@ export class BreizhChronoAdapter implements RaceDataSource {
         gender: "m" as "m" | "w", // Will be matched with our database
         timestamp,
         country: "XXX", // Will be matched with our database
+        lastPassing, // Clock time converted to timestamp
       };
     } catch (error) {
       console.error("Error parsing Breizh Chrono row:", error);
@@ -499,6 +507,33 @@ export class BreizhChronoAdapter implements RaceDataSource {
       return hours * 3600 + minutes * 60 + seconds;
     }
     return 0;
+  }
+
+  /**
+   * Helper: Convert clock time (HH:MM:SS) to ISO timestamp using today's date
+   * Breizh Chrono returns clock time like "10:24:35", we need to convert to full timestamp
+   */
+  private parseClockTimeToTimestamp(clockTimeStr: string): string {
+    const parts = clockTimeStr.split(":");
+    if (parts.length === 3) {
+      const hours = parseInt(parts[0]) || 0;
+      const minutes = parseInt(parts[1]) || 0;
+      const seconds = parseInt(parts[2]) || 0;
+
+      // Use today's date + the clock time
+      const now = new Date();
+      const timestamp = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate(),
+        hours,
+        minutes,
+        seconds
+      );
+
+      return timestamp.toISOString();
+    }
+    return new Date().toISOString();
   }
 
   /**

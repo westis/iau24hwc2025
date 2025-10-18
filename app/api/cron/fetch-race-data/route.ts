@@ -32,10 +32,10 @@ export async function GET(request: NextRequest) {
 
     const supabase = await createClient();
 
-    // Get active race and config
+    // Get active race and config (including start_date for elapsed time calculation)
     const { data: activeRace } = await supabase
       .from("race_info")
-      .select("id")
+      .select("id, start_date")
       .eq("is_active", true)
       .single();
 
