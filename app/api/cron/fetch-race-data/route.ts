@@ -79,14 +79,12 @@ export async function GET(request: NextRequest) {
 
     // Fetch data
     let leaderboard: LeaderboardEntry[];
-    let laps: any[] = [];
 
     try {
       leaderboard = await adapter.fetchLeaderboard();
 
-      // Note: Lap scraping has been moved to /api/admin/backfill-laps
-      // Normal operation uses lap calculation from distance increases
-      // This keeps the regular scraper fast and simple
+      // Note: Lap calculation has been moved to /api/cron/calculate-laps
+      // This keeps the leaderboard scraper fast and ensures immediate updates
     } catch (fetchError) {
       console.error("Error fetching race data:", fetchError);
       return NextResponse.json(
@@ -98,9 +96,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // CRITICAL: Calculate race times from timestamps BEFORE lap calculation
+    // CRITICAL: Calculate race times from timestamps
     // The BreizhChronoAdapter returns raceTimeSec=0 as a placeholder
-    // We must calculate it from lastPassing timestamp for accurate lap calculations
+    // We must calculate it from lastPassing timestamp for accurate calculations
     const raceStartTime = new Date(activeRace.start_date).getTime();
     const startTimeOffsetSec = config?.start_time_offset_seconds || 0; // Race started late offset
 
@@ -119,147 +117,6 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    // Get the latest lap for each runner from race_laps table using Postgres function
-    // This bypasses the 1000-row limit by doing aggregation in the database
-    // The function uses DISTINCT ON to get only the latest lap per runner
-    const { data: latestLaps, error: lapsQueryError } = await supabase
-      .rpc('get_latest_laps_per_runner', { race_id_param: activeRace.id });
-
-    if (lapsQueryError) {
-      console.error("ERROR querying latest laps:", lapsQueryError);
-    }
-    console.log(`Latest laps query returned ${latestLaps?.length || 0} rows`);
-
-    // Create a map of latest lap per runner
-    const latestLapMap = new Map();
-    if (latestLaps) {
-      latestLaps.forEach((lap: any) => {
-        latestLapMap.set(lap.bib, {
-          lap: lap.lap,
-          distanceKm: lap.distance_km,
-          raceTimeSec: lap.race_time_sec,
-        });
-      });
-    }
-    console.log(`latestLapMap has ${latestLapMap.size} entries`);
-    if (latestLapMap.size > 0) {
-      const first = Array.from(latestLapMap.entries())[0];
-      console.log(`Sample: Bib ${first[0]} has latestLap=${first[1].lap}`);
-    }
-
-    // Build "previous leaderboard" from latest laps
-    // IMPORTANT: Don't use current entry spread (...entry) as it includes current lastPassing
-    // which would make both current and previous have the same timestamp!
-    const previousLeaderboard = leaderboard.map(entry => {
-      const latestLap = latestLapMap.get(entry.bib);
-      if (latestLap) {
-        // Build minimal previous entry with ONLY data from database
-        return {
-          bib: entry.bib,
-          name: entry.name,
-          rank: entry.rank,
-          genderRank: entry.genderRank,
-          gender: entry.gender,
-          country: entry.country,
-          timestamp: entry.timestamp,
-          // Use database values for lap data (this is the "previous" state)
-          lap: latestLap.lap,
-          distanceKm: latestLap.distanceKm,
-          raceTimeSec: latestLap.raceTimeSec,
-          // DON'T include lastPassing - this prevents timestamp collision with current
-          projectedKm: 0,
-          lapPaceSec: 0,
-          lapTimeSec: 0,
-        } as LeaderboardEntry;
-      }
-      // No laps yet for this runner - start from 0
-      return {
-        bib: entry.bib,
-        name: entry.name,
-        rank: entry.rank,
-        genderRank: entry.genderRank,
-        gender: entry.gender,
-        country: entry.country,
-        timestamp: entry.timestamp,
-        lap: 0,
-        distanceKm: 0,
-        raceTimeSec: 0,
-        projectedKm: 0,
-        lapPaceSec: 0,
-        lapTimeSec: 0,
-      } as LeaderboardEntry;
-    });
-
-    // CRITICAL: Only insert CURRENT lap (from leaderboard), NOT historical laps
-    // Historical laps should come from Puppeteer backfill with accurate times
-    // This prevents inserting estimated/calculated laps that would be overwritten later
-    let newLapCandidates = 0;
-    let skippedNoLapIncrease = 0;
-    let skippedNoRaceTime = 0;
-    const debugSamples: any[] = [];
-
-    if (laps.length === 0) {
-      for (const entry of leaderboard) {
-        const latestLap = latestLapMap.get(entry.bib);
-        const currentLapNum = entry.lap; // Lap number from leaderboard
-        const latestLapNum = latestLap?.lap || 0;
-
-        // Debug: Collect first 5 samples for response
-        if (debugSamples.length < 5) {
-          debugSamples.push({
-            bib: entry.bib,
-            currentLap: currentLapNum,
-            latestLap: latestLapNum,
-            raceTime: entry.raceTimeSec,
-          });
-        }
-
-        // Only insert if runner completed a NEW lap since last check
-        if (currentLapNum > latestLapNum) {
-          if (entry.raceTimeSec > 0) {
-            newLapCandidates++;
-          } else {
-            skippedNoRaceTime++;
-          }
-        } else {
-          skippedNoLapIncrease++;
-        }
-
-        if (currentLapNum > latestLapNum && entry.raceTimeSec > 0) {
-          // Calculate lap time (time since last lap)
-          const previousRaceTime = latestLap?.raceTimeSec || 0;
-          const lapTimeSec = entry.raceTimeSec - previousRaceTime;
-
-          // Only insert if lap time is positive (valid)
-          if (lapTimeSec > 0) {
-            // Calculate paces
-            const previousDistance = latestLap?.distanceKm || 0;
-            const lapDistanceKm = entry.distanceKm - previousDistance;
-            const lapPace = lapDistanceKm > 0 ? lapTimeSec / lapDistanceKm : 0;
-            const avgPace = entry.distanceKm > 0 ? entry.raceTimeSec / entry.distanceKm : 0;
-
-            laps.push({
-              bib: entry.bib,
-              lap: currentLapNum, // ONLY the current lap!
-              lapTimeSec,
-              raceTimeSec: entry.raceTimeSec,
-              distanceKm: entry.distanceKm,
-              rank: entry.rank,
-              genderRank: entry.genderRank,
-              ageGroupRank: null,
-              lapPace,
-              avgPace,
-              timestamp: new Date().toISOString(),
-            });
-
-            console.log(`📊 Bib ${entry.bib}: New lap ${currentLapNum} detected (time: ${lapTimeSec}s, distance: ${entry.distanceKm}km)`);
-          }
-        }
-      }
-
-      console.log(`✅ Detected ${laps.length} new current laps from leaderboard`);
-    }
-
     // Match leaderboard entries with our runner database to get ALL runner info
     const { data: runners } = await supabase
       .from("runners")
@@ -275,13 +132,12 @@ export async function GET(request: NextRequest) {
     );
 
     // Enrich leaderboard with gender and country from database
-    // Note: raceTimeSec was already calculated earlier (before lap calculation)
     const race24Hours = 24 * 60 * 60; // 24 hours in seconds
 
     const enrichedLeaderboard = leaderboard.map((entry) => {
       const runner = runnerMap.get(entry.bib);
 
-      // Calculate projected distance and paces (raceTimeSec already set above)
+      // Calculate projected distance and paces
       let projectedKm = 0;
       let lapTimeSec = 0;
       let lapPaceSec = 0;
@@ -306,7 +162,6 @@ export async function GET(request: NextRequest) {
         name: runner?.name || entry.name, // Fallback to Breizh Chrono if not in DB
         gender: runner?.gender?.toLowerCase() || "m",
         country: runner?.country || "XXX",
-        // raceTimeSec already calculated, just use it
         projectedKm,
         lapTimeSec,
         lapPaceSec,
@@ -380,7 +235,8 @@ export async function GET(request: NextRequest) {
       timestamp: entry.timestamp,
     }));
 
-    // Use upsert to atomically update/insert - prevents table from being temporarily empty
+    // IMMEDIATE UPSERT - Don't wait for lap calculations!
+    // This ensures leaderboard updates in ~2-3 seconds instead of 15-20 seconds
     const leaderboardResult = await supabase
       .from("race_leaderboard")
       .upsert(leaderboardWithRaceId, {
@@ -388,96 +244,19 @@ export async function GET(request: NextRequest) {
         ignoreDuplicates: false,
       });
 
-    // Insert ONLY NEW laps - NEVER overwrite existing data
-    let lapsInserted = 0;
-    if (laps.length > 0) {
-      // Get existing laps to check which ones already exist
-      const bibsBeingUpdated = Array.from(new Set(laps.map(lap => lap.bib)));
-      const { data: allExistingLaps } = await supabase
-        .from("race_laps")
-        .select("bib, lap")
-        .eq("race_id", activeRace.id)
-        .in("bib", bibsBeingUpdated);
-
-      console.log(`Fetched ${allExistingLaps?.length || 0} existing laps for ${bibsBeingUpdated.length} bibs`);
-
-      // Create a Set of existing lap keys for fast lookup
-      const existingLapKeys = new Set<string>();
-      if (allExistingLaps) {
-        allExistingLaps.forEach((existingLap) => {
-          const key = `${existingLap.bib}-${existingLap.lap}`;
-          existingLapKeys.add(key);
-        });
-      }
-
-      // FILTER: Only keep laps that DON'T already exist in database
-      const newLapsOnly = laps.filter((lap) => {
-        const key = `${lap.bib}-${lap.lap}`;
-        return !existingLapKeys.has(key);
-      });
-
-      if (newLapsOnly.length === 0) {
-        console.log("No new laps to insert (all calculated laps already exist in database)");
-      } else {
-        console.log(`Inserting ${newLapsOnly.length} NEW laps (filtered out ${laps.length - newLapsOnly.length} existing laps)`);
-
-        // Map new laps to database format and VALIDATE times
-        const lapsWithRaceId = newLapsOnly
-          .map((lap) => ({
-            race_id: activeRace.id,
-            bib: lap.bib,
-            lap: lap.lap,
-            lap_time_sec: lap.lapTimeSec || 0,
-            race_time_sec: lap.raceTimeSec || 0,
-            distance_km: lap.distanceKm,
-            rank: lap.rank || null,
-            gender_rank: lap.genderRank || null,
-            age_group_rank: lap.ageGroupRank || null,
-            lap_pace: lap.lapPace,
-            avg_pace: lap.avgPace,
-            timestamp: lap.timestamp,
-          }))
-          // CRITICAL: Filter out laps with invalid times (0 or negative)
-          // This prevents corrupting puppeteer backfill data with calculated 0:00 times
-          .filter((lap) => {
-            const isValid = lap.lap_time_sec > 0 && lap.race_time_sec > 0;
-            if (!isValid) {
-              console.log(`⚠️  Skipping invalid lap for Bib ${lap.bib} Lap ${lap.lap}: lap_time=${lap.lap_time_sec}s, race_time=${lap.race_time_sec}s`);
-            }
-            return isValid;
-          });
-
-        // Check if we have any valid laps to insert after filtering
-        if (lapsWithRaceId.length === 0) {
-          console.log("⚠️  All calculated laps had invalid times (0 or negative), skipping insert");
-        } else {
-          console.log(`✅ Inserting ${lapsWithRaceId.length} validated laps`);
-
-          // Use INSERT (not upsert) since we've already filtered out existing laps
-          const lapsResult = await supabase
-            .from("race_laps")
-            .insert(lapsWithRaceId);
-
-          if (lapsResult.error) {
-            console.error("Laps insert error:", lapsResult.error);
-          } else {
-            lapsInserted = lapsWithRaceId.length;
-          }
-        }
-      }
-    }
-
     if (leaderboardResult.error) {
-      console.error("Leaderboard insert error:", leaderboardResult.error);
+      console.error("Leaderboard upsert error:", leaderboardResult.error);
       return NextResponse.json(
         {
-          error: "Failed to update database",
+          error: "Failed to update leaderboard",
           details: leaderboardResult.error.message || JSON.stringify(leaderboardResult.error),
           sampleData: leaderboardWithRaceId[0] // Show first entry for debugging
         },
         { status: 500 }
       );
     }
+
+    console.log(`✅ Leaderboard updated: ${leaderboard.length} runners`);
 
     // Update last fetch timestamp
     await supabase
@@ -487,18 +266,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      lapsInserted: lapsInserted,
       runnersUpdated: leaderboard.length,
-      lapsCalculated: laps.length > 0 && lapsInserted === 0 ? false : true,
       timestamp: new Date().toISOString(),
-      debug: {
-        latestLapsCount: latestLaps?.length || 0,
-        latestLapMapSize: latestLapMap.size,
-        newLapCandidates,
-        skippedNoLapIncrease,
-        skippedNoRaceTime,
-        samples: debugSamples,
-      },
+      message: "Leaderboard updated successfully. Lap calculation moved to separate endpoint.",
     });
   } catch (error) {
     console.error("Error in cron fetch:", error);
