@@ -1,10 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import ReactCountryFlag from "react-country-flag";
 import { getCountryCodeForFlag } from "@/lib/utils/country-codes";
 import { getCountryNameI18n } from "@/lib/utils/country-names-i18n";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { Trophy } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
 import type { LeaderboardEntry } from "@/types/live-race";
 
 interface TeamData {
@@ -16,14 +18,16 @@ interface TeamData {
 
 interface TeamRaceTrackProps {
   teams: TeamData[];
-  maxTeams?: number;
 }
 
-export function TeamRaceTrack({ teams, maxTeams = 6 }: TeamRaceTrackProps) {
+export function TeamRaceTrack({ teams }: TeamRaceTrackProps) {
   const { t, language } = useLanguage();
 
+  // State for number of teams to show (default 10)
+  const [numTeamsToShow, setNumTeamsToShow] = useState(Math.min(10, teams.length));
+
   // Get top N teams
-  const topTeams = teams.slice(0, maxTeams);
+  const topTeams = teams.slice(0, numTeamsToShow);
 
   // If less than 2 teams, don't show visualization
   if (topTeams.length < 2) {
@@ -51,14 +55,34 @@ export function TeamRaceTrack({ teams, maxTeams = 6 }: TeamRaceTrackProps) {
 
   return (
     <div className="bg-card border rounded-lg p-6 mb-4">
-      <div className="flex items-center gap-2 mb-6">
-        <Trophy className="h-5 w-5 text-muted-foreground" />
-        <h3 className="text-lg font-semibold">
-          {t.live?.teamRace || "Team Race"}
-        </h3>
-        <span className="text-sm text-muted-foreground">
-          ({t.live?.top || "Top"} {topTeams.length})
-        </span>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div className="flex items-center gap-2">
+          <Trophy className="h-5 w-5 text-muted-foreground" />
+          <h3 className="text-lg font-semibold">
+            {t.live?.teamRace || "Team Race"}
+          </h3>
+          <span className="text-sm text-muted-foreground">
+            ({t.live?.top || "Top"} {topTeams.length})
+          </span>
+        </div>
+
+        {/* Slider to control number of teams shown */}
+        <div className="flex items-center gap-3 min-w-[200px]">
+          <span className="text-sm text-muted-foreground whitespace-nowrap">
+            {t.live?.showTeams || "Show teams"}:
+          </span>
+          <Slider
+            value={[numTeamsToShow]}
+            onValueChange={(value) => setNumTeamsToShow(value[0])}
+            min={2}
+            max={teams.length}
+            step={1}
+            className="flex-1"
+          />
+          <span className="text-sm font-medium w-8 text-right">
+            {numTeamsToShow}
+          </span>
+        </div>
       </div>
 
       {/* Horizontal Race Track */}
@@ -66,9 +90,8 @@ export function TeamRaceTrack({ teams, maxTeams = 6 }: TeamRaceTrackProps) {
         {/* The track line */}
         <div className="absolute top-1/2 left-0 right-0 h-1 bg-gradient-to-r from-muted via-muted-foreground/20 to-primary/50 rounded-full transform -translate-y-1/2 z-0" />
 
-        {/* Start and finish markers */}
+        {/* Start marker only */}
         <div className="absolute top-1/2 left-0 w-2 h-2 bg-muted-foreground rounded-full transform -translate-y-1/2 -translate-x-1 z-10" />
-        <div className="absolute top-1/2 right-0 w-3 h-3 bg-primary rounded-full transform -translate-y-1/2 translate-x-1.5 z-10 shadow-lg" />
 
         {/* Teams positioned along the track */}
         <div className="relative h-32 sm:h-24">
@@ -119,7 +142,6 @@ export function TeamRaceTrack({ teams, maxTeams = 6 }: TeamRaceTrackProps) {
                         ? "ring-2 ring-primary ring-offset-2 ring-offset-background"
                         : ""
                     } rounded-md overflow-hidden shadow-md hover:shadow-lg transition-shadow`}
-                    title={countryName}
                   >
                     <ReactCountryFlag
                       countryCode={twoLetterCode}
@@ -130,11 +152,21 @@ export function TeamRaceTrack({ teams, maxTeams = 6 }: TeamRaceTrackProps) {
                         borderRadius: "4px",
                       }}
                     />
-                    {isLeader && (
-                      <div className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
-                        1
+
+                    {/* Tooltip on hover - country name, distance, and runner count */}
+                    <div
+                      className={`absolute opacity-0 group-hover:opacity-100 transition-opacity bg-popover border text-popover-foreground text-xs p-2 rounded-md shadow-xl z-50 whitespace-nowrap pointer-events-none ${
+                        isAbove ? "top-full mt-2" : "bottom-full mb-2"
+                      }`}
+                    >
+                      <div className="font-semibold">{countryName}</div>
+                      <div className="text-muted-foreground">
+                        {team.teamTotal.toFixed(3)} km
                       </div>
-                    )}
+                      <div className="text-muted-foreground text-[10px]">
+                        {team.runnerCount} {t.live?.runners || "runners"}
+                      </div>
+                    </div>
                   </div>
 
                   {/* Gap label */}
@@ -155,21 +187,6 @@ export function TeamRaceTrack({ teams, maxTeams = 6 }: TeamRaceTrackProps) {
                         #{team.rank}
                       </div>
                     )}
-                  </div>
-
-                  {/* Tooltip on hover - country name and total */}
-                  <div
-                    className={`absolute opacity-0 group-hover:opacity-100 transition-opacity bg-popover border text-popover-foreground text-xs p-2 rounded-md shadow-xl z-50 whitespace-nowrap pointer-events-none ${
-                      isAbove ? "top-full mt-2" : "bottom-full mb-2"
-                    }`}
-                  >
-                    <div className="font-semibold">{countryName}</div>
-                    <div className="text-muted-foreground">
-                      {team.teamTotal.toFixed(3)} km
-                    </div>
-                    <div className="text-muted-foreground text-[10px]">
-                      {team.runnerCount} {t.live?.runners || "runners"}
-                    </div>
                   </div>
                 </div>
               </div>

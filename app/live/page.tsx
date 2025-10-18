@@ -603,7 +603,7 @@ function LivePageContent() {
               </div>
 
               {/* Team Race Track Visualization */}
-              {teams.length > 0 && <TeamRaceTrack teams={teams} maxTeams={6} />}
+              {teams.length > 0 && <TeamRaceTrack teams={teams} />}
 
               {/* Loading State */}
               {loadingTeams && teams.length === 0 ? (
