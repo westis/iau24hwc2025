@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ReactCountryFlag from "react-country-flag";
 import { getCountryCodeForFlag } from "@/lib/utils/country-codes";
 import { getCountryNameI18n } from "@/lib/utils/country-names-i18n";
@@ -22,9 +22,30 @@ interface TeamRaceTrackProps {
 
 export function TeamRaceTrack({ teams }: TeamRaceTrackProps) {
   const { t, language } = useLanguage();
+  const [isMobile, setIsMobile] = useState(false);
 
-  // State for number of teams to show (default 10)
-  const [numTeamsToShow, setNumTeamsToShow] = useState(Math.min(10, teams.length));
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  // State for number of teams to show - limit to 10 on mobile, default 10 on desktop
+  const maxTeamsForDevice = isMobile ? 10 : teams.length;
+  const defaultTeams = Math.min(10, teams.length);
+  const [numTeamsToShow, setNumTeamsToShow] = useState(defaultTeams);
+
+  // Adjust numTeamsToShow if it exceeds the mobile limit
+  useEffect(() => {
+    if (isMobile && numTeamsToShow > 10) {
+      setNumTeamsToShow(10);
+    }
+  }, [isMobile, numTeamsToShow]);
 
   // Get top N teams
   const topTeams = teams.slice(0, numTeamsToShow);
@@ -48,10 +69,32 @@ export function TeamRaceTrack({ teams }: TeamRaceTrackProps) {
 
   // Calculate positions (0-100% along track)
   // Leader at 100% (right), last team at 0% (left)
-  const teamsWithPositions = teamsWithGaps.map((team) => ({
+  const rawPositions = teamsWithGaps.map((team) => ({
     ...team,
     position: maxGap > 0 ? ((team.gap + maxGap) / maxGap) * 100 : 100,
   }));
+
+  // Apply collision detection - ensure minimum spacing between flags
+  // Minimum spacing: 8% on mobile (smaller screens), 5% on desktop
+  const MIN_SPACING = isMobile ? 8 : 5;
+
+  const teamsWithPositions = rawPositions.map((team, index) => {
+    if (index === 0) return team; // Leader stays at calculated position
+
+    // Check distance from previous team
+    const prevTeam = rawPositions[index - 1];
+    const distanceFromPrev = prevTeam.position - team.position;
+
+    // If too close, adjust position to maintain minimum spacing
+    if (distanceFromPrev < MIN_SPACING) {
+      return {
+        ...team,
+        position: Math.max(0, prevTeam.position - MIN_SPACING),
+      };
+    }
+
+    return team;
+  });
 
   return (
     <div className="bg-card border rounded-lg p-6 mb-4">
@@ -80,7 +123,7 @@ export function TeamRaceTrack({ teams }: TeamRaceTrackProps) {
             value={[numTeamsToShow]}
             onValueChange={(value) => setNumTeamsToShow(value[0])}
             min={2}
-            max={teams.length}
+            max={maxTeamsForDevice}
             step={1}
             className="flex-1"
           />
@@ -98,8 +141,8 @@ export function TeamRaceTrack({ teams }: TeamRaceTrackProps) {
         {/* Start marker only */}
         <div className="absolute top-1/2 left-0 w-2 h-2 bg-muted-foreground rounded-full transform -translate-y-1/2 -translate-x-1 z-10" />
 
-        {/* Teams positioned along the track */}
-        <div className="relative h-32 sm:h-24">
+        {/* Teams positioned along the track - taller on mobile for better spacing */}
+        <div className="relative h-40 sm:h-24">
           {teamsWithPositions.map((team, index) => {
             const isLeader = team.rank === 1;
             const twoLetterCode = getCountryCodeForFlag(team.country);
@@ -204,7 +247,9 @@ export function TeamRaceTrack({ teams }: TeamRaceTrackProps) {
 
       {/* Legend */}
       <div className="mt-6 pt-4 border-t text-xs text-muted-foreground text-center">
-        {t.live?.hoverForDetails || "Hover for details"}
+        {isMobile
+          ? t.live?.clickForDetails || "Click for details"
+          : t.live?.hoverForDetails || "Hover for details"}
       </div>
     </div>
   );

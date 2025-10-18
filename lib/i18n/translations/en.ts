@@ -539,6 +539,7 @@ export const en: Translations = {
     leader: "Leader",
     gapFromLeader: "Gap from leader in kilometers",
     hoverForDetails: "Hover for details",
+    clickForDetails: "Click for details",
     showTeams: "Show teams",
     // Race Updates
     updates: "Updates",

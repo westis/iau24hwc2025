@@ -539,6 +539,7 @@ export interface Translations {
     leader: string;
     gapFromLeader: string;
     hoverForDetails: string;
+    clickForDetails: string;
     showTeams: string;
   };
   footer: {

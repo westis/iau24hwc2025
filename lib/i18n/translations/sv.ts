@@ -540,6 +540,7 @@ export const sv: Translations = {
     leader: "Ledare",
     gapFromLeader: "Avstånd från ledaren i kilometer",
     hoverForDetails: "Håll muspekaren för detaljer",
+    clickForDetails: "Klicka för detaljer",
     showTeams: "Visa lag",
     // Race Updates
     updates: "Uppdateringar",
