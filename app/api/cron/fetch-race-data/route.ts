@@ -161,17 +161,18 @@ export async function GET(request: NextRequest) {
       laps = calculatedLaps;
     }
 
-    // Match leaderboard entries with our runner database to get name, gender, and country
+    // Match leaderboard entries with our runner database to get ALL runner info
     const { data: runners } = await supabase
       .from("runners")
-      .select("bib, first_name, last_name, gender, nationality")
+      .select("bib, first_name, last_name, gender, nationality, team")
       .not("bib", "is", null);
 
     const runnerMap = new Map(
       runners?.map((r) => [r.bib, {
         name: `${r.first_name} ${r.last_name}`.trim(),
         gender: r.gender,
-        country: r.nationality
+        country: r.nationality,
+        team: r.team
       }])
     );
 
@@ -210,7 +211,8 @@ export async function GET(request: NextRequest) {
 
       return {
         ...entry,
-        // Keep name from Breizh Chrono (entry.name) - it has proper Swedish characters
+        // Use ALL data from runners table (matched by bib)
+        name: runner?.name || entry.name, // Fallback to Breizh Chrono if not in DB
         gender: runner?.gender?.toLowerCase() || "m",
         country: runner?.country || "XXX",
         raceTimeSec,
