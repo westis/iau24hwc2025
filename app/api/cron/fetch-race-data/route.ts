@@ -299,21 +299,53 @@ export async function GET(request: NextRequest) {
     // Insert new laps (use upsert to avoid duplicates)
     let lapsInserted = 0;
     if (laps.length > 0) {
-      // Map calculated laps to database format
-      const lapsWithRaceId = laps.map((lap) => ({
-        race_id: activeRace.id,
-        bib: lap.bib,
-        lap: lap.lap,
-        lap_time_sec: lap.lapTimeSec,
-        race_time_sec: lap.raceTimeSec,
-        distance_km: lap.distanceKm,
-        rank: lap.rank || null,
-        gender_rank: lap.genderRank || null,
-        age_group_rank: lap.ageGroupRank || null,
-        lap_pace: lap.lapPace,
-        avg_pace: lap.avgPace,
-        timestamp: lap.timestamp,
-      }));
+      // Get ALL existing laps with their time data to preserve Puppeteer backfilled times
+      const { data: allExistingLaps } = await supabase
+        .from("race_laps")
+        .select("bib, lap, race_time_sec, lap_time_sec")
+        .eq("race_id", activeRace.id);
+
+      // Create a map of existing laps with time data
+      const existingLapTimesMap = new Map();
+      if (allExistingLaps) {
+        allExistingLaps.forEach((existingLap) => {
+          const key = `${existingLap.bib}-${existingLap.lap}`;
+          existingLapTimesMap.set(key, {
+            raceTimeSec: existingLap.race_time_sec,
+            lapTimeSec: existingLap.lap_time_sec,
+          });
+        });
+      }
+
+      // Map calculated laps to database format, preserving existing lap times if they exist
+      const lapsWithRaceId = laps.map((lap) => {
+        const key = `${lap.bib}-${lap.lap}`;
+        const existingTimes = existingLapTimesMap.get(key);
+
+        // If existing lap has non-zero times (from Puppeteer backfill), preserve them
+        // Otherwise use calculated times (which might be 0 for distance-based detection)
+        const raceTimeSec = existingTimes && existingTimes.raceTimeSec > 0
+          ? existingTimes.raceTimeSec
+          : lap.raceTimeSec;
+        const lapTimeSec = existingTimes && existingTimes.lapTimeSec > 0
+          ? existingTimes.lapTimeSec
+          : lap.lapTimeSec;
+
+        return {
+          race_id: activeRace.id,
+          bib: lap.bib,
+          lap: lap.lap,
+          lap_time_sec: lapTimeSec,
+          race_time_sec: raceTimeSec,
+          distance_km: lap.distanceKm,
+          rank: lap.rank || null,
+          gender_rank: lap.genderRank || null,
+          age_group_rank: lap.ageGroupRank || null,
+          lap_pace: lap.lapPace,
+          avg_pace: lap.avgPace,
+          timestamp: lap.timestamp,
+        };
+      });
 
       // Use upsert based on unique constraint (race_id, bib, lap)
       const lapsResult = await supabase
