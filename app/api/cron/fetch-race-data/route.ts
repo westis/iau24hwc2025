@@ -131,6 +131,19 @@ export async function GET(request: NextRequest) {
       }])
     );
 
+    // Get latest lap times to show ACTUAL last lap time (not average)
+    const { data: latestLapTimes } = await supabase
+      .rpc('get_latest_laps_per_runner', { race_id_param: activeRace.id });
+
+    const latestLapTimeMap = new Map<number, number>();
+    if (latestLapTimes) {
+      latestLapTimes.forEach((lap: any) => {
+        // Calculate the actual lap time from the latest lap record
+        // We need to get the lap_time_sec directly from the lap record
+        latestLapTimeMap.set(lap.bib, lap.race_time_sec);
+      });
+    }
+
     // Enrich leaderboard with gender and country from database
     const race24Hours = 24 * 60 * 60; // 24 hours in seconds
 
@@ -151,8 +164,13 @@ export async function GET(request: NextRequest) {
         lapPaceSec = entry.raceTimeSec / entry.distanceKm;
       }
 
-      // Calculate average lap time
-      if (entry.lap > 0 && entry.raceTimeSec > 0) {
+      // Get ACTUAL last lap time from race_laps table
+      // Calculate it by subtracting previous lap's race time from current
+      const previousLapRaceTime = latestLapTimeMap.get(entry.bib) || 0;
+      lapTimeSec = entry.raceTimeSec - previousLapRaceTime;
+
+      // Fallback to average if we don't have previous lap data
+      if (lapTimeSec <= 0 && entry.lap > 0 && entry.raceTimeSec > 0) {
         lapTimeSec = entry.raceTimeSec / entry.lap;
       }
 
