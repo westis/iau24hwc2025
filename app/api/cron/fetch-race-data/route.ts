@@ -138,12 +138,46 @@ export async function GET(request: NextRequest) {
     );
 
     // Enrich leaderboard with gender and country from database
+    // Also calculate race time and projected distance
+    const raceStartTime = new Date(activeRace.start_date).getTime();
+    const race24Hours = 24 * 60 * 60; // 24 hours in seconds
+
     const enrichedLeaderboard = leaderboard.map((entry) => {
       const runner = runnerMap.get(entry.bib);
+
+      // Calculate actual race time from last passing timestamp
+      let raceTimeSec = 0;
+      let projectedKm = 0;
+      let lapTimeSec = 0;
+      let lapPaceSec = 0;
+
+      if (entry.lastPassing) {
+        const lastPassingTime = new Date(entry.lastPassing).getTime();
+        raceTimeSec = Math.floor((lastPassingTime - raceStartTime) / 1000);
+
+        // Calculate projected 24h distance based on current pace
+        if (raceTimeSec > 0 && entry.distanceKm > 0) {
+          const currentPaceKmPerSec = entry.distanceKm / raceTimeSec;
+          projectedKm = currentPaceKmPerSec * race24Hours;
+
+          // Calculate lap pace (seconds per km)
+          lapPaceSec = raceTimeSec / entry.distanceKm;
+        }
+
+        // Calculate average lap time
+        if (entry.lap > 0) {
+          lapTimeSec = raceTimeSec / entry.lap;
+        }
+      }
+
       return {
         ...entry,
         gender: runner?.gender?.toLowerCase() || "m",
         country: runner?.country || "XXX",
+        raceTimeSec,
+        projectedKm,
+        lapTimeSec,
+        lapPaceSec,
       };
     });
 

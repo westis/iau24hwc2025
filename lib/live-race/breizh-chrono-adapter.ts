@@ -546,8 +546,8 @@ export class BreizhChronoAdapter implements RaceDataSource {
   }
 
   /**
-   * Helper: Convert clock time (HH:MM:SS) to ISO timestamp using today's date
-   * Breizh Chrono returns clock time like "10:24:35", we need to convert to full timestamp
+   * Helper: Convert clock time (HH:MM:SS) to ISO timestamp using today's date in Europe/Paris timezone
+   * Breizh Chrono returns clock time like "10:24:35" in France local time
    */
   private parseClockTimeToTimestamp(clockTimeStr: string): string {
     const parts = clockTimeStr.split(":");
@@ -556,18 +556,18 @@ export class BreizhChronoAdapter implements RaceDataSource {
       const minutes = parseInt(parts[1]) || 0;
       const seconds = parseInt(parts[2]) || 0;
 
-      // Use today's date + the clock time
+      // Get today's date in Europe/Paris timezone
+      // France is UTC+2 in October (CEST)
       const now = new Date();
-      const timestamp = new Date(
-        now.getFullYear(),
-        now.getMonth(),
-        now.getDate(),
-        hours,
-        minutes,
-        seconds
-      );
+      const year = now.getUTCFullYear();
+      const month = now.getUTCMonth();
+      const day = now.getUTCDate();
 
-      return timestamp.toISOString();
+      // Create date string in format that will be parsed as Europe/Paris time
+      // Format: YYYY-MM-DDTHH:MM:SS+02:00
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}+02:00`;
+
+      return new Date(dateStr).toISOString();
     }
     return new Date().toISOString();
   }
