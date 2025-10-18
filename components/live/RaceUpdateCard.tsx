@@ -345,16 +345,23 @@ export function RaceUpdateCard({ update, onMarkAsRead, isRead = false, onDelete 
     <>
       <Card
         ref={cardRef}
-        className={`overflow-hidden ${!isRead && onMarkAsRead ? 'border-l-4 border-l-blue-500' : ''} ${update.isSticky ? 'bg-muted/20' : ''}`}
+        className={`overflow-hidden ${!isRead && onMarkAsRead ? 'border-l-4 border-l-blue-500' : ''} ${update.isSticky ? 'bg-primary/5 border-2 border-primary/50' : ''}`}
       >
+        {/* Sticky post banner */}
+        {update.isSticky && (
+          <div className="bg-primary/20 border-b border-primary/30 px-4 py-2 flex items-center gap-2">
+            <Pin className="h-4 w-4 text-primary" />
+            <span className="text-sm font-semibold text-primary">
+              Fäst inlägg - Fler inlägg nedan
+            </span>
+          </div>
+        )}
+
         <CardHeader className="pb-2 pt-3 px-4">
           <div className="flex items-start justify-between gap-2">
             <div className="flex gap-1.5 flex-wrap items-center">
               {!isRead && onMarkAsRead && (
                 <Circle className="h-2 w-2 fill-blue-500 text-blue-500" />
-              )}
-              {update.isSticky && (
-                <Pin className="h-3.5 w-3.5 text-primary" />
               )}
               {getCategoryBadge(update.category)}
               {update.priority === "high" && (
