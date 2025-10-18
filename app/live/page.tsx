@@ -507,7 +507,7 @@ function LivePageContent() {
                         entries={visibleEntries}
                         onToggleWatchlist={toggleWatchlist}
                         isInWatchlist={isInWatchlist}
-                        showGenderRank={filter === "men" || filter === "women"}
+                        showGenderRank={filter === "men" || filter === "women" || filter === "watchlist"}
                       />
 
                       {/* Pagination Controls */}
