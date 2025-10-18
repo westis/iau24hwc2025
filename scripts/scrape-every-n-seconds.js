@@ -21,9 +21,9 @@
  */
 
 // Configuration
-const ENDPOINT_URL = process.env.VERCEL_URL || 'https://your-app.vercel.app';
+const ENDPOINT_URL = process.env.ENDPOINT_URL || process.env.VERCEL_URL || 'http://localhost:3000';
 const CRON_SECRET = process.env.CRON_SECRET || '534bdef9ca6fa5fef4a324b8b895b17b8f942a8bd9c3f9ef10b61819a7e545ba';
-const INTERVAL_SECONDS = parseInt(process.env.SCRAPE_INTERVAL || '30'); // Default 30s
+const INTERVAL_SECONDS = parseInt(process.env.SCRAPE_INTERVAL || '20'); // Default 20s
 
 let successCount = 0;
 let errorCount = 0;

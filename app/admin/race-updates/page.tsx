@@ -106,10 +106,7 @@ export default function AdminRaceUpdatesPage() {
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({ error: "Unknown error" }));
         console.error("Upload error response:", errorData);
-        const errorMsg = errorData.error || "Uppladdning misslyckades";
-        const errorDetails = errorData.details ? ` - ${errorData.details}` : '';
-        const errorHint = errorData.hint ? ` (${errorData.hint})` : '';
-        throw new Error(`${errorMsg}${errorDetails}${errorHint}`);
+        throw new Error(errorData.error || "Uppladdning misslyckades");
       }
 
       const data = await res.json();

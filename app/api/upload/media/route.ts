@@ -86,15 +86,11 @@ export async function POST(request: NextRequest) {
       console.error("=== SUPABASE UPLOAD ERROR ===");
       console.error("Error:", error);
       console.error("Error message:", error.message);
-      console.error("Error details:", error.details);
-      console.error("Error hint:", error.hint);
       console.error("File:", fileName, "Type:", file.type, "Size:", file.size);
 
       return NextResponse.json(
         {
           error: `Upload failed: ${error.message}`,
-          details: error.details,
-          hint: error.hint
         },
         { status: 500 }
       );
