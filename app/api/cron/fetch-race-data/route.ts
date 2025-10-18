@@ -187,7 +187,6 @@ export async function GET(request: NextRequest) {
       trend: entry.trend,
       last_passing: entry.lastPassing,
       timestamp: entry.timestamp,
-      last_known_distance_km: entry.distanceKm,
     }));
 
     const leaderboardResult = await supabase
