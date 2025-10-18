@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
+// Configure route to allow large file uploads (100MB)
+export const runtime = 'nodejs';
+export const maxDuration = 60; // 60 seconds max execution time
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey =
   process.env.SUPABASE_SERVICE_ROLE_KEY ||

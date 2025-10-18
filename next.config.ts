@@ -22,6 +22,12 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  experimental: {
+    // Increase body size limit for media uploads (100MB)
+    serverActions: {
+      bodySizeLimit: '100mb',
+    },
+  },
 }
 
 export default nextConfig

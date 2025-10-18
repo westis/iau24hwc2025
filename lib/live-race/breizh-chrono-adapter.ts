@@ -24,16 +24,34 @@ export class BreizhChronoAdapter implements RaceDataSource {
 
   async fetchLeaderboard(): Promise<LeaderboardEntry[]> {
     try {
-      const html = await this.fetchHtml();
+      // BreizhChrono has pagination - fetch all pages
+      const allEntries: LeaderboardEntry[] = [];
+      let page = 0;
+      let hasMore = true;
 
-      // Try to extract JSON data first (some timing systems embed it)
-      const jsonData = this.extractJsonData(html);
-      if (jsonData && jsonData.length > 0) {
-        return this.parseJsonLeaderboard(jsonData);
+      while (hasMore) {
+        const html = await this.fetchHtml(page);
+
+        // Parse this page
+        const entries = this.parseHtmlLeaderboard(html);
+
+        if (entries.length === 0) {
+          // No more results
+          hasMore = false;
+        } else {
+          allEntries.push(...entries);
+          page++;
+
+          // Safety limit to prevent infinite loops
+          if (page > 50) {
+            console.warn("Reached page limit of 50, stopping pagination");
+            hasMore = false;
+          }
+        }
       }
 
-      // Fall back to HTML parsing
-      return this.parseHtmlLeaderboard(html);
+      console.log(`Fetched ${allEntries.length} runners across ${page} pages`);
+      return allEntries;
     } catch (error) {
       console.error("Error fetching BreizhChrono leaderboard:", error);
       throw error;
@@ -63,7 +81,7 @@ export class BreizhChronoAdapter implements RaceDataSource {
   /**
    * Fetch HTML from BreizhChrono
    */
-  private async fetchHtml(): Promise<string> {
+  private async fetchHtml(page: number = 0): Promise<string> {
     // Extract reference ID from URL if present
     const referenceMatch = this.url.match(/reference=([^&]+)/);
     const reference = referenceMatch ? referenceMatch[1] : "";
@@ -83,7 +101,7 @@ export class BreizhChronoAdapter implements RaceDataSource {
       from: "null",
       nofacebook: "1",
       version: "v6",
-      page: "0",
+      page: page.toString(),
     });
 
     const response = await fetch(endpoint, {

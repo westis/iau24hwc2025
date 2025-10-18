@@ -16,5 +16,11 @@
       "path": "/api/cron/generate-hourly-summary",
       "schedule": "0 * * * *"
     }
-  ]
+  ],
+  "functions": {
+    "api/upload/media.ts": {
+      "maxDuration": 60,
+      "memory": 1024
+    }
+  }
 }
