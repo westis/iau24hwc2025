@@ -452,6 +452,13 @@ export function RaceUpdateCard({ update, onMarkAsRead, isRead = false, onDelete 
             <InstagramEmbed url={update.mediaUrl} />
           )}
 
+          {/* Media Credit */}
+          {update.mediaCredit && update.mediaType !== "text" && (
+            <p className="text-xs text-muted-foreground italic">
+              {t.live?.photo || "Foto"}: {update.mediaCredit}
+            </p>
+          )}
+
           {/* Description/Content */}
           <div className="prose prose-sm dark:prose-invert max-w-none">
             <p className="whitespace-pre-wrap">

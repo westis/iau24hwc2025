@@ -45,6 +45,7 @@ export default function AdminRaceUpdatesPage() {
   const [showEnglishField, setShowEnglishField] = React.useState(false);
   const [mediaUrl, setMediaUrl] = React.useState("");
   const [mediaDescription, setMediaDescription] = React.useState("");
+  const [mediaCredit, setMediaCredit] = React.useState("");
   const [uploading, setUploading] = React.useState(false);
   const [submitting, setSubmitting] = React.useState(false);
   const [sendNotification, setSendNotification] = React.useState(false);
@@ -155,6 +156,7 @@ export default function AdminRaceUpdatesPage() {
           mediaType,
           mediaUrl: mediaUrl || undefined,
           mediaDescription: mediaDescription || undefined,
+          mediaCredit: mediaCredit || undefined,
           allowComments,
           sendNotification,
           isSticky,
@@ -173,6 +175,7 @@ export default function AdminRaceUpdatesPage() {
       setShowEnglishField(false);
       setMediaUrl("");
       setMediaDescription("");
+      setMediaCredit("");
       setSendNotification(false);
       setIsSticky(false);
 
@@ -437,6 +440,24 @@ export default function AdminRaceUpdatesPage() {
                     value={mediaDescription}
                     onChange={(e) => setMediaDescription(e.target.value)}
                   />
+                </div>
+              )}
+
+              {/* Media credit */}
+              {mediaType !== "text" && (
+                <div className="space-y-2">
+                  <Label htmlFor="mediaCredit">
+                    Fotograf/Källa (valfritt)
+                  </Label>
+                  <Input
+                    id="mediaCredit"
+                    placeholder="t.ex. @instagramhandle, Namn Efternamn, etc."
+                    value={mediaCredit}
+                    onChange={(e) => setMediaCredit(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Kreditera fotografen eller källan för bild/video
+                  </p>
                 </div>
               )}
 

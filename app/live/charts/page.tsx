@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { RaceClock } from "@/components/live/RaceClock";
 import { DistancePaceChart } from "@/components/live/DistancePaceChart";
 import { GapAnalysisChart } from "@/components/live/GapAnalysisChart";
@@ -34,7 +34,7 @@ import { getCountryCodeForFlag } from "@/lib/utils/country-codes";
 import type { RaceInfo } from "@/types/race";
 import type { LeaderboardEntry } from "@/types/live-race";
 
-export default function ChartsPage() {
+function ChartsContent() {
   const [raceInfo, setRaceInfo] = useState<RaceInfo | null>(null);
   const [loadingRace, setLoadingRace] = useState(true);
   const [selectedBibs, setSelectedBibs] = useState<number[]>([]);
@@ -407,5 +407,22 @@ export default function ChartsPage() {
         </div>
       </div>
     </>
+  );
+}
+
+export default function ChartsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-foreground mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Laddar...</p>
+          </div>
+        </div>
+      }
+    >
+      <ChartsContent />
+    </Suspense>
   );
 }

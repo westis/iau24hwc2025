@@ -48,6 +48,7 @@ export default function EditRaceUpdatePage({ params }: { params: Promise<{ id: s
   const [showEnglishField, setShowEnglishField] = React.useState(false);
   const [mediaUrl, setMediaUrl] = React.useState("");
   const [mediaDescription, setMediaDescription] = React.useState("");
+  const [mediaCredit, setMediaCredit] = React.useState("");
   const [uploading, setUploading] = React.useState(false);
   const [submitting, setSubmitting] = React.useState(false);
   const [allowComments, setAllowComments] = React.useState(true);
@@ -81,6 +82,7 @@ export default function EditRaceUpdatePage({ params }: { params: Promise<{ id: s
         setShowEnglishField(!!(update.content && update.content !== update.contentSv));
         setMediaUrl(update.mediaUrl || "");
         setMediaDescription(update.mediaDescription || "");
+        setMediaCredit(update.mediaCredit || "");
         setAllowComments(update.allowComments !== false);
         setIsSticky(update.isSticky || false);
         setLoading(false);
@@ -193,6 +195,7 @@ export default function EditRaceUpdatePage({ params }: { params: Promise<{ id: s
           mediaType,
           mediaUrl: mediaUrl || undefined,
           mediaDescription: mediaDescription || undefined,
+          mediaCredit: mediaCredit || undefined,
           allowComments,
           isSticky,
         }),
@@ -476,6 +479,24 @@ export default function EditRaceUpdatePage({ params }: { params: Promise<{ id: s
                     value={mediaDescription}
                     onChange={(e) => setMediaDescription(e.target.value)}
                   />
+                </div>
+              )}
+
+              {/* Media credit */}
+              {mediaType !== "text" && (
+                <div className="space-y-2">
+                  <Label htmlFor="mediaCredit">
+                    Fotograf/Källa (valfritt)
+                  </Label>
+                  <Input
+                    id="mediaCredit"
+                    placeholder="t.ex. @instagramhandle, Namn Efternamn, etc."
+                    value={mediaCredit}
+                    onChange={(e) => setMediaCredit(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Kreditera fotografen eller källan för bild/video
+                  </p>
                 </div>
               )}
 

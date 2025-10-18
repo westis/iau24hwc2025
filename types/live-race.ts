@@ -66,6 +66,7 @@ export interface RaceUpdate {
   mediaType?: RaceUpdateMediaType;
   mediaUrl?: string; // URL to media file (Vercel Blob, YouTube, Instagram, etc.)
   mediaDescription?: string; // Text description or transcript for accessibility
+  mediaCredit?: string; // Credit/attribution for media (photographer, Instagram handle, etc.)
   category?: RaceUpdateCategory;
   allowComments?: boolean;
   commentCount?: number;
