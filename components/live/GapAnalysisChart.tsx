@@ -197,9 +197,12 @@ function GapAnalysisChartComponent({ bibs }: GapAnalysisChartProps) {
     // Filter to points within the moving average window (last X hours)
     const windowMs = windowHours * 3600 * 1000;
     const windowStart = latestTime - windowMs;
-    const recentPoints = runnerData.filter(p => p.time * 1000 >= windowStart);
+    let recentPoints = runnerData.filter(p => p.time * 1000 >= windowStart);
 
-    if (recentPoints.length < 2) return null;
+    // If window doesn't have enough points, use all available data (at least we have 2 total)
+    if (recentPoints.length < 2) {
+      recentPoints = runnerData;
+    }
 
     // Calculate average pace from recent points (km per ms)
     const firstRecent = recentPoints[0];
@@ -428,8 +431,8 @@ function GapAnalysisChartComponent({ bibs }: GapAnalysisChartProps) {
             usePointStyle: true,
             padding: 15,
             filter: (item) => {
-              // Show baseline in legend but make it less prominent
-              return true;
+              // Hide trendline items from legend
+              return !item.text.includes("trend");
             },
           },
         },
@@ -648,7 +651,7 @@ function GapAnalysisChartComponent({ bibs }: GapAnalysisChartProps) {
             <CardTitle>{t.live?.gapAnalysis || "Gap Analysis"}</CardTitle>
             <CardDescription>
               {t.live?.gapAnalysisDesc ||
-                "Gap from baseline. Dashed lines show projected gap at 24h based on recent pace (average of last 3-6 hours). Use mouse wheel to zoom, drag to pan."}
+                "Gap from baseline. Dashed trendlines show projected gap at 24h based on recent pace. Use mouse wheel to zoom, drag to pan."}
             </CardDescription>
           </div>
 

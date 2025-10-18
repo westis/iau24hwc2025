@@ -176,9 +176,12 @@ function DistancePaceChartComponent({ bibs }: DistancePaceChartProps) {
     // Filter to points within the moving average window (last X hours)
     const windowMs = windowHours * 3600 * 1000;
     const windowStart = latestTime - windowMs;
-    const recentPoints = runnerData.filter(p => p.time * 1000 >= windowStart);
+    let recentPoints = runnerData.filter(p => p.time * 1000 >= windowStart);
 
-    if (recentPoints.length < 2) return null;
+    // If window doesn't have enough points, use all available data (at least we have 2 total)
+    if (recentPoints.length < 2) {
+      recentPoints = runnerData;
+    }
 
     // Calculate average pace from recent points (km per ms)
     const firstRecent = recentPoints[0];
@@ -386,6 +389,10 @@ function DistancePaceChartComponent({ bibs }: DistancePaceChartProps) {
             color: textColor,
             usePointStyle: true,
             padding: 15,
+            filter: (item) => {
+              // Hide trendline items from legend
+              return !item.text.includes("trend");
+            },
           },
         },
         tooltip: {
@@ -588,7 +595,7 @@ function DistancePaceChartComponent({ bibs }: DistancePaceChartProps) {
         </CardTitle>
         <CardDescription>
           {t.live?.distanceAndPaceDesc ||
-            "Projected distance over race time. Dashed lines show expected 24h finish based on recent pace (average of last 3-6 hours). Use mouse wheel to zoom, drag to pan."}
+            "Projected distance over race time. Dashed trendlines show expected 24h finish based on recent pace. Use mouse wheel to zoom, drag to pan."}
         </CardDescription>
 
         {/* Time Range Buttons */}
