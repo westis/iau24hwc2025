@@ -230,7 +230,11 @@ export async function GET(request: NextRequest) {
     if (leaderboardResult.error) {
       console.error("Leaderboard insert error:", leaderboardResult.error);
       return NextResponse.json(
-        { error: "Failed to update database" },
+        {
+          error: "Failed to update database",
+          details: leaderboardResult.error.message || JSON.stringify(leaderboardResult.error),
+          sampleData: leaderboardWithRaceId[0] // Show first entry for debugging
+        },
         { status: 500 }
       );
     }
