@@ -648,7 +648,7 @@ function GapAnalysisChartComponent({ bibs }: GapAnalysisChartProps) {
             <CardTitle>{t.live?.gapAnalysis || "Gap Analysis"}</CardTitle>
             <CardDescription>
               {t.live?.gapAnalysisDesc ||
-                "Gap from baseline. Use mouse wheel to zoom, drag to pan."}
+                "Gap from baseline. Dashed lines show projected gap at 24h based on recent pace (average of last 3-6 hours). Use mouse wheel to zoom, drag to pan."}
             </CardDescription>
           </div>
 

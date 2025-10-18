@@ -588,7 +588,7 @@ function DistancePaceChartComponent({ bibs }: DistancePaceChartProps) {
         </CardTitle>
         <CardDescription>
           {t.live?.distanceAndPaceDesc ||
-            "Projected distance over race time. Use mouse wheel to zoom, drag to pan."}
+            "Projected distance over race time. Dashed lines show expected 24h finish based on recent pace (average of last 3-6 hours). Use mouse wheel to zoom, drag to pan."}
         </CardDescription>
 
         {/* Time Range Buttons */}
