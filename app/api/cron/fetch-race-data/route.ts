@@ -164,15 +164,14 @@ export async function GET(request: NextRequest) {
     // Match leaderboard entries with our runner database to get ALL runner info
     const { data: runners } = await supabase
       .from("runners")
-      .select("bib, first_name, last_name, gender, nationality, team")
+      .select("bib, firstname, lastname, gender, nationality")
       .not("bib", "is", null);
 
     const runnerMap = new Map(
       runners?.map((r) => [r.bib, {
-        name: `${r.first_name} ${r.last_name}`.trim(),
+        name: `${r.firstname} ${r.lastname}`.trim(),
         gender: r.gender,
-        country: r.nationality,
-        team: r.team
+        country: r.nationality
       }])
     );
 
