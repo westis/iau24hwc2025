@@ -1,5 +1,4 @@
-// Backfill lap data from downloaded Breizh Chrono HTML
-import { readFileSync } from "fs";
+// Backfill lap data from live Breizh Chrono HTML
 import { createClient } from "@supabase/supabase-js";
 import { config } from "dotenv";
 import { resolve } from "path";
@@ -39,7 +38,14 @@ function extractBibFromTitle(title: string): number | null {
 }
 
 async function backfillFromHTML() {
-  const html = readFileSync("breizh-leaderboard.html", "utf-8");
+  console.log("Reading saved HTML from Courses en Live - BreizhChrono.html...\n");
+
+  // Use the saved HTML file which contains the embedded modals
+  const htmlPath = resolve(process.cwd(), "..", "Courses en Live - BreizhChrono.html");
+  const { readFileSync } = await import("fs");
+  const html = readFileSync(htmlPath, "utf-8");
+
+  console.log(`✅ Loaded ${html.length} characters\n`);
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -60,7 +66,7 @@ async function backfillFromHTML() {
   console.log(`✅ Active race ID: ${activeRace.id}\n`);
 
   // Find all modals with lap data
-  const modalRegex = /<div class="modal-dialog[^>]*>[\s\S]*?<\/div>\s*<\/div>\s*<\/div>/g;
+  const modalRegex = /<div class="modal fade" id="details\d+"[\s\S]*?<\/div>\s*<\/div>\s*<\/div>/g;
   const modals = html.match(modalRegex) || [];
 
   console.log(`Found ${modals.length} modals in HTML\n`);
@@ -81,8 +87,9 @@ async function backfillFromHTML() {
     // Check if modal has lap table
     if (!modal.includes("Passage") || !modal.includes("Temps global")) continue;
 
-    // Extract table rows - pattern: N° LAP | RANK | CAT_RANK | RACE_TIME | LAP_TIME | ... | DISTANCE
-    const rowRegex = /<td>N°\s*(\d+)<\/td>\s*<td>[^<]*(?:<sup>[^<]*<\/sup>)?[^<]*<\/td>\s*<td>[^<]*(?:<sup>[^<]*<\/sup>)?[^<]*<\/td>\s*<td>([^<]+)<\/td>\s*<td>([^<]+)<\/td>\s*[\s\S]*?<td>\s*([\d,]+)/g;
+    // Extract table rows - pattern: N° LAP | RANK | CAT_RANK | RACE_TIME | LAP_TIME | DISTANCE
+    // Example: <tr><td>N° 4</td><td>1<sup>er</sup></td><td>1<sup>er</sup></td><td>00:24:16</td><td>00:05:56</td><td>6,00128 km</td></tr>
+    const rowRegex = /<tr>\s*<td>N°\s*(\d+)<\/td>\s*<td>[^<]*(?:<sup>[^<]*<\/sup>)?[^<]*<\/td>\s*<td>[^<]*(?:<sup>[^<]*<\/sup>)?[^<]*<\/td>\s*<td>([^<]+)<\/td>\s*<td>([^<]+)<\/td>\s*<td>\s*([0-9,]+)/g;
 
     let match;
     const laps: LapData[] = [];
