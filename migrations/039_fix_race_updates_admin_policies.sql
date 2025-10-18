@@ -1,8 +1,11 @@
 -- Migration 039: Fix race_updates RLS policies to properly check admin status
 -- The old policy just checked if user was authenticated, not if they were admin
 
--- Drop the old admin write access policy
+-- Drop all existing write policies
 DROP POLICY IF EXISTS "Admin write access for race_updates" ON race_updates;
+DROP POLICY IF EXISTS "Admins can insert race_updates" ON race_updates;
+DROP POLICY IF EXISTS "Admins can update race_updates" ON race_updates;
+DROP POLICY IF EXISTS "Admins can delete race_updates" ON race_updates;
 
 -- Create INSERT policy for admins
 CREATE POLICY "Admins can insert race_updates"
