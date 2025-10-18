@@ -258,6 +258,108 @@ export async function GET(request: NextRequest) {
 
     console.log(`✅ Leaderboard updated: ${leaderboard.length} runners`);
 
+    // FAST lap sync: Insert CURRENT lap if lap count increased
+    // This ensures leaderboard lap count matches lap details immediately
+    // Heavy lap validation/backfill still happens in /api/cron/calculate-laps
+    let newLapsInserted = 0;
+    try {
+      // Get max lap per runner (lightweight query - only returns one row per runner)
+      const { data: maxLaps } = await supabase
+        .rpc('get_latest_laps_per_runner', { race_id_param: activeRace.id });
+
+      const maxLapMap = new Map<number, number>();
+      if (maxLaps) {
+        maxLaps.forEach((lap: any) => {
+          maxLapMap.set(lap.bib, lap.lap);
+        });
+      }
+
+      // Find runners who completed a new lap
+      const runnersWithNewLaps = enrichedLeaderboard.filter(entry => {
+        const maxLap = maxLapMap.get(entry.bib) || 0;
+        return entry.lap > maxLap && entry.raceTimeSec > 0;
+      });
+
+      if (runnersWithNewLaps.length === 0) {
+        console.log("No new laps detected");
+      } else {
+        console.log(`Detected ${runnersWithNewLaps.length} runners with new laps`);
+
+        // Batch query: Get previous lap data for all runners with new laps
+        const bibsWithNewLaps = runnersWithNewLaps.map(e => e.bib);
+        const lapsToQuery = runnersWithNewLaps.map(e => maxLapMap.get(e.bib) || 0);
+
+        // Build a map to look up previous lap data
+        const { data: prevLaps } = await supabase
+          .from("race_laps")
+          .select("bib, lap, race_time_sec, distance_km")
+          .eq("race_id", activeRace.id)
+          .in("bib", bibsWithNewLaps);
+
+        const prevLapMap = new Map<string, { raceTimeSec: number; distanceKm: number }>();
+        if (prevLaps) {
+          prevLaps.forEach((lap: any) => {
+            const key = `${lap.bib}-${lap.lap}`;
+            prevLapMap.set(key, {
+              raceTimeSec: lap.race_time_sec,
+              distanceKm: lap.distance_km,
+            });
+          });
+        }
+
+        // Calculate new laps
+        const newLaps: any[] = [];
+        for (const entry of runnersWithNewLaps) {
+          const maxLap = maxLapMap.get(entry.bib) || 0;
+          const prevLapKey = `${entry.bib}-${maxLap}`;
+          const prevLap = prevLapMap.get(prevLapKey);
+
+          const previousRaceTime = prevLap?.raceTimeSec || 0;
+          const previousDistance = prevLap?.distanceKm || 0;
+          const lapTimeSec = entry.raceTimeSec - previousRaceTime;
+          const lapDistanceKm = entry.distanceKm - previousDistance;
+
+          // Only insert if lap time is valid
+          if (lapTimeSec > 0) {
+            const lapPace = lapDistanceKm > 0 ? lapTimeSec / lapDistanceKm : 0;
+            const avgPace = entry.distanceKm > 0 ? entry.raceTimeSec / entry.distanceKm : 0;
+
+            newLaps.push({
+              race_id: activeRace.id,
+              bib: entry.bib,
+              lap: entry.lap,
+              lap_time_sec: lapTimeSec,
+              race_time_sec: entry.raceTimeSec,
+              distance_km: entry.distanceKm,
+              rank: entry.rank,
+              gender_rank: entry.genderRank,
+              age_group_rank: null,
+              lap_pace: lapPace,
+              avg_pace: avgPace,
+              timestamp: entry.lastPassing || new Date().toISOString(),
+            });
+          }
+        }
+
+        // Insert new laps (if any)
+        if (newLaps.length > 0) {
+          const { error: insertError } = await supabase
+            .from("race_laps")
+            .insert(newLaps);
+
+          if (!insertError) {
+            newLapsInserted = newLaps.length;
+            console.log(`✅ Inserted ${newLapsInserted} new current laps`);
+          } else {
+            console.error("Error inserting new laps:", insertError);
+          }
+        }
+      }
+    } catch (lapError) {
+      console.error("Error in fast lap sync:", lapError);
+      // Don't fail the whole request if lap sync fails
+    }
+
     // Update last fetch timestamp
     await supabase
       .from("race_config")
@@ -267,8 +369,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       runnersUpdated: leaderboard.length,
+      newLapsInserted,
       timestamp: new Date().toISOString(),
-      message: "Leaderboard updated successfully. Lap calculation moved to separate endpoint.",
+      message: "Leaderboard and current laps updated successfully.",
     });
   } catch (error) {
     console.error("Error in cron fetch:", error);
