@@ -38,16 +38,23 @@ export function calculateRunnerPosition(
   // Predict next lap time
   const prediction = predictNextLapTime(laps);
 
+  // Use default lap time if no prediction available (no lap data)
+  // Default: 12 minutes (720 seconds) - conservative estimate for 24h race
+  const DEFAULT_LAP_TIME_SEC = 720;
+  const predictedLapTime = prediction.predictedLapTime > 0
+    ? prediction.predictedLapTime
+    : DEFAULT_LAP_TIME_SEC;
+
   // Calculate time since last passing
   const lastPassingDate = leaderboardEntry.lastPassing
     ? new Date(leaderboardEntry.lastPassing)
-    : new Date(currentTime.getTime() - prediction.predictedLapTime * 1000);
+    : new Date(currentTime.getTime() - predictedLapTime * 1000);
 
   const timeSinceLastPassing =
     (currentTime.getTime() - lastPassingDate.getTime()) / 1000;
 
   // Calculate progress through current lap (allow > 100% for pending state detection)
-  const progressPercent = (timeSinceLastPassing / prediction.predictedLapTime) * 100;
+  const progressPercent = (timeSinceLastPassing / predictedLapTime) * 100;
 
   // Determine status and position
   let status: RunnerStatus = "racing";
@@ -56,12 +63,12 @@ export function calculateRunnerPosition(
   let timeOverdue: number | undefined;
 
   const expectedFinishTime =
-    prediction.predictedLapTime * breakConfig.thresholdMultiplier;
+    predictedLapTime * breakConfig.thresholdMultiplier;
   const PENDING_CONFIRMATION_WINDOW = 30; // seconds
 
-  if (timeSinceLastPassing > prediction.predictedLapTime) {
+  if (timeSinceLastPassing > predictedLapTime) {
     // Runner is overdue (predicted to have crossed timing mat)
-    timeOverdue = timeSinceLastPassing - prediction.predictedLapTime;
+    timeOverdue = timeSinceLastPassing - predictedLapTime;
 
     if (timeOverdue <= PENDING_CONFIRMATION_WINDOW) {
       // Within 30 seconds of predicted crossing - pending confirmation
@@ -109,7 +116,7 @@ export function calculateRunnerPosition(
     genderRank: leaderboardEntry.genderRank,
     distanceKm: leaderboardEntry.distanceKm,
     timeSinceLastPassing,
-    predictedLapTime: prediction.predictedLapTime,
+    predictedLapTime: predictedLapTime,
     progressPercent,
     timeOverdue,
   };
@@ -140,10 +147,8 @@ export function calculateAllRunnerPositions(
   return leaderboard
     .map((entry) => {
       const laps = lapsMap.get(entry.bib) || [];
-      if (laps.length === 0) {
-        // Skip runners with no lap data
-        return null;
-      }
+      // Don't skip runners with no lap data - they might be on break!
+      // calculateRunnerPosition will handle it with defaults
       const avatarUrl = avatarMap?.get(entry.bib);
       return calculateRunnerPosition(
         entry,
