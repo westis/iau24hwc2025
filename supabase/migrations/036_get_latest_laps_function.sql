@@ -5,7 +5,8 @@ RETURNS TABLE (
   bib integer,
   lap integer,
   distance_km numeric,
-  race_time_sec integer
+  race_time_sec numeric,
+  lap_time_sec numeric
 )
 LANGUAGE sql
 STABLE
@@ -14,7 +15,8 @@ AS $$
     bib,
     lap,
     distance_km,
-    race_time_sec
+    race_time_sec,
+    lap_time_sec
   FROM race_laps
   WHERE race_id = race_id_param
   ORDER BY bib, lap DESC;

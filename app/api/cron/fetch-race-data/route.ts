@@ -135,12 +135,14 @@ export async function GET(request: NextRequest) {
     const { data: latestLapTimes } = await supabase
       .rpc('get_latest_laps_per_runner', { race_id_param: activeRace.id });
 
-    const latestLapTimeMap = new Map<number, number>();
+    const latestLapTimeMap = new Map<number, { lapTimeSec: number; raceTimeSec: number }>();
     if (latestLapTimes) {
       latestLapTimes.forEach((lap: any) => {
-        // Calculate the actual lap time from the latest lap record
-        // We need to get the lap_time_sec directly from the lap record
-        latestLapTimeMap.set(lap.bib, lap.race_time_sec);
+        // Store both lap_time_sec (duration of last lap) and race_time_sec (cumulative time)
+        latestLapTimeMap.set(lap.bib, {
+          lapTimeSec: lap.lap_time_sec,
+          raceTimeSec: lap.race_time_sec,
+        });
       });
     }
 
@@ -165,11 +167,19 @@ export async function GET(request: NextRequest) {
       }
 
       // Get ACTUAL last lap time from race_laps table
-      // Calculate it by subtracting previous lap's race time from current
-      const previousLapRaceTime = latestLapTimeMap.get(entry.bib) || 0;
-      lapTimeSec = entry.raceTimeSec - previousLapRaceTime;
+      const latestLapData = latestLapTimeMap.get(entry.bib);
+      if (latestLapData) {
+        // Check if we already have this lap in the database
+        if (latestLapData.raceTimeSec === entry.raceTimeSec) {
+          // Lap already inserted - use the stored lap_time_sec directly
+          lapTimeSec = latestLapData.lapTimeSec;
+        } else {
+          // New lap detected - calculate from difference
+          lapTimeSec = entry.raceTimeSec - latestLapData.raceTimeSec;
+        }
+      }
 
-      // Fallback to average if we don't have previous lap data
+      // Fallback to average if we don't have any lap data
       if (lapTimeSec <= 0 && entry.lap > 0 && entry.raceTimeSec > 0) {
         lapTimeSec = entry.raceTimeSec / entry.lap;
       }
