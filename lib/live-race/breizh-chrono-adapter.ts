@@ -22,6 +22,31 @@ export class BreizhChronoAdapter implements RaceDataSource {
 
   constructor(private url: string) {}
 
+  /**
+   * Decode HTML entities (both named and numeric)
+   * Handles: &nbsp; &amp; &#246; &#228; etc.
+   */
+  private decodeHtmlEntities(text: string): string {
+    // First handle common named entities
+    let decoded = text
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'");
+
+    // Then handle numeric entities (&#NNN; for decimal, &#xHH; for hex)
+    decoded = decoded.replace(/&#(\d+);/g, (match, dec) => {
+      return String.fromCharCode(parseInt(dec, 10));
+    });
+    decoded = decoded.replace(/&#x([0-9a-fA-F]+);/g, (match, hex) => {
+      return String.fromCharCode(parseInt(hex, 16));
+    });
+
+    return decoded;
+  }
+
   async fetchLeaderboard(): Promise<LeaderboardEntry[]> {
     try {
       // BreizhChrono has pagination - fetch all pages
@@ -189,12 +214,13 @@ export class BreizhChronoAdapter implements RaceDataSource {
             let match;
 
             while ((match = cellPattern.exec(row)) !== null) {
-              const cellText = match[1]
-                .replace(/<[^>]*>/g, "")
-                .replace(/&nbsp;/g, " ")
-                .replace(/&amp;/g, "&")
-                .replace(/\s+/g, " ")
-                .trim();
+              // Remove HTML tags, decode entities, and trim
+              const cellText = this.decodeHtmlEntities(
+                match[1]
+                  .replace(/<[^>]*>/g, "")
+                  .replace(/\s+/g, " ")
+                  .trim()
+              );
               cells.push(cellText);
             }
 
@@ -365,13 +391,13 @@ export class BreizhChronoAdapter implements RaceDataSource {
         let match;
 
         while ((match = cellPattern.exec(row)) !== null) {
-          // Remove HTML tags and trim
-          const cellText = match[1]
-            .replace(/<[^>]*>/g, "")
-            .replace(/&nbsp;/g, " ")
-            .replace(/&amp;/g, "&")
-            .replace(/\s+/g, " ") // Collapse multiple spaces
-            .trim();
+          // Remove HTML tags, decode entities, and trim
+          const cellText = this.decodeHtmlEntities(
+            match[1]
+              .replace(/<[^>]*>/g, "")
+              .replace(/\s+/g, " ") // Collapse multiple spaces
+              .trim()
+          );
           cells.push(cellText);
         }
 
