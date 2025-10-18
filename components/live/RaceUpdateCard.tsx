@@ -22,6 +22,7 @@ import {
   ChevronUp,
   Pin,
   Circle,
+  ExternalLink,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { enUS, sv } from "date-fns/locale";
@@ -454,8 +455,21 @@ export function RaceUpdateCard({ update, onMarkAsRead, isRead = false, onDelete 
 
           {/* Media Credit */}
           {update.mediaCredit && update.mediaType !== "text" && (
-            <p className="text-xs text-muted-foreground italic">
-              {t.live?.photo || "Foto"}: {update.mediaCredit}
+            <p className="text-xs text-muted-foreground italic flex items-center gap-1">
+              Foto:
+              {update.mediaCreditUrl ? (
+                <a
+                  href={update.mediaCreditUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline flex items-center gap-1"
+                >
+                  {update.mediaCredit}
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              ) : (
+                <span>{update.mediaCredit}</span>
+              )}
             </p>
           )}
 

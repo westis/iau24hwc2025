@@ -49,6 +49,7 @@ export async function GET(
       mediaUrl: update.media_url,
       mediaDescription: update.media_description,
       mediaCredit: update.media_credit,
+      mediaCreditUrl: update.media_credit_url,
       category: update.category || "general",
       allowComments: update.allow_comments !== false,
       commentCount: update.comment_count || 0,
@@ -112,6 +113,7 @@ export async function PATCH(
       mediaUrl,
       mediaDescription,
       mediaCredit,
+      mediaCreditUrl,
       allowComments,
       isSticky,
     } = body;
@@ -129,6 +131,8 @@ export async function PATCH(
       updateData.media_description = mediaDescription?.trim() || null;
     if (mediaCredit !== undefined)
       updateData.media_credit = mediaCredit?.trim() || null;
+    if (mediaCreditUrl !== undefined)
+      updateData.media_credit_url = mediaCreditUrl?.trim() || null;
     if (allowComments !== undefined) updateData.allow_comments = allowComments;
     if (isSticky !== undefined) updateData.is_sticky = isSticky;
 
@@ -169,6 +173,7 @@ export async function PATCH(
       mediaUrl: updatedUpdate.media_url,
       mediaDescription: updatedUpdate.media_description,
       mediaCredit: updatedUpdate.media_credit,
+      mediaCreditUrl: updatedUpdate.media_credit_url,
       category: updatedUpdate.category || "general",
       allowComments: updatedUpdate.allow_comments !== false,
       commentCount: updatedUpdate.comment_count || 0,

@@ -49,6 +49,7 @@ export default function EditRaceUpdatePage({ params }: { params: Promise<{ id: s
   const [mediaUrl, setMediaUrl] = React.useState("");
   const [mediaDescription, setMediaDescription] = React.useState("");
   const [mediaCredit, setMediaCredit] = React.useState("");
+  const [mediaCreditUrl, setMediaCreditUrl] = React.useState("");
   const [uploading, setUploading] = React.useState(false);
   const [submitting, setSubmitting] = React.useState(false);
   const [allowComments, setAllowComments] = React.useState(true);
@@ -83,6 +84,7 @@ export default function EditRaceUpdatePage({ params }: { params: Promise<{ id: s
         setMediaUrl(update.mediaUrl || "");
         setMediaDescription(update.mediaDescription || "");
         setMediaCredit(update.mediaCredit || "");
+        setMediaCreditUrl(update.mediaCreditUrl || "");
         setAllowComments(update.allowComments !== false);
         setIsSticky(update.isSticky || false);
         setLoading(false);
@@ -196,6 +198,7 @@ export default function EditRaceUpdatePage({ params }: { params: Promise<{ id: s
           mediaUrl: mediaUrl || undefined,
           mediaDescription: mediaDescription || undefined,
           mediaCredit: mediaCredit || undefined,
+          mediaCreditUrl: mediaCreditUrl || undefined,
           allowComments,
           isSticky,
         }),
@@ -496,6 +499,25 @@ export default function EditRaceUpdatePage({ params }: { params: Promise<{ id: s
                   />
                   <p className="text-xs text-muted-foreground">
                     Kreditera fotografen eller källan för bild/video
+                  </p>
+                </div>
+              )}
+
+              {/* Media credit URL */}
+              {mediaType !== "text" && mediaCredit && (
+                <div className="space-y-2">
+                  <Label htmlFor="mediaCreditUrl">
+                    Instagram/Profil-URL (valfritt)
+                  </Label>
+                  <Input
+                    id="mediaCreditUrl"
+                    type="url"
+                    placeholder="https://instagram.com/username"
+                    value={mediaCreditUrl}
+                    onChange={(e) => setMediaCreditUrl(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Länk till fotografens Instagram eller profil
                   </p>
                 </div>
               )}

@@ -46,6 +46,7 @@ export default function AdminRaceUpdatesPage() {
   const [mediaUrl, setMediaUrl] = React.useState("");
   const [mediaDescription, setMediaDescription] = React.useState("");
   const [mediaCredit, setMediaCredit] = React.useState("");
+  const [mediaCreditUrl, setMediaCreditUrl] = React.useState("");
   const [uploading, setUploading] = React.useState(false);
   const [submitting, setSubmitting] = React.useState(false);
   const [sendNotification, setSendNotification] = React.useState(false);
@@ -157,6 +158,7 @@ export default function AdminRaceUpdatesPage() {
           mediaUrl: mediaUrl || undefined,
           mediaDescription: mediaDescription || undefined,
           mediaCredit: mediaCredit || undefined,
+          mediaCreditUrl: mediaCreditUrl || undefined,
           allowComments,
           sendNotification,
           isSticky,
@@ -176,6 +178,7 @@ export default function AdminRaceUpdatesPage() {
       setMediaUrl("");
       setMediaDescription("");
       setMediaCredit("");
+      setMediaCreditUrl("");
       setSendNotification(false);
       setIsSticky(false);
 
@@ -457,6 +460,25 @@ export default function AdminRaceUpdatesPage() {
                   />
                   <p className="text-xs text-muted-foreground">
                     Kreditera fotografen eller källan för bild/video
+                  </p>
+                </div>
+              )}
+
+              {/* Media credit URL */}
+              {mediaType !== "text" && mediaCredit && (
+                <div className="space-y-2">
+                  <Label htmlFor="mediaCreditUrl">
+                    Instagram/Profil-URL (valfritt)
+                  </Label>
+                  <Input
+                    id="mediaCreditUrl"
+                    type="url"
+                    placeholder="https://instagram.com/username"
+                    value={mediaCreditUrl}
+                    onChange={(e) => setMediaCreditUrl(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Länk till fotografens Instagram eller profil
                   </p>
                 </div>
               )}
