@@ -299,11 +299,16 @@ export async function GET(request: NextRequest) {
     // Insert new laps (use upsert to avoid duplicates)
     let lapsInserted = 0;
     if (laps.length > 0) {
-      // Get ALL existing laps with their time data to preserve Puppeteer backfilled times
+      // Get ONLY existing laps for bibs being updated (to preserve Puppeteer backfilled times)
+      // This is much faster than fetching all 10k+ laps
+      const bibsBeingUpdated = Array.from(new Set(laps.map(lap => lap.bib)));
       const { data: allExistingLaps } = await supabase
         .from("race_laps")
         .select("bib, lap, race_time_sec, lap_time_sec")
-        .eq("race_id", activeRace.id);
+        .eq("race_id", activeRace.id)
+        .in("bib", bibsBeingUpdated);
+
+      console.log(`Fetched ${allExistingLaps?.length || 0} existing laps for ${bibsBeingUpdated.length} bibs`);
 
       // Create a map of existing laps with time data
       const existingLapTimesMap = new Map();
@@ -318,6 +323,7 @@ export async function GET(request: NextRequest) {
       }
 
       // Map calculated laps to database format, preserving existing lap times if they exist
+      let preservedCount = 0;
       const lapsWithRaceId = laps.map((lap) => {
         const key = `${lap.bib}-${lap.lap}`;
         const existingTimes = existingLapTimesMap.get(key);
@@ -330,6 +336,12 @@ export async function GET(request: NextRequest) {
         const lapTimeSec = existingTimes && existingTimes.lapTimeSec > 0
           ? existingTimes.lapTimeSec
           : lap.lapTimeSec;
+
+        // Debug: Track preserved laps
+        if (existingTimes && existingTimes.raceTimeSec > 0 && lap.bib === 191 && lap.lap <= 3) {
+          console.log(`Preserving Bib ${lap.bib} Lap ${lap.lap}: existing=${existingTimes.raceTimeSec}s, calculated=${lap.raceTimeSec}s`);
+          preservedCount++;
+        }
 
         return {
           race_id: activeRace.id,
