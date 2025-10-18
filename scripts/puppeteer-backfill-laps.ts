@@ -89,7 +89,7 @@ async function backfillWithPuppeteer() {
     let runnersProcessed = 0;
 
     // TEST MODE: Only process first runner (race leader)
-    const TEST_MODE = true; // Set to true to test with just one runner
+    const TEST_MODE = false; // Set to true to test with just one runner
     const MAX_RUNNERS = TEST_MODE ? 1 : Infinity;
 
     // Iterate through all pages and process runners on each page
@@ -197,6 +197,14 @@ async function backfillWithPuppeteer() {
           genderRank: null,
         }));
 
+        // DEBUG: Log first 3 laps to see what we extracted
+        if (laps.length >= 3) {
+          console.log(`\n🔍 DEBUG - First 3 laps for Bib ${runner.bib}:`)
+          for (let i = 0; i < Math.min(3, laps.length); i++) {
+            console.log(`  Lap ${laps[i].lap}: raceTime="${lapData[i].raceTime}" (${laps[i].raceTimeSec}s), lapTime="${lapData[i].lapTime}" (${laps[i].lapTimeSec}s)`)
+          }
+        }
+
         if (laps.length > 0) {
           allLaps.push(...laps);
           runnersProcessed++;
@@ -232,12 +240,31 @@ async function backfillWithPuppeteer() {
       return;
     }
 
+    // Sort laps by bib and lap number to calculate individual lap distances
+    allLaps.sort((a, b) => {
+      if (a.bib !== b.bib) return a.bib - b.bib;
+      return a.lap - b.lap;
+    });
+
     // Calculate paces and prepare for database
-    const enrichedLaps = allLaps.map((lap) => {
-      const lapPace = lap.lapTimeSec > 0 && lap.distanceKm > 0
-        ? lap.lapTimeSec / (lap.distanceKm / 1.5) // Normalize to standard lap
+    const enrichedLaps = allLaps.map((lap, index) => {
+      // Calculate actual lap distance (current distance - previous distance)
+      let lapDistanceKm = 1.5; // Default standard lap distance
+
+      if (index > 0 && allLaps[index - 1].bib === lap.bib) {
+        // Not the first lap for this runner - calculate from distance difference
+        lapDistanceKm = lap.distanceKm - allLaps[index - 1].distanceKm;
+      } else {
+        // First lap for this runner - use the distance itself (should be ~0.2 km)
+        lapDistanceKm = lap.distanceKm;
+      }
+
+      // Lap pace in seconds per km
+      const lapPace = lap.lapTimeSec > 0 && lapDistanceKm > 0
+        ? lap.lapTimeSec / lapDistanceKm
         : 0;
 
+      // Average pace in seconds per km
       const avgPace = lap.raceTimeSec > 0 && lap.distanceKm > 0
         ? lap.raceTimeSec / lap.distanceKm
         : 0;

@@ -20,6 +20,7 @@ export interface LapCalculationConfig {
  * - First lap with different distance (100m start offset)
  * - Multiple laps completed between updates
  * - Distance measurement variations
+ * - Actual lap times from lastPassing timestamps
  */
 export function calculateNewLaps(
   bib: number,
@@ -28,7 +29,9 @@ export function calculateNewLaps(
   currentRaceTimeSec: number,
   previousRaceTimeSec: number,
   currentLap: number,
-  config: LapCalculationConfig
+  config: LapCalculationConfig,
+  currentLastPassing?: string, // ISO timestamp of current passing
+  previousLastPassing?: string  // ISO timestamp of previous passing
 ): LapCalculationResult {
   const newLaps: LapTime[] = [];
   let distance = previousDistance;
@@ -46,6 +49,14 @@ export function calculateNewLaps(
     };
   }
 
+  // Calculate actual lap time from timestamps if available
+  let actualLapTimeSec: number | undefined;
+  if (currentLastPassing && previousLastPassing) {
+    const currentTime = new Date(currentLastPassing).getTime();
+    const previousTime = new Date(previousLastPassing).getTime();
+    actualLapTimeSec = Math.floor((currentTime - previousTime) / 1000);
+  }
+
   // Determine if this is the first lap
   const isFirstLap = previousDistance === 0 || currentLap === 0;
 
@@ -55,8 +66,8 @@ export function calculateNewLaps(
       config.firstLapDistanceKm * (1 - config.tolerancePercent / 100);
 
     if (currentDistance >= firstLapThreshold) {
-      // Calculate time for first lap
-      const lapTimeSec = currentRaceTimeSec - previousRaceTimeSec;
+      // Use actual lap time from timestamps if available, otherwise estimate
+      const lapTimeSec = actualLapTimeSec ?? (currentRaceTimeSec - previousRaceTimeSec);
       const lapPace = lapTimeSec / config.firstLapDistanceKm;
       const avgPace = lapTimeSec / currentDistance;
 
@@ -101,8 +112,11 @@ export function calculateNewLaps(
     );
 
     if (lapsCompleted >= 1) {
-      // Calculate time per lap (approximate if multiple laps)
-      const totalTimeForLaps = currentRaceTimeSec - previousRaceTimeSec;
+      // If exactly ONE lap completed and we have actual timestamps, use them
+      // Otherwise average the time across multiple laps
+      const totalTimeForLaps = (lapsCompleted === 1 && actualLapTimeSec !== undefined)
+        ? actualLapTimeSec
+        : (currentRaceTimeSec - previousRaceTimeSec);
       const avgLapTime = totalTimeForLaps / lapsCompleted;
 
       for (let i = 0; i < lapsCompleted; i++) {
@@ -218,7 +232,9 @@ export async function calculateLapsFromLeaderboard(
           current.raceTimeSec,
           0,
           0,
-          config
+          config,
+          current.lastPassing,  // Current crossing timestamp
+          undefined             // No previous timestamp for new runner
         );
         allNewLaps.push(...result.newLaps);
       }
@@ -232,7 +248,9 @@ export async function calculateLapsFromLeaderboard(
           current.raceTimeSec,
           previous.raceTimeSec,
           previous.lap,
-          config
+          config,
+          current.lastPassing,   // Current crossing timestamp
+          previous.lastPassing   // Previous crossing timestamp
         );
         allNewLaps.push(...result.newLaps);
       }

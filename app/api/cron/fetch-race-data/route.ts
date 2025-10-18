@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
 
     const { data: config } = await supabase
       .from("race_config")
-      .select("*")
+      .select("*, start_time_offset_seconds")
       .eq("race_id", activeRace.id)
       .single();
 
@@ -185,6 +185,7 @@ export async function GET(request: NextRequest) {
     // Also calculate race time and projected distance
     const raceStartTime = new Date(activeRace.start_date).getTime();
     const race24Hours = 24 * 60 * 60; // 24 hours in seconds
+    const startTimeOffsetSec = config?.start_time_offset_seconds || 0; // Race started late offset
 
     const enrichedLeaderboard = leaderboard.map((entry) => {
       const runner = runnerMap.get(entry.bib);
@@ -197,7 +198,8 @@ export async function GET(request: NextRequest) {
 
       if (entry.lastPassing) {
         const lastPassingTime = new Date(entry.lastPassing).getTime();
-        raceTimeSec = Math.floor((lastPassingTime - raceStartTime) / 1000);
+        // Subtract offset to get true race time (race started late)
+        raceTimeSec = Math.floor((lastPassingTime - raceStartTime) / 1000) - startTimeOffsetSec;
 
         // Calculate projected 24h distance based on current pace
         if (raceTimeSec > 0 && entry.distanceKm > 0) {
