@@ -346,17 +346,23 @@ export async function GET(request: NextRequest) {
         // Calculate new laps
         const newLaps: any[] = [];
         for (const entry of runnersWithNewLaps) {
-          const maxLap = maxLapMap.get(entry.bib) || 0;
-          const prevLapKey = `${entry.bib}-${maxLap}`;
-          const prevLap = prevLapMap.get(prevLapKey);
+          const prevLap = prevLapMap.get(entry.bib);
 
           const previousRaceTime = prevLap?.raceTimeSec || 0;
           const previousDistance = prevLap?.distanceKm || 0;
           const lapTimeSec = entry.raceTimeSec - previousRaceTime;
           const lapDistanceKm = entry.distanceKm - previousDistance;
 
-          // Only insert if lap time is valid
-          if (lapTimeSec > 0) {
+          // Debug log for suspicious lap times
+          if (lapTimeSec > 10000) {
+            console.log(`⚠️  WARNING Bib ${entry.bib}: Calculated lap time seems wrong`);
+            console.log(`   Current race time: ${entry.raceTimeSec}s`);
+            console.log(`   Previous race time: ${previousRaceTime}s (lap ${prevLap?.lap || 'N/A'})`);
+            console.log(`   Calculated lap time: ${lapTimeSec}s (${(lapTimeSec/60).toFixed(1)} min)`);
+          }
+
+          // Only insert if lap time is valid (between 5 and 20 minutes)
+          if (lapTimeSec > 300 && lapTimeSec < 1200) {
             const lapPace = lapDistanceKm > 0 ? lapTimeSec / lapDistanceKm : 0;
             const avgPace = entry.distanceKm > 0 ? entry.raceTimeSec / entry.distanceKm : 0;
 
@@ -374,6 +380,10 @@ export async function GET(request: NextRequest) {
               avg_pace: avgPace,
               timestamp: entry.lastPassing || new Date().toISOString(),
             });
+
+            console.log(`📊 Bib ${entry.bib}: New lap ${entry.lap} detected (time: ${lapTimeSec}s = ${(lapTimeSec/60).toFixed(1)}min, distance: ${entry.distanceKm.toFixed(2)}km)`);
+          } else {
+            console.log(`⚠️  Skipping Bib ${entry.bib} lap ${entry.lap}: Invalid lap time ${lapTimeSec}s (expected 300-1200s)`);
           }
         }
 
