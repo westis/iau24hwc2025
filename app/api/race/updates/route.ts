@@ -18,6 +18,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Check if user is admin
+    const { data: chatUser } = await supabase
+      .from("chat_users")
+      .select("is_admin")
+      .eq("id", user.id)
+      .single();
+
+    if (!chatUser?.is_admin) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     // Get active race
     const { data: activeRace } = await supabase
       .from("race_info")
