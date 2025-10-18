@@ -533,7 +533,7 @@ export const sv: Translations = {
     fourthToSixth: "4:e-6:e",
     pendingConfirmation: "Väntar på bekräftelse",
     // Team Race Track
-    teamRace: "Lagkampen",
+    teamEvent: "Lagtävling",
     top: "Topp",
     leader: "Ledare",
     gapFromLeader: "Gap från ledaren i kilometer",

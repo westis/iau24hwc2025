@@ -534,7 +534,7 @@ export const en: Translations = {
     fourthToSixth: "4th-6th",
     pendingConfirmation: "Awaiting confirmation",
     // Team Race Track
-    teamRace: "Team Race",
+    teamEvent: "Team Event",
     top: "Top",
     leader: "Leader",
     gapFromLeader: "Gap from leader in kilometers",

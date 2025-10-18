@@ -56,14 +56,19 @@ export function TeamRaceTrack({ teams }: TeamRaceTrackProps) {
   return (
     <div className="bg-card border rounded-lg p-6 mb-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-2">
-          <Trophy className="h-5 w-5 text-muted-foreground" />
-          <h3 className="text-lg font-semibold">
-            {t.live?.teamRace || "Team Race"}
-          </h3>
-          <span className="text-sm text-muted-foreground">
-            ({t.live?.top || "Top"} {topTeams.length})
-          </span>
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2">
+            <Trophy className="h-5 w-5 text-muted-foreground" />
+            <h3 className="text-lg font-semibold">
+              {t.live?.teamEvent || "Team Event"}
+            </h3>
+            <span className="text-sm text-muted-foreground">
+              ({t.live?.top || "Top"} {topTeams.length})
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground ml-7">
+            {t.live?.gapFromLeader || "Gap from leader in kilometers"}
+          </p>
         </div>
 
         {/* Slider to control number of teams shown */}
@@ -135,27 +140,29 @@ export function TeamRaceTrack({ teams }: TeamRaceTrackProps) {
                     isAbove ? "mb-10" : "mt-10"
                   }`}
                 >
-                  {/* Flag */}
-                  <div
-                    className={`relative group cursor-pointer ${
-                      isLeader
-                        ? "ring-2 ring-primary ring-offset-2 ring-offset-background"
-                        : ""
-                    } rounded-md overflow-hidden shadow-md hover:shadow-lg transition-shadow`}
-                  >
-                    <ReactCountryFlag
-                      countryCode={twoLetterCode}
-                      svg
-                      style={{
-                        width: isLeader ? "3em" : "2.5em",
-                        height: isLeader ? "2em" : "1.67em",
-                        borderRadius: "4px",
-                      }}
-                    />
+                  {/* Flag with tooltip */}
+                  <div className="relative group">
+                    <div
+                      className={`cursor-pointer ${
+                        isLeader
+                          ? "ring-2 ring-primary ring-offset-2 ring-offset-background"
+                          : ""
+                      } rounded-md overflow-hidden shadow-md hover:shadow-lg transition-shadow`}
+                    >
+                      <ReactCountryFlag
+                        countryCode={twoLetterCode}
+                        svg
+                        style={{
+                          width: isLeader ? "3em" : "2.5em",
+                          height: isLeader ? "2em" : "1.67em",
+                          borderRadius: "4px",
+                        }}
+                      />
+                    </div>
 
                     {/* Tooltip on hover - country name, distance, and runner count */}
                     <div
-                      className={`absolute opacity-0 group-hover:opacity-100 transition-opacity bg-popover border text-popover-foreground text-xs p-2 rounded-md shadow-xl z-50 whitespace-nowrap pointer-events-none ${
+                      className={`absolute left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-popover border text-popover-foreground text-xs p-2 rounded-md shadow-xl z-[100] whitespace-nowrap pointer-events-none ${
                         isAbove ? "top-full mt-2" : "bottom-full mb-2"
                       }`}
                     >
@@ -196,16 +203,8 @@ export function TeamRaceTrack({ teams }: TeamRaceTrackProps) {
       </div>
 
       {/* Legend */}
-      <div className="mt-6 pt-4 border-t text-xs text-muted-foreground flex flex-wrap gap-x-4 gap-y-1 justify-center">
-        <div className="flex items-center gap-1">
-          <span>
-            {t.live?.gapFromLeader || "Gap from leader in kilometers"}
-          </span>
-        </div>
-        <div className="flex items-center gap-1">
-          <span>•</span>
-          <span>{t.live?.hoverForDetails || "Hover for details"}</span>
-        </div>
+      <div className="mt-6 pt-4 border-t text-xs text-muted-foreground text-center">
+        {t.live?.hoverForDetails || "Hover for details"}
       </div>
     </div>
   );
