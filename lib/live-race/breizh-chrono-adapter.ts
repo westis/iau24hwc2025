@@ -708,6 +708,7 @@ export class BreizhChronoAdapter implements RaceDataSource {
   /**
    * Helper: Convert clock time (HH:MM:SS) to ISO timestamp using today's date in Europe/Paris timezone
    * Breizh Chrono returns clock time like "10:24:35" in France local time
+   * Handles midnight boundary: if clock time appears to be >12h in the past, assumes next day
    */
   private parseClockTimeToTimestamp(clockTimeStr: string): string {
     const parts = clockTimeStr.split(":");
@@ -716,18 +717,37 @@ export class BreizhChronoAdapter implements RaceDataSource {
       const minutes = parseInt(parts[1]) || 0;
       const seconds = parseInt(parts[2]) || 0;
 
-      // Get today's date in Europe/Paris timezone
-      // France is UTC+2 in October (CEST)
+      // Get current time
       const now = new Date();
       const year = now.getUTCFullYear();
       const month = now.getUTCMonth();
       const day = now.getUTCDate();
 
-      // Create date string in format that will be parsed as Europe/Paris time
+      // Create date string with today's date in Europe/Paris time (UTC+2 in October)
       // Format: YYYY-MM-DDTHH:MM:SS+02:00
       const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}+02:00`;
 
-      return new Date(dateStr).toISOString();
+      let timestamp = new Date(dateStr);
+      const nowTime = now.getTime();
+      const timestampTime = timestamp.getTime();
+
+      // MIDNIGHT BOUNDARY FIX:
+      // If the created timestamp is more than 12 hours in the past,
+      // the clock time must be from tomorrow (race crossed midnight)
+      // Example: Current time 23:45, clock time 00:30 → 00:30 is tomorrow, not 23h ago
+      const diffHours = (nowTime - timestampTime) / (1000 * 60 * 60);
+
+      if (diffHours > 12) {
+        // Add 1 day - clock time is from tomorrow
+        timestamp = new Date(timestamp.getTime() + 24 * 60 * 60 * 1000);
+        console.log(`⏰ Midnight rollover detected: clock time ${clockTimeStr} adjusted to next day`);
+      } else if (diffHours < -12) {
+        // Subtract 1 day - clock time was from yesterday (edge case)
+        timestamp = new Date(timestamp.getTime() - 24 * 60 * 60 * 1000);
+        console.log(`⏰ Reverse rollover detected: clock time ${clockTimeStr} adjusted to previous day`);
+      }
+
+      return timestamp.toISOString();
     }
     return new Date().toISOString();
   }
