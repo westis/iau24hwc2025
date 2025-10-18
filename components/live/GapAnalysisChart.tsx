@@ -29,30 +29,7 @@ const Line = dynamic(() => import("react-chartjs-2").then((mod) => mod.Line), {
   ssr: false,
 });
 
-// Import and register Chart.js components only on client side
-let ChartJS: any;
-let chartRegistered = false;
-
-if (typeof window !== "undefined") {
-  import("chart.js").then((mod) => {
-    ChartJS = mod.Chart;
-    mod.Chart.register(
-      mod.CategoryScale,
-      mod.LinearScale,
-      mod.PointElement,
-      mod.LineElement,
-      mod.Tooltip,
-      mod.Legend
-    );
-  });
-
-  import("chartjs-plugin-zoom").then((mod) => {
-    if (ChartJS && !chartRegistered) {
-      ChartJS.register(mod.default);
-      chartRegistered = true;
-    }
-  });
-}
+// Chart.js will be registered in useEffect to ensure proper initialization order
 
 interface GapAnalysisChartProps {
   bibs: number[];
@@ -82,11 +59,11 @@ export function GapAnalysisChart({ bibs }: GapAnalysisChartProps) {
   const { theme } = useTheme();
   const [data, setData] = useState<ChartDataResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [chartReady, setChartReady] = useState(false);
   const [baselineMode, setBaselineMode] = useState<"manual" | "wr">("wr");
   const [wrGender, setWrGender] = useState<"men" | "women">("men");
   const [manualDistance, setManualDistance] = useState<string>("250");
   const chartRef = useRef<any>(null);
-  const lastTimestampByBib = useRef<Record<number, number>>({});
   const prevBibs = useRef<string>("");
   const prevBaseline = useRef<number | null>(null);
 
@@ -94,6 +71,41 @@ export function GapAnalysisChart({ bibs }: GapAnalysisChartProps) {
     baselineMode === "wr"
       ? WORLD_RECORDS[wrGender]
       : parseFloat(manualDistance) || 250;
+
+  // Register Chart.js components before rendering
+  useEffect(() => {
+    let mounted = true;
+
+    async function registerChartJS() {
+      try {
+        const chartModule = await import("chart.js");
+        chartModule.Chart.register(
+          chartModule.CategoryScale,
+          chartModule.LinearScale,
+          chartModule.PointElement,
+          chartModule.LineElement,
+          chartModule.Tooltip,
+          chartModule.Legend,
+          chartModule.TimeScale
+        );
+
+        const zoomPlugin = await import("chartjs-plugin-zoom");
+        chartModule.Chart.register(zoomPlugin.default);
+
+        if (mounted) {
+          setChartReady(true);
+        }
+      } catch (error) {
+        console.error("Failed to register Chart.js:", error);
+      }
+    }
+
+    registerChartJS();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   // Fetch data with auto-refresh
   useEffect(() => {
@@ -163,99 +175,21 @@ export function GapAnalysisChart({ bibs }: GapAnalysisChartProps) {
     }
   };
 
-  // Update chart data when new data arrives or baseline changes
+  // Track changes for logging
   useEffect(() => {
-    if (!data || !chartRef.current) return;
-
-    const chart = chartRef.current;
     const currentBibsKey = bibs.sort().join(",");
     const baselineChanged = prevBaseline.current !== baselineDistance;
 
-    // If runner selection changed or baseline changed, do full rebuild
-    if (prevBibs.current !== currentBibsKey || baselineChanged) {
-      console.log(
-        baselineChanged
-          ? "Baseline changed, recalculating gaps"
-          : "Runner selection changed, rebuilding chart"
-      );
-      prevBibs.current = currentBibsKey;
-      prevBaseline.current = baselineDistance;
-      lastTimestampByBib.current = {};
-
-      // Full dataset replacement with gap calculations
-      const datasets = data.runners
-        .sort((a, b) => a.bib - b.bib)
-        .map((runner) => ({
-          label: `#${runner.bib} ${runner.name}`,
-          data: runner.data.map((point) => ({
-            x: point.time * 1000,
-            y: point.projectedKm - baselineDistance,
-          })),
-          borderColor: runner.color,
-          backgroundColor: runner.color,
-          borderWidth: 2,
-          pointRadius: 0,
-          tension: 0.1,
-        }));
-
-      // Add baseline reference line (y=0)
-      datasets.push({
-        label: `Baseline (${baselineDistance.toFixed(0)}km)`,
-        data: [
-          { x: 0, y: 0 },
-          { x: 24 * 3600 * 1000, y: 0 },
-        ],
-        borderColor: "#fbbf24",
-        backgroundColor: "#fbbf24",
-        borderWidth: 3,
-        borderDash: [5, 5],
-        pointRadius: 0,
-        tension: 0,
-      } as any);
-
-      chart.data.datasets = datasets;
-
-      // Update last timestamps
-      data.runners.forEach((runner) => {
-        const lastPoint = runner.data[runner.data.length - 1];
-        if (lastPoint) {
-          lastTimestampByBib.current[runner.bib] = lastPoint.time * 1000;
-        }
-      });
-
-      chart.update("none");
-      return;
+    if (baselineChanged) {
+      console.log("[GapAnalysisChart] Baseline changed, recalculating gaps");
+    }
+    if (prevBibs.current && prevBibs.current !== currentBibsKey) {
+      console.log("[GapAnalysisChart] Runner selection changed");
     }
 
-    // Append only new data points
-    let hasNewData = false;
-    data.runners.forEach((runner, idx) => {
-      const lastKnownTime = lastTimestampByBib.current[runner.bib] || -1;
-      const newPoints = runner.data
-        .filter((p) => p.time * 1000 > lastKnownTime)
-        .map((p) => ({
-          x: p.time * 1000,
-          y: p.projectedKm - baselineDistance,
-        }));
-
-      if (newPoints.length > 0) {
-        hasNewData = true;
-        const dataset = chart.data.datasets[idx];
-        if (dataset) {
-          (dataset.data as ChartDataPoint[]).push(...newPoints);
-          const lastPoint = runner.data[runner.data.length - 1];
-          if (lastPoint) {
-            lastTimestampByBib.current[runner.bib] = lastPoint.time * 1000;
-          }
-        }
-      }
-    });
-
-    if (hasNewData) {
-      console.log("Appending new gap data to chart");
-      chart.update("none"); // Preserve zoom/pan
-    }
-  }, [data, bibs, baselineDistance]);
+    prevBibs.current = currentBibsKey;
+    prevBaseline.current = baselineDistance;
+  }, [bibs, baselineDistance]);
 
   // Update X-axis max when data range changes
   useEffect(() => {
@@ -314,12 +248,44 @@ export function GapAnalysisChart({ bibs }: GapAnalysisChartProps) {
     }
   }, [theme]);
 
-  // Chart configuration - ONLY initialize once, updates happen via ref
-  // DO NOT depend on 'data' or chart will rebuild on every update
+  // Chart data - rebuild when data or baseline changes
   const chartData = useMemo(() => {
-    return { datasets: [] };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Empty deps = only create once
+    if (!data || data.runners.length === 0) {
+      return { datasets: [] };
+    }
+
+    const datasets = data.runners
+      .sort((a, b) => a.bib - b.bib)
+      .map((runner) => ({
+        label: `#${runner.bib} ${runner.name}`,
+        data: runner.data.map((point) => ({
+          x: point.time * 1000,
+          y: point.projectedKm - baselineDistance,
+        })),
+        borderColor: runner.color,
+        backgroundColor: runner.color,
+        borderWidth: 2,
+        pointRadius: 0,
+        tension: 0.1,
+      }));
+
+    // Add baseline reference line (y=0)
+    datasets.push({
+      label: `Baseline (${baselineDistance.toFixed(0)}km)`,
+      data: [
+        { x: 0, y: 0 },
+        { x: 24 * 3600 * 1000, y: 0 },
+      ],
+      borderColor: "#fbbf24",
+      backgroundColor: "#fbbf24",
+      borderWidth: 3,
+      borderDash: [5, 5],
+      pointRadius: 0,
+      tension: 0,
+    } as any);
+
+    return { datasets };
+  }, [data, baselineDistance]); // Rebuild when data or baseline changes
 
   const chartOptions: ChartOptions<"line"> = useMemo(() => {
     const isDark = theme === "dark";
@@ -515,7 +481,7 @@ export function GapAnalysisChart({ bibs }: GapAnalysisChartProps) {
     );
   }
 
-  if (loading) {
+  if (!chartReady || loading) {
     return (
       <Card>
         <CardHeader>
@@ -525,7 +491,9 @@ export function GapAnalysisChart({ bibs }: GapAnalysisChartProps) {
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground mx-auto mb-2"></div>
             <p className="text-sm text-muted-foreground">
-              {t.live?.loadingChartData || "Loading..."}
+              {!chartReady
+                ? "Initializing chart..."
+                : t.live?.loadingChartData || "Loading..."}
             </p>
           </div>
         </CardContent>
@@ -638,15 +606,7 @@ export function GapAnalysisChart({ bibs }: GapAnalysisChartProps) {
       </CardHeader>
       <CardContent>
         <div className="h-[500px] w-full">
-          {chartData.datasets.length > 0 ? (
-            <Line ref={chartRef} data={chartData} options={chartOptions} />
-          ) : (
-            <div className="h-full flex items-center justify-center border rounded-lg bg-muted/20">
-              <p className="text-muted-foreground">
-                {t.live?.noData || "No data available"}
-              </p>
-            </div>
-          )}
+          <Line ref={chartRef} data={chartData} options={chartOptions} />
         </div>
       </CardContent>
     </Card>

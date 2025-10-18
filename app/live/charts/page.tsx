@@ -153,7 +153,17 @@ function ChartsContent() {
   // Calculate filtered bibs based on selection mode
   useEffect(() => {
     if (selectionMode === "watchlist") {
-      setSelectedBibs(watchlist.length > 0 ? watchlist : []);
+      const watchlistBibs = watchlist.length > 0 ? watchlist : [];
+      setSelectedBibs((prev) => {
+        // Prevent unnecessary updates if watchlist hasn't changed
+        if (
+          prev.length === watchlistBibs.length &&
+          prev.every((bib, i) => bib === watchlistBibs[i])
+        ) {
+          return prev;
+        }
+        return watchlistBibs;
+      });
       return;
     }
 
@@ -185,7 +195,16 @@ function ChartsContent() {
         )
         .slice(0, 10) // Limit to 10 runners for charts
         .map((e: LeaderboardEntry) => e.bib);
-      setSelectedBibs(filtered);
+      setSelectedBibs((prev) => {
+        // Prevent unnecessary updates if filtered bibs haven't changed
+        if (
+          prev.length === filtered.length &&
+          prev.every((bib, i) => bib === filtered[i])
+        ) {
+          return prev;
+        }
+        return filtered;
+      });
     }
   }, [selectionMode, leaderboardData?.entries, watchlist, selectedCountry, selectedGender]);
 
