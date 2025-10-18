@@ -119,35 +119,26 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    // Get the latest lap for each runner from race_laps table
-    // This is the source of truth for what laps have been captured
-    // Strategy: Get ALL laps, then filter to latest per runner in JavaScript
-    // This is more efficient than trying to do DISTINCT ON via Supabase client
-    // Note: .limit() doesn't work reliably in Edge runtime, use .range() instead
-    const { data: existingLaps, error: lapsQueryError } = await supabase
-      .from("race_laps")
-      .select("bib, lap, distance_km, race_time_sec")
-      .eq("race_id", activeRace.id)
-      .range(0, 99999); // Fetch up to 100k rows (0-indexed, inclusive)
+    // Get the latest lap for each runner from race_laps table using Postgres function
+    // This bypasses the 1000-row limit by doing aggregation in the database
+    // The function uses DISTINCT ON to get only the latest lap per runner
+    const { data: latestLaps, error: lapsQueryError } = await supabase
+      .rpc('get_latest_laps_per_runner', { race_id_param: activeRace.id });
 
     if (lapsQueryError) {
-      console.error("ERROR querying existing laps:", lapsQueryError);
+      console.error("ERROR querying latest laps:", lapsQueryError);
     }
-    console.log(`Existing laps query returned ${existingLaps?.length || 0} rows`);
+    console.log(`Latest laps query returned ${latestLaps?.length || 0} rows`);
 
-    // Create a map of latest lap per runner by finding max lap number for each bib
+    // Create a map of latest lap per runner
     const latestLapMap = new Map();
-    if (existingLaps) {
-      existingLaps.forEach(lap => {
-        const existing = latestLapMap.get(lap.bib);
-        // Keep the lap with the highest lap number
-        if (!existing || lap.lap > existing.lap) {
-          latestLapMap.set(lap.bib, {
-            lap: lap.lap,
-            distanceKm: lap.distance_km,
-            raceTimeSec: lap.race_time_sec,
-          });
-        }
+    if (latestLaps) {
+      latestLaps.forEach((lap: any) => {
+        latestLapMap.set(lap.bib, {
+          lap: lap.lap,
+          distanceKm: lap.distance_km,
+          raceTimeSec: lap.race_time_sec,
+        });
       });
     }
     console.log(`latestLapMap has ${latestLapMap.size} entries`);
@@ -501,7 +492,7 @@ export async function GET(request: NextRequest) {
       lapsCalculated: laps.length > 0 && lapsInserted === 0 ? false : true,
       timestamp: new Date().toISOString(),
       debug: {
-        existingLapsCount: existingLaps?.length || 0,
+        latestLapsCount: latestLaps?.length || 0,
         latestLapMapSize: latestLapMap.size,
         newLapCandidates,
         skippedNoLapIncrease,
