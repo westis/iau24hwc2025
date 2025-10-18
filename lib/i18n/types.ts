@@ -36,6 +36,8 @@ export interface Translations {
     adjustCrop: string;
     remove: string;
     reset: string;
+    retry: string;
+    refresh: string;
     gender: string;
   };
   home: {
@@ -394,7 +396,20 @@ export interface Translations {
     map: string;
     individuals: string;
     teams: string;
+    all: string;
     startsIn: string;
+    // Race Updates
+    updates: string;
+    urgent: string;
+    summary: string;
+    teamSweden: string;
+    interview: string;
+    general: string;
+    unread: string;
+    noUpdates: string;
+    noUpdatesMessage: string;
+    newUpdatesAvailable: string;
+    high: string;
     elapsedTime: string;
     remaining: string;
     raceFinished: string;

@@ -36,6 +36,8 @@ export const sv: Translations = {
     adjustCrop: "Justera beskärning",
     remove: "Ta bort",
     reset: "Återställ",
+    retry: "Försök igen",
+    refresh: "Uppdatera",
     gender: "Kön",
   },
   home: {
@@ -538,7 +540,6 @@ export const sv: Translations = {
     general: "Allmänt",
     all: "Alla",
     unread: "olästa",
-    refresh: "Uppdatera",
     noUpdates: "Inga uppdateringar än",
     noUpdatesMessage: "Uppdateringar visas här under loppet",
     newUpdatesAvailable:

@@ -36,6 +36,8 @@ export const en: Translations = {
     adjustCrop: "Adjust Crop",
     remove: "Remove",
     reset: "Reset",
+    retry: "Try Again",
+    refresh: "Refresh",
     gender: "Gender",
   },
   home: {
@@ -539,7 +541,6 @@ export const en: Translations = {
     general: "General",
     all: "All",
     unread: "unread",
-    refresh: "Refresh",
     noUpdates: "No updates yet",
     noUpdatesMessage: "Updates will appear here during the race",
     newUpdatesAvailable: "New updates available - Click to refresh",

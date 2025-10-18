@@ -129,8 +129,7 @@ export default function AdminRaceUpdatesPage() {
     if (
       mediaType !== "text" &&
       mediaType !== "instagram" &&
-      !mediaUrl &&
-      mediaType !== "text"
+      !mediaUrl
     ) {
       setError("Vänligen ladda upp en fil eller ange en URL för denna mediatyp");
       return;
