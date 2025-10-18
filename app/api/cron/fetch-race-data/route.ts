@@ -120,12 +120,17 @@ export async function GET(request: NextRequest) {
 
     // Get the latest lap for each runner from race_laps table
     // This is the source of truth for what laps have been captured
-    const { data: existingLaps } = await supabase
+    const { data: existingLaps, error: lapsQueryError } = await supabase
       .from("race_laps")
       .select("bib, lap, distance_km, race_time_sec")
       .eq("race_id", activeRace.id)
       .order("bib", { ascending: true })
       .order("lap", { ascending: false });
+
+    if (lapsQueryError) {
+      console.error("ERROR querying existing laps:", lapsQueryError);
+    }
+    console.log(`Existing laps query returned ${existingLaps?.length || 0} rows`);
 
     // Create a map of latest lap per runner
     const latestLapMap = new Map();
@@ -139,6 +144,11 @@ export async function GET(request: NextRequest) {
           });
         }
       });
+    }
+    console.log(`latestLapMap has ${latestLapMap.size} entries`);
+    if (latestLapMap.size > 0) {
+      const first = Array.from(latestLapMap.entries())[0];
+      console.log(`Sample: Bib ${first[0]} has latestLap=${first[1].lap}`);
     }
 
     // Build "previous leaderboard" from latest laps
@@ -486,6 +496,8 @@ export async function GET(request: NextRequest) {
       lapsCalculated: laps.length > 0 && lapsInserted === 0 ? false : true,
       timestamp: new Date().toISOString(),
       debug: {
+        existingLapsCount: existingLaps?.length || 0,
+        latestLapMapSize: latestLapMap.size,
         newLapCandidates,
         skippedNoLapIncrease,
         skippedNoRaceTime,
