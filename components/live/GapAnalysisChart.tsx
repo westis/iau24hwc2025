@@ -501,6 +501,30 @@ function GapAnalysisChartComponent({ bibs }: GapAnalysisChartProps) {
     };
   }, [theme, t, baselineDistance, maxTime]); // Include maxTime to update initial view range
 
+  // Debug: Log component renders
+  console.log("[GapAnalysisChart] COMPONENT RENDER", {
+    chartReady,
+    loading,
+    hasData: !!data,
+    numRunners: data?.runners?.length,
+    chartDatasets: chartData.datasets.length,
+    chartRefDatasets: chartRef.current?.data?.datasets?.length || 0,
+    bibs: bibs,
+    baselineDistance,
+    timestamp: Date.now()
+  });
+
+  // Debug: Check if chart has data but it's not showing
+  if (chartReady && !loading && chartRef.current) {
+    const chart = chartRef.current;
+    console.log("[GapAnalysisChart] Chart instance state:", {
+      datasetsInChart: chart.data?.datasets?.length,
+      datasetsInProp: chartData.datasets.length,
+      firstDatasetPoints: chart.data?.datasets?.[0]?.data?.length || 0,
+      baselineDataset: chart.data?.datasets?.[chart.data.datasets.length - 1]?.label
+    });
+  }
+
   if (bibs.length === 0) {
     return (
       <Card>

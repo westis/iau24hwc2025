@@ -487,10 +487,21 @@ function DistancePaceChartComponent({ bibs }: DistancePaceChartProps) {
     loading,
     hasData: !!data,
     numRunners: data?.runners?.length,
-    datasetCount: chartData.datasets.length,
+    chartDatasets: chartData.datasets.length,
+    chartRefDatasets: chartRef.current?.data?.datasets?.length || 0,
     bibs: bibs,
     timestamp: Date.now()
   });
+
+  // Check if chart has data but it's not showing
+  if (chartReady && !loading && chartRef.current) {
+    const chart = chartRef.current;
+    console.log("[DistancePaceChart] Chart instance state:", {
+      datasetsInChart: chart.data?.datasets?.length,
+      datasetsInProp: chartData.datasets.length,
+      firstDatasetPoints: chart.data?.datasets?.[0]?.data?.length || 0
+    });
+  }
 
   return (
     <Card>
