@@ -35,6 +35,7 @@ function RaceUpdatesContent() {
     new Set()
   );
   const [hasNewUpdates, setHasNewUpdates] = React.useState(false);
+  const [lastSeenUpdateId, setLastSeenUpdateId] = React.useState<number>(0);
   const [raceInfo, setRaceInfo] = React.useState<any>(null);
 
   // Fetch updates
@@ -62,11 +63,12 @@ function RaceUpdatesContent() {
         const data = await res.json();
         const newUpdates = data.updates || [];
 
-        // Check if there are new updates
-        if (updates.length > 0 && newUpdates.length > 0) {
-          const latestId = updates[0]?.id || 0;
-          const hasNew = newUpdates.some((u: RaceUpdate) => u.id > latestId);
-          setHasNewUpdates(hasNew);
+        // Check if there are new updates compared to last seen
+        if (newUpdates.length > 0) {
+          const latestId = newUpdates[0]?.id || 0;
+          if (latestId > lastSeenUpdateId && lastSeenUpdateId > 0) {
+            setHasNewUpdates(true);
+          }
         }
 
         setUpdates(newUpdates);
@@ -82,7 +84,7 @@ function RaceUpdatesContent() {
         setRefreshing(false);
       }
     },
-    [selectedCategory, updates]
+    [selectedCategory, lastSeenUpdateId]
   );
 
   // Fetch race info
@@ -152,13 +154,35 @@ function RaceUpdatesContent() {
 
   const handleRefresh = () => {
     setHasNewUpdates(false);
+    // Update last seen ID when user manually refreshes
+    if (updates.length > 0) {
+      setLastSeenUpdateId(updates[0]?.id || 0);
+    }
     fetchUpdates(false);
   };
 
   const handleScrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
     setHasNewUpdates(false);
-    fetchUpdates(false);
+    // Update last seen ID when user clicks "new updates" banner
+    setTimeout(async () => {
+      const params = new URLSearchParams();
+      if (selectedCategory !== "all") {
+        params.set("category", selectedCategory);
+      }
+      params.set("limit", "100");
+
+      const res = await fetch(`/api/race/updates?${params}`);
+      if (res.ok) {
+        const data = await res.json();
+        const newUpdates = data.updates || [];
+        if (newUpdates.length > 0) {
+          setLastSeenUpdateId(newUpdates[0]?.id || 0);
+          setUpdates(newUpdates);
+          setUnreadCount(data.unreadCount || 0);
+        }
+      }
+    }, 300); // Wait for scroll animation
   };
 
   const categories: Array<RaceUpdateCategory | "all"> = [
