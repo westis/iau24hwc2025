@@ -228,14 +228,7 @@ export async function GET(request: NextRequest) {
       entry.genderRank = index + 1;
     });
 
-    // Update database with upsert strategy
-    // Delete existing leaderboard
-    await supabase
-      .from("race_leaderboard")
-      .delete()
-      .eq("race_id", activeRace.id);
-
-    // Insert new leaderboard data
+    // Update database with upsert strategy (no deletion needed - prevents empty table flicker)
     const leaderboardWithRaceId = enrichedLeaderboard.map((entry) => ({
       race_id: activeRace.id,
       bib: entry.bib,
@@ -255,9 +248,13 @@ export async function GET(request: NextRequest) {
       timestamp: entry.timestamp,
     }));
 
+    // Use upsert to atomically update/insert - prevents table from being temporarily empty
     const leaderboardResult = await supabase
       .from("race_leaderboard")
-      .insert(leaderboardWithRaceId);
+      .upsert(leaderboardWithRaceId, {
+        onConflict: "race_id,bib",
+        ignoreDuplicates: false,
+      });
 
     // Insert new laps (use upsert to avoid duplicates)
     let lapsInserted = 0;
