@@ -212,11 +212,12 @@ async function backfillBib(
     }
 
     if (laps.length > 0) {
+      // CRITICAL: Use ignoreDuplicates: true to NEVER overwrite existing laps
       const { error } = await supabase
         .from("race_laps")
         .upsert(laps, {
           onConflict: "race_id,bib,lap",
-          ignoreDuplicates: false,
+          ignoreDuplicates: true, // NEVER overwrite existing data!
         });
 
       if (error) {

@@ -206,13 +206,67 @@ async function backfillWithPuppeteer() {
         }
 
         if (laps.length > 0) {
-          allLaps.push(...laps);
-          runnersProcessed++;
+          // Calculate paces and prepare for database immediately
+          const sortedLaps = [...laps].sort((a, b) => a.lap - b.lap);
+          const enrichedLaps = sortedLaps.map((lap, index) => {
+            // Calculate actual lap distance (current distance - previous distance)
+            let lapDistanceKm = 1.5; // Default standard lap distance
 
-          if (runnersProcessed <= 10) {
-            console.log(`✅ Bib ${runner.bib} (${runner.name}): ${laps.length} laps`);
-          } else if (runnersProcessed % 50 === 0) {
-            console.log(`   ... processed ${runnersProcessed} runners so far`);
+            if (index > 0) {
+              // Not the first lap for this runner - calculate from distance difference
+              lapDistanceKm = lap.distanceKm - sortedLaps[index - 1].distanceKm;
+            } else {
+              // First lap for this runner - use the distance itself (should be ~0.2 km)
+              lapDistanceKm = lap.distanceKm;
+            }
+
+            // Lap pace in seconds per km
+            const lapPace = lap.lapTimeSec > 0 && lapDistanceKm > 0
+              ? lap.lapTimeSec / lapDistanceKm
+              : 0;
+
+            // Average pace in seconds per km
+            const avgPace = lap.raceTimeSec > 0 && lap.distanceKm > 0
+              ? lap.raceTimeSec / lap.distanceKm
+              : 0;
+
+            return {
+              race_id: activeRace.id,
+              bib: lap.bib,
+              lap: lap.lap,
+              lap_time_sec: lap.lapTimeSec,
+              race_time_sec: lap.raceTimeSec,
+              distance_km: lap.distanceKm,
+              rank: lap.rank,
+              gender_rank: lap.genderRank,
+              age_group_rank: null,
+              lap_pace: lapPace,
+              avg_pace: avgPace,
+              timestamp: new Date().toISOString(),
+            };
+          });
+
+          // Write to database immediately after each runner
+          // IMPORTANT: ignoreDuplicates: false allows overwriting bad data from scraper
+          // Puppeteer has the TRUE accurate lap times from Breizh Chrono modals
+          const { error } = await supabase
+            .from("race_laps")
+            .upsert(enrichedLaps, {
+              onConflict: "race_id,bib,lap",
+              ignoreDuplicates: false, // CAN overwrite to fix inaccurate data!
+            });
+
+          if (error) {
+            console.log(`   ❌ Error inserting laps for Bib ${runner.bib}: ${error.message}`);
+          } else {
+            allLaps.push(...laps);
+            runnersProcessed++;
+
+            if (runnersProcessed <= 10) {
+              console.log(`✅ Bib ${runner.bib} (${runner.name}): ${laps.length} laps written to DB`);
+            } else if (runnersProcessed % 50 === 0) {
+              console.log(`   ... processed ${runnersProcessed} runners (${allLaps.length} total laps)`);
+            }
           }
         }
 
@@ -233,83 +287,10 @@ async function backfillWithPuppeteer() {
       console.log(`   Page ${pageIndex + 1} complete: ${runnersProcessed} total runners processed, ${allLaps.length} total laps`);
     }
 
-    console.log(`\n✅ Extracted ${allLaps.length} laps from ${runnersProcessed} runners across ${totalPages} pages\n`);
-
-    if (allLaps.length === 0) {
-      console.log("❌ No lap data extracted!");
-      return;
-    }
-
-    // Sort laps by bib and lap number to calculate individual lap distances
-    allLaps.sort((a, b) => {
-      if (a.bib !== b.bib) return a.bib - b.bib;
-      return a.lap - b.lap;
-    });
-
-    // Calculate paces and prepare for database
-    const enrichedLaps = allLaps.map((lap, index) => {
-      // Calculate actual lap distance (current distance - previous distance)
-      let lapDistanceKm = 1.5; // Default standard lap distance
-
-      if (index > 0 && allLaps[index - 1].bib === lap.bib) {
-        // Not the first lap for this runner - calculate from distance difference
-        lapDistanceKm = lap.distanceKm - allLaps[index - 1].distanceKm;
-      } else {
-        // First lap for this runner - use the distance itself (should be ~0.2 km)
-        lapDistanceKm = lap.distanceKm;
-      }
-
-      // Lap pace in seconds per km
-      const lapPace = lap.lapTimeSec > 0 && lapDistanceKm > 0
-        ? lap.lapTimeSec / lapDistanceKm
-        : 0;
-
-      // Average pace in seconds per km
-      const avgPace = lap.raceTimeSec > 0 && lap.distanceKm > 0
-        ? lap.raceTimeSec / lap.distanceKm
-        : 0;
-
-      return {
-        race_id: activeRace.id,
-        bib: lap.bib,
-        lap: lap.lap,
-        lap_time_sec: lap.lapTimeSec,
-        race_time_sec: lap.raceTimeSec,
-        distance_km: lap.distanceKm,
-        rank: lap.rank,
-        gender_rank: lap.genderRank,
-        age_group_rank: null,
-        lap_pace: lapPace,
-        avg_pace: avgPace,
-        timestamp: new Date().toISOString(),
-      };
-    });
-
-    console.log(`💾 Inserting ${enrichedLaps.length} laps into database...`);
-
-    // Insert in batches of 500
-    const batchSize = 500;
-    let inserted = 0;
-
-    for (let i = 0; i < enrichedLaps.length; i += batchSize) {
-      const batch = enrichedLaps.slice(i, i + batchSize);
-      const { error } = await supabase
-        .from("race_laps")
-        .upsert(batch, {
-          onConflict: "race_id,bib,lap",
-          ignoreDuplicates: false,
-        });
-
-      if (error) {
-        console.error(`❌ Error inserting batch ${i / batchSize + 1}:`, error);
-        break;
-      }
-
-      inserted += batch.length;
-      console.log(`  ✅ Inserted ${inserted}/${enrichedLaps.length} laps...`);
-    }
-
-    console.log(`\n🎉 Successfully backfilled ${inserted} laps!`);
+    console.log(`\n✅ Backfill complete!`);
+    console.log(`   Total runners processed: ${runnersProcessed}/${totalPages * 10} (approx)`);
+    console.log(`   Total laps written to DB: ${allLaps.length}`);
+    console.log(`\n🎉 All data written to database in real-time!`);
 
   } catch (error) {
     console.error("❌ Fatal error:", error);
