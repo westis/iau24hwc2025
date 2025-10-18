@@ -210,7 +210,7 @@ export async function GET(request: NextRequest) {
 
       return {
         ...entry,
-        name: runner?.name || entry.name, // Use name from database if available
+        // Keep name from Breizh Chrono (entry.name) - it has proper Swedish characters
         gender: runner?.gender?.toLowerCase() || "m",
         country: runner?.country || "XXX",
         raceTimeSec,
