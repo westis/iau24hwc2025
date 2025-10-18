@@ -96,6 +96,26 @@ export function TeamRaceTrack({ teams }: TeamRaceTrackProps) {
     return team;
   });
 
+  // Calculate vertical positions (above/below track) BEFORE rendering
+  // This ensures proper alternating and prevents overlap
+  const verticalPositions = teamsWithPositions.map((team, index) => {
+    // Default: alternate above/below
+    let isAbove = index % 2 === 0;
+
+    if (index > 0) {
+      const prevTeam = teamsWithPositions[index - 1];
+      const horizontalDistance = Math.abs(team.position - prevTeam.position);
+
+      // If flags are close horizontally (< 12%), force opposite level
+      if (horizontalDistance < 12) {
+        const prevIsAbove = verticalPositions[index - 1];
+        isAbove = !prevIsAbove;
+      }
+    }
+
+    return isAbove;
+  });
+
   return (
     <div className="bg-card border rounded-lg p-6 mb-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
@@ -151,21 +171,8 @@ export function TeamRaceTrack({ teams }: TeamRaceTrackProps) {
               language as "en" | "sv"
             );
 
-            // Smart vertical positioning to prevent overlap
-            // Check if this flag is close to the previous one
-            let isAbove = index % 2 === 0; // Default alternating pattern
-
-            if (index > 0) {
-              const prevTeam = teamsWithPositions[index - 1];
-              const horizontalDistance = Math.abs(team.position - prevTeam.position);
-
-              // If flags are very close horizontally (< 12%), ensure they're on opposite levels
-              if (horizontalDistance < 12) {
-                // Force opposite of previous flag's position
-                const prevIsAbove = (index - 1) % 2 === 0;
-                isAbove = !prevIsAbove;
-              }
-            }
+            // Get pre-calculated vertical position
+            const isAbove = verticalPositions[index];
 
             return (
               <div
