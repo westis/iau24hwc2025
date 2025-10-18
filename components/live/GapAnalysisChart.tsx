@@ -181,7 +181,7 @@ function GapAnalysisChartComponent({ bibs }: GapAnalysisChartProps) {
     }
   };
 
-  // Calculate moving average trendline for a runner (gap from baseline)
+  // Calculate moving average trendline for a runner using dual-window weighted approach (gap from baseline)
   const calculateTrendline = (runnerData: any[]) => {
     if (runnerData.length < 2) return null;
 
@@ -189,37 +189,67 @@ function GapAnalysisChartComponent({ bibs }: GapAnalysisChartProps) {
     const latestPoint = runnerData[runnerData.length - 1];
     const latestTime = latestPoint.time * 1000; // Convert to ms
     const latestGap = latestPoint.projectedKm - baselineDistance;
-
-    // Adaptive window: 20% of elapsed time, min 3h, max 6h
     const elapsedHours = latestTime / 3600000;
-    const windowHours = Math.max(3, Math.min(6, elapsedHours * 0.2));
 
-    // Filter to points within the moving average window (last X hours)
-    const windowMs = windowHours * 3600 * 1000;
-    const windowStart = latestTime - windowMs;
-    let recentPoints = runnerData.filter(p => p.time * 1000 >= windowStart);
+    // Helper to calculate pace for a time window
+    const calculatePaceForWindow = (windowHours: number) => {
+      const windowMs = windowHours * 3600 * 1000;
+      const windowStart = latestTime - windowMs;
+      const windowPoints = runnerData.filter(p => p.time * 1000 >= windowStart);
 
-    // If window doesn't have enough points, use all available data (at least we have 2 total)
-    if (recentPoints.length < 2) {
-      recentPoints = runnerData;
+      if (windowPoints.length < 2) return null;
+
+      const firstPoint = windowPoints[0];
+      const timeElapsed = (latestPoint.time - firstPoint.time) * 1000; // ms
+      const distanceGained = latestPoint.projectedKm - firstPoint.projectedKm;
+      return distanceGained / timeElapsed; // km per ms
+    };
+
+    let finalPace: number;
+
+    // Early race (< 6 hours): Use all available data
+    if (elapsedHours < 6) {
+      const firstPoint = runnerData[0];
+      const timeElapsed = (latestPoint.time - firstPoint.time) * 1000;
+      const distanceGained = latestPoint.projectedKm - firstPoint.projectedKm;
+      finalPace = distanceGained / timeElapsed;
+    } else {
+      // Dual-window approach: Blend long-term stability with short-term changes
+
+      // Long-term window: 6-12 hours (adaptive, grows with race)
+      const longTermHours = Math.min(12, Math.max(6, elapsedHours * 0.5));
+      const longTermPace = calculatePaceForWindow(longTermHours);
+
+      // Short-term window: 2-3 hours (shows recent changes)
+      const shortTermHours = Math.min(3, Math.max(2, elapsedHours * 0.15));
+      const shortTermPace = calculatePaceForWindow(shortTermHours);
+
+      // If we can't get both windows, fall back
+      if (!longTermPace || !shortTermPace) {
+        finalPace = longTermPace || shortTermPace || 0;
+        if (finalPace === 0) {
+          // Ultimate fallback: use all data
+          const firstPoint = runnerData[0];
+          const timeElapsed = (latestPoint.time - firstPoint.time) * 1000;
+          const distanceGained = latestPoint.projectedKm - firstPoint.projectedKm;
+          finalPace = distanceGained / timeElapsed;
+        }
+      } else {
+        // Weighted blend: 70% long-term (stable) + 30% short-term (recent adjustment)
+        finalPace = (longTermPace * 0.7) + (shortTermPace * 0.3);
+      }
     }
-
-    // Calculate average pace from recent points (km per ms)
-    const firstRecent = recentPoints[0];
-    const timeElapsed = (latestPoint.time - firstRecent.time) * 1000; // ms
-    const distanceGained = latestPoint.projectedKm - firstRecent.projectedKm;
-    const pace = distanceGained / timeElapsed; // km per ms
 
     // Project trendline from current position to 24 hours
     const endTime = 24 * 3600 * 1000; // 24 hours in ms
     const timeRemaining = endTime - latestTime;
-    const projectedEndDistance = latestPoint.projectedKm + (pace * timeRemaining);
+    const projectedEndDistance = latestPoint.projectedKm + (finalPace * timeRemaining);
     const projectedEndGap = projectedEndDistance - baselineDistance;
 
     return {
       startPoint: { x: latestTime, y: latestGap },
       endPoint: { x: endTime, y: projectedEndGap },
-      pace: pace * 3600000, // Convert to km/hour for display
+      pace: finalPace * 3600000, // Convert to km/hour for display
     };
   };
 

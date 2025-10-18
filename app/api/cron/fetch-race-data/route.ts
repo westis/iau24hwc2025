@@ -317,25 +317,31 @@ export async function GET(request: NextRequest) {
 
         // Batch query: Get previous lap data for all runners with new laps
         const bibsWithNewLaps = runnersWithNewLaps.map(e => e.bib);
-        const lapsToQuery = runnersWithNewLaps.map(e => maxLapMap.get(e.bib) || 0);
 
-        // Build a map to look up previous lap data
-        const { data: prevLaps } = await supabase
+        // Get ALL laps for these runners, then find the max lap (which is the previous lap)
+        const { data: allLaps } = await supabase
           .from("race_laps")
           .select("bib, lap, race_time_sec, distance_km")
           .eq("race_id", activeRace.id)
           .in("bib", bibsWithNewLaps);
 
-        const prevLapMap = new Map<string, { raceTimeSec: number; distanceKm: number }>();
-        if (prevLaps) {
-          prevLaps.forEach((lap: any) => {
-            const key = `${lap.bib}-${lap.lap}`;
-            prevLapMap.set(key, {
-              raceTimeSec: lap.race_time_sec,
-              distanceKm: lap.distance_km,
-            });
+        // Build a map with the LATEST (highest lap number) for each bib
+        const prevLapMap = new Map<number, { lap: number; raceTimeSec: number; distanceKm: number }>();
+        if (allLaps) {
+          allLaps.forEach((lap: any) => {
+            const existing = prevLapMap.get(lap.bib);
+            // Keep the lap with the highest lap number
+            if (!existing || lap.lap > existing.lap) {
+              prevLapMap.set(lap.bib, {
+                lap: lap.lap,
+                raceTimeSec: lap.race_time_sec,
+                distanceKm: lap.distance_km,
+              });
+            }
           });
         }
+
+        console.log(`Found previous lap data for ${prevLapMap.size} runners`);
 
         // Calculate new laps
         const newLaps: any[] = [];
