@@ -127,6 +127,12 @@ async function backfillWithPuppeteer() {
         // Wait for modal to be visible
         await page.waitForSelector(`#${runner.modalId}`, { visible: true, timeout: 5000 });
 
+        // Wait for the table body to actually have data
+        await page.waitForSelector(`#${runner.modalId} tbody tr`, { visible: true, timeout: 3000 });
+
+        // Extra delay to ensure data is fully loaded
+        await new Promise(resolve => setTimeout(resolve, 500));
+
         // Extract lap data from modal
         const lapData = await page.evaluate((modalId) => {
           const modal = document.querySelector(`#${modalId}`);
