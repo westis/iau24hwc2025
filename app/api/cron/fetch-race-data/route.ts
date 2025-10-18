@@ -161,14 +161,18 @@ export async function GET(request: NextRequest) {
       laps = calculatedLaps;
     }
 
-    // Match leaderboard entries with our runner database to get gender/country
+    // Match leaderboard entries with our runner database to get name, gender, and country
     const { data: runners } = await supabase
       .from("runners")
-      .select("bib, gender, nationality")
+      .select("bib, first_name, last_name, gender, nationality")
       .not("bib", "is", null);
 
     const runnerMap = new Map(
-      runners?.map((r) => [r.bib, { gender: r.gender, country: r.nationality }])
+      runners?.map((r) => [r.bib, {
+        name: `${r.first_name} ${r.last_name}`.trim(),
+        gender: r.gender,
+        country: r.nationality
+      }])
     );
 
     // Enrich leaderboard with gender and country from database
@@ -206,6 +210,7 @@ export async function GET(request: NextRequest) {
 
       return {
         ...entry,
+        name: runner?.name || entry.name, // Use name from database if available
         gender: runner?.gender?.toLowerCase() || "m",
         country: runner?.country || "XXX",
         raceTimeSec,
