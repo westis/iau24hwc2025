@@ -224,18 +224,28 @@ export class BreizhChronoAdapter implements RaceDataSource {
               cells.push(cellText);
             }
 
-            if (cells.length >= 2) {
+            if (cells.length >= 6) {
               lapNumber++;
 
-              // Typical format: [lap#, time, pace, distance, rank, ...]
-              const lapTimeSec = this.parseTimeToSeconds(cells[1] || "0:00:00");
+              // BreizhChrono modal format:
+              // cells[0] = Passage (lap#, e.g., "N° 105")
+              // cells[1] = Classement (rank, e.g., "1er")
+              // cells[2] = Clsmt Catégorie (category rank)
+              // cells[3] = Temps global (cumulative race time, e.g., "11:41:53")
+              // cells[4] = Dernier Temps (INDIVIDUAL lap time, e.g., "00:07:11")
+              // cells[5] = Distance (cumulative distance, e.g., "157,5336 km")
+
+              const raceTimeSec = this.parseTimeToSeconds(cells[3] || "0:00:00"); // Temps global
+              const lapTimeSec = this.parseTimeToSeconds(cells[4] || "0:00:00");  // Dernier Temps
+              const distanceStr = cells[5].replace(/[^\d,.]/g, "").replace(",", ".");
+              const distanceKm = parseFloat(distanceStr) || 0;
 
               laps.push({
                 bib,
                 lap: lapNumber,
-                lapTimeSec,
-                raceTimeSec: 0, // Will be calculated
-                distanceKm: 0, // Will be calculated
+                lapTimeSec,     // ACTUAL lap duration from "Dernier Temps"
+                raceTimeSec,    // Cumulative time from "Temps global"
+                distanceKm,     // Cumulative distance
                 rank: 0,
                 genderRank: 0,
                 ageGroupRank: 0,

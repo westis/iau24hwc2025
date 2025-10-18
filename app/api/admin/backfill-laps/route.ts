@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
 
     console.log(`Fetched ${laps.length} lap records`);
 
-    // Calculate proper race times and distances
+    // Calculate lap distances for pace calculations
     const lapDistanceKm = parseFloat(process.env.LAP_DISTANCE || "1.5");
     const firstLapDistanceKm = parseFloat(
       process.env.FIRST_LAP_DISTANCE ||
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
         "0.2"
     );
 
-    // Group laps by bib to calculate cumulative times
+    // Group laps by bib for processing
     const lapsByBib = new Map<number, any[]>();
     laps.forEach(lap => {
       if (!lapsByBib.has(lap.bib)) {
@@ -125,39 +125,33 @@ export async function POST(request: NextRequest) {
       lapsByBib.get(lap.bib)!.push(lap);
     });
 
-    // Sort laps within each bib and calculate lap times from cumulative times
-    // NOTE: Puppeteer scraper returns CUMULATIVE race time in lapTimeSec (misleading name)
+    // Process laps - now the scraper provides BOTH lap time and cumulative race time directly!
+    // No need to calculate lap times anymore - modal table has them in "Dernier Temps" column
     const lapsWithRaceId = [];
     for (const [bib, runnerLaps] of lapsByBib) {
       runnerLaps.sort((a, b) => a.lap - b.lap);
 
-      let previousRaceTimeSec = 0;
       for (const lap of runnerLaps) {
-        // lap.lapTimeSec is actually cumulative race time from modal table
-        const cumulativeTimeSec = lap.lapTimeSec;
-
-        // Calculate actual lap time: current cumulative - previous cumulative
-        const actualLapTimeSec = cumulativeTimeSec - previousRaceTimeSec;
-
-        const distanceKm = lap.lap === 1
-          ? firstLapDistanceKm
-          : firstLapDistanceKm + (lap.lap - 1) * lapDistanceKm;
+        // Scraper now provides accurate values from modal table:
+        // - lap.lapTimeSec = individual lap duration from "Dernier Temps" column
+        // - lap.raceTimeSec = cumulative race time from "Temps global" column
+        // - lap.distanceKm = cumulative distance from "Distance" column
 
         const thisLapDistanceKm = lap.lap === 1 ? firstLapDistanceKm : lapDistanceKm;
-        const lapPace = actualLapTimeSec > 0
-          ? actualLapTimeSec / thisLapDistanceKm
+        const lapPace = lap.lapTimeSec > 0 && thisLapDistanceKm > 0
+          ? lap.lapTimeSec / thisLapDistanceKm
           : 0;
-        const avgPace = cumulativeTimeSec > 0 && distanceKm > 0
-          ? cumulativeTimeSec / distanceKm
+        const avgPace = lap.raceTimeSec > 0 && lap.distanceKm > 0
+          ? lap.raceTimeSec / lap.distanceKm
           : 0;
 
         lapsWithRaceId.push({
           race_id: activeRace.id,
           bib: lap.bib,
           lap: lap.lap,
-          lap_time_sec: actualLapTimeSec, // ← ACTUAL lap duration
-          race_time_sec: cumulativeTimeSec, // ← Cumulative race time
-          distance_km: distanceKm,
+          lap_time_sec: lap.lapTimeSec,    // ACTUAL lap duration from modal
+          race_time_sec: lap.raceTimeSec,  // Cumulative race time from modal
+          distance_km: lap.distanceKm,     // Cumulative distance from modal
           rank: lap.rank || null,
           gender_rank: lap.genderRank || null,
           age_group_rank: lap.ageGroupRank || null,
@@ -165,8 +159,6 @@ export async function POST(request: NextRequest) {
           avg_pace: avgPace,
           timestamp: lap.timestamp,
         });
-
-        previousRaceTimeSec = cumulativeTimeSec;
       }
     }
 
