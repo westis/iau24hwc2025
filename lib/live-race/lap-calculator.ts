@@ -117,6 +117,16 @@ export function calculateNewLaps(
       const totalTimeForLaps = (lapsCompleted === 1 && actualLapTimeSec !== undefined)
         ? actualLapTimeSec
         : (currentRaceTimeSec - previousRaceTimeSec);
+
+      // Skip if lap time is zero or negative (timestamp hasn't updated yet)
+      // This happens when distance updates before lastPassing timestamp
+      if (totalTimeForLaps <= 0) {
+        return {
+          newLaps: [],
+          updatedDistance: currentDistance,
+        };
+      }
+
       const avgLapTime = totalTimeForLaps / lapsCompleted;
 
       for (let i = 0; i < lapsCompleted; i++) {

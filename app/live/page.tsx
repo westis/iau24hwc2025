@@ -425,36 +425,38 @@ function LivePageContent() {
                 </div>
               </div>
 
+              {/* Last Updated - always show */}
+              {data && (
+                <div className="text-right text-xs text-muted-foreground pb-2">
+                  {t.live?.lastUpdate || "Senast uppdaterad"}:{" "}
+                  {new Date(data.lastUpdate).toLocaleTimeString()}
+                </div>
+              )}
+
               {/* Race Status - only show when live or in simulation */}
               {data && (raceState === "live" || simulationMode) && (
-                <div className="flex items-center justify-between text-sm text-muted-foreground border-b pb-2">
-                  <div className="flex items-center gap-4">
-                    <span className="flex items-center gap-2">
-                      {(raceState === "live" || simulationMode) && (
-                        <span className="h-2 w-2 bg-red-500 rounded-full animate-pulse" />
-                      )}
-                      {t.live?.status || "Status"}:{" "}
-                      <span className="capitalize font-medium">
-                        {simulationMode ? "Simulation" : raceState.replace("_", " ")}
-                      </span>
-                    </span>
-                    <span>
-                      {t.live?.totalRunners || "Antal löpare"}:{" "}
-                      <span className="font-medium">{data.totalRunners}</span>
-                    </span>
-                    {filteredEntries.length !== data.totalRunners && (
-                      <span>
-                        {t.live?.showing || "Visar"}:{" "}
-                        <span className="font-medium">
-                          {filteredEntries.length}
-                        </span>
-                      </span>
+                <div className="flex items-center gap-4 text-sm text-muted-foreground border-b pb-2">
+                  <span className="flex items-center gap-2">
+                    {(raceState === "live" || simulationMode) && (
+                      <span className="h-2 w-2 bg-red-500 rounded-full animate-pulse" />
                     )}
-                  </div>
-                  <div>
-                    {t.live?.lastUpdate || "Senast uppdaterad"}:{" "}
-                    {new Date(data.lastUpdate).toLocaleTimeString()}
-                  </div>
+                    {t.live?.status || "Status"}:{" "}
+                    <span className="capitalize font-medium">
+                      {simulationMode ? "Simulation" : raceState.replace("_", " ")}
+                    </span>
+                  </span>
+                  <span>
+                    {t.live?.totalRunners || "Antal löpare"}:{" "}
+                    <span className="font-medium">{data.totalRunners}</span>
+                  </span>
+                  {filteredEntries.length !== data.totalRunners && (
+                    <span>
+                      {t.live?.showing || "Visar"}:{" "}
+                      <span className="font-medium">
+                        {filteredEntries.length}
+                      </span>
+                    </span>
+                  )}
                 </div>
               )}
 
