@@ -96,13 +96,14 @@ export default function AdminRaceUpdatesPage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const res = await fetch("/api/upload/image", {
+      const res = await fetch("/api/upload/media", {
         method: "POST",
         body: formData,
       });
 
       if (!res.ok) {
-        throw new Error("Uppladdning misslyckades");
+        const errorData = await res.json().catch(() => ({ error: "Unknown error" }));
+        throw new Error(errorData.error || "Uppladdning misslyckades");
       }
 
       const data = await res.json();
@@ -110,7 +111,11 @@ export default function AdminRaceUpdatesPage() {
       setError("");
     } catch (err) {
       console.error("Upload error:", err);
-      setError("Misslyckades med att ladda upp fil. Försök igen.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Misslyckades med att ladda upp fil. Försök igen."
+      );
     } finally {
       setUploading(false);
     }
