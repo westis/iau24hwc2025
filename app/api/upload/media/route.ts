@@ -5,15 +5,6 @@ import { createClient } from "@supabase/supabase-js";
 export const runtime = 'nodejs';
 export const maxDuration = 60; // 60 seconds max execution time
 
-// CRITICAL: Set body size limit for this route
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '100mb',
-    },
-  },
-};
-
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey =
   process.env.SUPABASE_SERVICE_ROLE_KEY ||
