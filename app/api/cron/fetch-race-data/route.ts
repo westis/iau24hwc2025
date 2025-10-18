@@ -131,56 +131,20 @@ export async function GET(request: NextRequest) {
       }])
     );
 
-    // Get latest lap data to calculate ACTUAL last lap time
-    // We need the previous lap's race_time_sec to calculate current lap time
+    // Get latest lap data to show ACTUAL last lap time
+    // After backfill, we can trust the stored lap_time_sec values
     const { data: latestLapTimes } = await supabase
       .rpc('get_latest_laps_per_runner', { race_id_param: activeRace.id });
 
-    const latestLapTimeMap = new Map<number, { lap: number; raceTimeSec: number }>();
+    const latestLapTimeMap = new Map<number, { lap: number; raceTimeSec: number; lapTimeSec: number }>();
     if (latestLapTimes) {
       latestLapTimes.forEach((lapRecord: any) => {
         latestLapTimeMap.set(lapRecord.bib, {
           lap: lapRecord.lap,
           raceTimeSec: lapRecord.race_time_sec,
+          lapTimeSec: lapRecord.lap_time_sec, // Use the stored value (accurate from backfill/Puppeteer)
         });
       });
-    }
-
-    // For runners where latest DB lap matches current lap, get the PREVIOUS lap
-    const bibsNeedingPrevLap = leaderboard
-      .filter(entry => {
-        const latestLap = latestLapTimeMap.get(entry.bib);
-        return latestLap && latestLap.lap === entry.lap && entry.lap > 1;
-      })
-      .map(e => e.bib);
-
-    const prevLapMap = new Map<number, number>();
-    if (bibsNeedingPrevLap.length > 0) {
-      // Query for lap N-1 for these runners
-      const { data: prevLaps } = await supabase
-        .from("race_laps")
-        .select("bib, lap, race_time_sec")
-        .eq("race_id", activeRace.id)
-        .in("bib", bibsNeedingPrevLap);
-
-      if (prevLaps) {
-        // For each bib, find the second-highest lap number
-        const bibLapsMap = new Map<number, any[]>();
-        prevLaps.forEach((lap: any) => {
-          if (!bibLapsMap.has(lap.bib)) {
-            bibLapsMap.set(lap.bib, []);
-          }
-          bibLapsMap.get(lap.bib)!.push(lap);
-        });
-
-        bibLapsMap.forEach((laps, bib) => {
-          // Sort by lap desc and take the second one
-          laps.sort((a, b) => b.lap - a.lap);
-          if (laps.length >= 2) {
-            prevLapMap.set(bib, laps[1].race_time_sec);
-          }
-        });
-      }
     }
 
     // Enrich leaderboard with gender and country from database
@@ -203,22 +167,16 @@ export async function GET(request: NextRequest) {
         lapPaceSec = entry.raceTimeSec / entry.distanceKm;
       }
 
-      // Calculate ACTUAL last lap time from race_laps table
-      // ALWAYS calculate from race time difference (don't trust stored lap_time_sec - it may have bad data)
+      // Get ACTUAL last lap time from race_laps table
       const latestLapData = latestLapTimeMap.get(entry.bib);
 
       if (latestLapData) {
         if (latestLapData.lap === entry.lap) {
-          // Same lap already in DB - get previous lap's race time
-          const prevRaceTime = prevLapMap.get(entry.bib);
-          if (prevRaceTime !== undefined) {
-            lapTimeSec = entry.raceTimeSec - prevRaceTime;
-          } else {
-            // First lap or no previous lap data - use average
-            lapTimeSec = entry.lap > 0 ? entry.raceTimeSec / entry.lap : 0;
-          }
+          // Same lap already in DB - use stored lap_time_sec (accurate from backfill/Puppeteer)
+          lapTimeSec = latestLapData.lapTimeSec;
         } else {
-          // New lap detected - calculate from latest lap in DB
+          // New lap detected - calculate from race time difference
+          // Note: This is an estimate until backfill/calculate-laps runs
           lapTimeSec = entry.raceTimeSec - latestLapData.raceTimeSec;
         }
       }
