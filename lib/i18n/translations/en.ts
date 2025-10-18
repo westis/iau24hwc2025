@@ -458,9 +458,9 @@ export const en: Translations = {
     distanceOverTime: "Distance Over Time",
     distanceAndPace: "Distance & Pace Analysis",
     distanceAndPaceDesc:
-      "Projected distance (left) and average pace (right) over race time",
+      "Projected distance over race time. Dashed trendlines show expected 24h finish based on recent pace. Use mouse wheel to zoom, drag to pan.",
     gapAnalysis: "Gap Analysis",
-    gapAnalysisDesc: "Gap from baseline distance",
+    gapAnalysisDesc: "Gap from baseline. Dashed trendlines show projected gap at 24h based on recent pace. Use mouse wheel to zoom, drag to pan.",
     gapFromBaseline: "Gap from baseline (km)",
     baselineMode: "Baseline Mode",
     worldRecord: "World Record",

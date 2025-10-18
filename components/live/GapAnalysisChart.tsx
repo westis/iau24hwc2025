@@ -440,6 +440,10 @@ function GapAnalysisChartComponent({ bibs }: GapAnalysisChartProps) {
           enabled: true,
           mode: "index",
           intersect: false,
+          filter: (tooltipItem) => {
+            // Hide trendline items from tooltip
+            return !tooltipItem.dataset.label?.includes("trend");
+          },
           callbacks: {
             title: (context) => {
               const time = context[0]?.parsed?.x;
