@@ -67,7 +67,7 @@ export function calculateRunnerPosition(
 
   // Overshoot configuration - allow runners to continue moving past timing mat
   const MAX_OVERSHOOT_PROGRESS = 115; // Continue up to 15% past timing mat (115%)
-  const MAX_OVERSHOOT_SECONDS = 60;   // Continue for up to 60 seconds after estimated crossing
+  const MAX_OVERSHOOT_SECONDS = 90;   // Continue for up to 90 seconds after estimated crossing
   const PENDING_CONFIRMATION_WINDOW = 30; // seconds
 
   if (progressPercent < 100) {
