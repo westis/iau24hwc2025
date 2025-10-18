@@ -2,11 +2,12 @@
 // API endpoint for fetching race updates (AI commentary feed)
 
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import type { RaceUpdate, RaceUpdatesResponse } from "@/types/live-race";
 
 export async function POST(request: NextRequest) {
   try {
+    // Use regular client to verify authentication
     const supabase = await createClient();
 
     // Get current user (admin only)
@@ -18,8 +19,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Use service role client for admin operations (bypasses RLS)
+    const adminClient = createServiceClient();
+
     // Get active race
-    const { data: activeRace } = await supabase
+    const { data: activeRace } = await adminClient
       .from("race_info")
       .select("id")
       .eq("is_active", true)
@@ -59,7 +63,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Insert race update
-    const { data: newUpdate, error } = await supabase
+    const { data: newUpdate, error } = await adminClient
       .from("race_updates")
       .insert({
         race_id: activeRace.id,

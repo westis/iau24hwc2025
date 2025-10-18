@@ -2,7 +2,7 @@
 // API endpoint for individual race update operations (GET, PATCH, DELETE)
 
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import type { RaceUpdate } from "@/types/live-race";
 
 export async function GET(
@@ -103,6 +103,9 @@ export async function PATCH(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    // Use service role client for admin operations (bypasses RLS)
+    const adminClient = createServiceClient();
+
     const body = await request.json();
     const {
       content,
@@ -136,7 +139,7 @@ export async function PATCH(
     if (allowComments !== undefined) updateData.allow_comments = allowComments;
     if (isSticky !== undefined) updateData.is_sticky = isSticky;
 
-    const { data: updatedUpdate, error } = await supabase
+    const { data: updatedUpdate, error } = await adminClient
       .from("race_updates")
       .update(updateData)
       .eq("id", updateId)
@@ -227,8 +230,11 @@ export async function DELETE(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    // Use service role client for admin operations (bypasses RLS)
+    const adminClient = createServiceClient();
+
     // Delete the update (comments will cascade delete due to FK constraint)
-    const { error } = await supabase
+    const { error } = await adminClient
       .from("race_updates")
       .delete()
       .eq("id", updateId);
